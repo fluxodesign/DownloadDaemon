@@ -1,12 +1,29 @@
 package net.fluxo.dd
 
+import org.apache.log4j.Level
+
 /**
- * Created with IntelliJ IDEA.
  * User: Ronald Kurniawan (viper)
  * Date: 3/03/14
  * Time: 7:21 PM
  *
  */
-class FluxoDownloadDaemon {
+object FluxoDownloadDaemon {
 
+	private val _dt = new DaemonThread
+
+	def main(args: Array[String]) {
+		System.out.println("DownloadDaemon version 0.1\n")
+		attachShutdownHook()
+		_dt.start()
+	}
+
+	def attachShutdownHook() {
+		Runtime.getRuntime.addShutdownHook(new Thread {
+			override def run() {
+				LogWriter.writeLog("Shutdown attempted...", Level.INFO)
+				LogWriter.writeLog("Shutting down database...", Level.INFO)
+			}
+		})
+	}
 }
