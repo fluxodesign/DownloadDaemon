@@ -10,7 +10,8 @@ import org.apache.log4j.Level
  */
 object FluxoDownloadDaemon {
 
-	private val _dt = new DaemonThread
+	private val _dbMan = DbControl
+	private val _dt = new DaemonThread(_dbMan)
 
 	def main(args: Array[String]) {
 		System.out.println("DownloadDaemon version 0.1\n")
@@ -23,6 +24,8 @@ object FluxoDownloadDaemon {
 			override def run() {
 				LogWriter.writeLog("Shutdown attempted...", Level.INFO)
 				LogWriter.writeLog("Shutting down database...", Level.INFO)
+				_dbMan.cleanup()
+				_dt.tryStop()
 			}
 		})
 	}

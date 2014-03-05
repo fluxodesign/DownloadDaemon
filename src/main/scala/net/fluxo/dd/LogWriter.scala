@@ -3,6 +3,7 @@ package net.fluxo.dd
 import org.apache.log4j.{Logger, Level}
 import org.joda.time.format.{DateTimeFormatter, DateTimeFormat}
 import org.joda.time.DateTime
+import java.io.{PrintWriter, StringWriter}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -40,5 +41,12 @@ object LogWriter {
 	def currentDateTime: String = {
 		val formatter: DateTimeFormatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss ZZZZ")
 		formatter.print(DateTime.now().getMillis)
+	}
+
+	def stackTraceToString(e: Throwable): String = {
+		val sw = new StringWriter
+		val pw = new PrintWriter(sw)
+		e.printStackTrace(pw)
+		sw.toString
 	}
 }
