@@ -6,6 +6,9 @@ import java.net.{URL, ServerSocket}
 import net.fluxo.dd.dbo.{TaskStatus, Config}
 import java.util.Properties
 import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
+import org.apache.xmlrpc.common.{XmlRpcStreamConfig, XmlRpcController, TypeFactoryImpl}
+import org.apache.xmlrpc.serializer.{StringSerializer, TypeSerializer}
+import org.xml.sax.{SAXException, ContentHandler}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -18,6 +21,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	private var _isRunning: Boolean = false
 	private var _xmlRpcClient: XmlRpcClient = _
 	private var _aria2Process: Process = _
+	private var _tDlMonitor: Option[DownloadMonitor] = None
+	private var _threadDlMonitor: Thread = null
 
 	override def run() {
 		_isRunning = true
@@ -36,6 +41,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		}
 		if (isRPCPortInUse) {
 			LogWriter.writeLog("RPC Port " +  config.RPCPort + " is in use; assumed aria2 has been started", Level.INFO)
+			_isRunning = false
+			return
 		} else {
 			activateAria2()
 			if (_aria2Process != null) {
@@ -44,8 +51,14 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 				xmlClientConfig.setServerURL(new URL(url))
 				_xmlRpcClient = new XmlRpcClient()
 				_xmlRpcClient.setConfig(xmlClientConfig)
-				_xmlRpcClient.setTypeFactory(new MyTypeFactoryImpl(_xmlRpcClient))
+				_xmlRpcClient.setTypeFactory(new XmlRpcTypeFactory(_xmlRpcClient))
 			}
+		}
+		if (_isRunning) {
+			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan)
+			_tDlMonitor = Some(dlMon)
+			_threadDlMonitor = new Thread(_tDlMonitor.getOrElse(null))
+			_threadDlMonitor.start()
 		}
 	}
 
@@ -94,12 +107,13 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 
 	def isRPCPortInUse: Boolean = {
 		var status = false
-		val ss: ServerSocket = new ServerSocket(6800)
+		var ss: ServerSocket = null
 		try {
+			ss = new ServerSocket(6800)
 			ss.setReuseAddress(true)
-			status = true
 		} catch {
 			case ioe: IOException =>
+				status = true
 		} finally {
 			if (ss != null) {
 				ss.close()
@@ -114,17 +128,46 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	}
 
 	def sendAriaForceShutdown() {
-		val rpcConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
+		if (_xmlRpcClient != null) {
+			val result: String = _xmlRpcClient.execute("aria2.forceShutdown", Array[Object]()).asInstanceOf[String]
+			// DEBUG
+			System.out.println("aria2 force shutdown, result: " + result)
+		}
 	}
 
 	def sendAriaTellStatus(gid: String): TaskStatus = {
-		val response: JsonRpcResponse = _jsonHttp.callAService("aria2.tellStatus", gid)
-		null
+		val ts: TaskStatus = null
+		if (_xmlRpcClient != null) {
+			_xmlRpcClient.execute("aria2.tellStatus", Array[Object](Array[String](gid)))
+		}
+		ts
 	}
 
 	def tryStop() {
 		// force shutdown aria2
 		sendAriaForceShutdown()
 		/// TODO
+		if (_tDlMonitor.isDefined) {
+			_tDlMonitor.getOrElse(null).stop()
+			_threadDlMonitor.interrupt()
+		}
+	}
+
+	class XmlRpcStringSerializer extends StringSerializer {
+		@throws(classOf[SAXException])
+		override def write(pHandler: ContentHandler, pObject: Object) {
+			write(pHandler, StringSerializer.STRING_TAG, pObject.toString)
+		}
+	}
+
+	class XmlRpcTypeFactory(pController: XmlRpcController) extends TypeFactoryImpl(pController) {
+		@throws(classOf[SAXException])
+		override def getSerializer(pConfig: XmlRpcStreamConfig, pObject: Object): TypeSerializer = {
+			val response: TypeSerializer = pObject match {
+				case s:String => new XmlRpcStringSerializer()
+				case _ => super.getSerializer(pConfig, pObject)
+			}
+			response
+		}
 	}
 }
