@@ -2,9 +2,10 @@ package net.fluxo.dd
 
 import org.apache.log4j.Level
 import java.io._
-import java.net.ServerSocket
-import net.fluxo.dd.dbo.Config
+import java.net.{URL, ServerSocket}
+import net.fluxo.dd.dbo.{TaskStatus, Config}
 import java.util.Properties
+import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -15,7 +16,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 
 	@volatile
 	private var _isRunning: Boolean = false
-	var _aria2Process: Process = _
+	private var _xmlRpcClient: XmlRpcClient = _
+	private var _aria2Process: Process = _
 
 	override def run() {
 		_isRunning = true
@@ -37,7 +39,12 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		} else {
 			activateAria2()
 			if (_aria2Process != null) {
-
+				val url: String = "http://127.0.0.1:" + config.RPCPort + "/rpc"
+				val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
+				xmlClientConfig.setServerURL(new URL(url))
+				_xmlRpcClient = new XmlRpcClient()
+				_xmlRpcClient.setConfig(xmlClientConfig)
+				_xmlRpcClient.setTypeFactory(new MyTypeFactoryImpl(_xmlRpcClient))
 			}
 		}
 	}
@@ -106,7 +113,18 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		_aria2Process = new ProcessBuilder("aria2c", "--enable-rpc").start()
 	}
 
+	def sendAriaForceShutdown() {
+		val rpcConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
+	}
+
+	def sendAriaTellStatus(gid: String): TaskStatus = {
+		val response: JsonRpcResponse = _jsonHttp.callAService("aria2.tellStatus", gid)
+		null
+	}
+
 	def tryStop() {
+		// force shutdown aria2
+		sendAriaForceShutdown()
 		/// TODO
 	}
 }
