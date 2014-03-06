@@ -125,11 +125,13 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	def activateAria2() {
 		LogWriter.writeLog("Starting aria2c...", Level.INFO)
 		_aria2Process = new ProcessBuilder("aria2c", "--enable-rpc").start()
+		_aria2Process.waitFor()
 	}
 
 	def sendAriaForceShutdown() {
 		if (_xmlRpcClient != null) {
-			val result: String = _xmlRpcClient.execute("aria2.forceShutdown", Array[Object]()).asInstanceOf[String]
+			val params: Array[Object] = new Array(0)
+			val result: String = _xmlRpcClient.execute("aria2.forceShutdown", params).asInstanceOf[String]
 			// DEBUG
 			System.out.println("aria2 force shutdown, result: " + result)
 		}
