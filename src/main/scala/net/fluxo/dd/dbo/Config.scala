@@ -1,5 +1,7 @@
 package net.fluxo.dd.dbo
 
+import java.net.ConnectException
+
 /**
  * User: Ronald Kurniawan (viper)
  * Date: 5/03/14
@@ -34,6 +36,23 @@ class Config {
 	def GooglePassword: Option[String] = _googlePassword
 	def GooglePassword_= (value: String) {
 		_googlePassword = Some(value)
+	}
+
+	private var _xmppServer: Option[String] = None
+
+	def XMPPServer: Option[String] = _xmppServer
+	def XMPPServer_= (value:String) {
+		_xmppServer = Some(value)
+	}
+
+	private var _xmppPort: Int = 0
+
+	def XMPPPort: Int = _xmppPort
+	def XMPPPort_= (value: Int) {
+		val correctInput: Boolean =  value >= 0 && value <= 65535
+		if (correctInput) {
+			_xmppPort = value
+		} else throw new ConnectException("Port number is between 0 - 65535 inclusive")
 	}
 
 	private var _xmppAccount: Option[String] = None

@@ -23,13 +23,16 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	private var _aria2Process: Process = _
 	private var _tDlMonitor: Option[DownloadMonitor] = None
 	private var _threadDlMonitor: Thread = null
+	private var _tXMPPMonitor: Option[XMPPMonitor] = None
+	private var _threadXMPPMonitor: Thread = null
+	private val _config = readConfiguration
+	private val _runningGoogle = _config.GoogleAccount.isDefined && _config.GooglePassword.isDefined
 
 	override def run() {
 		_isRunning = true
 		dbMan.setup()
 		LogWriter.writeLog("Daemon started on " + LogWriter.currentDateTime, Level.INFO)
-		val config = readConfiguration
-		if (config.isEmpty) {
+		if (_config.isEmpty) {
 			LogWriter.writeLog("DownloadDaemon configuration is empty", Level.ERROR)
 			_isRunning = false
 			return
@@ -40,13 +43,13 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			return
 		}
 		if (isRPCPortInUse) {
-			LogWriter.writeLog("RPC Port " +  config.RPCPort + " is in use; assumed aria2 has been started", Level.INFO)
+			LogWriter.writeLog("RPC Port " +  _config.RPCPort + " is in use; assumed aria2 has been started", Level.INFO)
 			_isRunning = false
 			return
 		} else {
 			activateAria2()
 			if (_aria2Process != null) {
-				val url: String = "http://127.0.0.1:" + config.RPCPort + "/rpc"
+				val url: String = "http://127.0.0.1:" + _config.RPCPort + "/rpc"
 				val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
 				xmlClientConfig.setServerURL(new URL(url))
 				_xmlRpcClient = new XmlRpcClient()
@@ -59,6 +62,10 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_tDlMonitor = Some(dlMon)
 			_threadDlMonitor = new Thread(_tDlMonitor.getOrElse(null))
 			_threadDlMonitor.start()
+			val xmppMon: XMPPMonitor = {
+				if (_runningGoogle) new XMPPMonitor()
+				else new XMPPMonitor()
+			}
 		}
 	}
 
@@ -75,6 +82,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			cfg.RPCPort_= (java.lang.Integer.parseInt(prop.getProperty("rpc_port")))
 			cfg.GoogleAccount_= (prop.getProperty("google_account"))
 			cfg.GooglePassword_=(prop.getProperty("google_password"))
+			cfg.XMPPServer_=(prop.getProperty("xmpp_server"))
+			cfg.XMPPPort_=(java.lang.Integer.parseInt(prop.getProperty("xmpp_port")))
 			cfg.XMPPAccount_=(prop.getProperty("xmpp_account"))
 			cfg.XMPPPassword_=(prop.getProperty("xmpp_password"))
 			cfg.DownloadDir_=(prop.getProperty("download_dir"))
@@ -124,25 +133,35 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 
 	def activateAria2() {
 		LogWriter.writeLog("Starting aria2c...", Level.INFO)
-		_aria2Process = new ProcessBuilder("aria2c", "--enable-rpc").start()
+		_aria2Process = new ProcessBuilder("aria2c", "--enable-rpc", "--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
+		"--seed-ratio=0.1", "--rpc-listen-all=false").start()
 		_aria2Process.waitFor()
 	}
 
 	def sendAriaForceShutdown() {
 		if (_xmlRpcClient != null) {
 			val params: Array[Object] = new Array(0)
-			val result: String = _xmlRpcClient.execute("aria2.forceShutdown", params).asInstanceOf[String]
-			// DEBUG
-			System.out.println("aria2 force shutdown, result: " + result)
+			 _xmlRpcClient.execute("aria2.forceShutdown", params).asInstanceOf[String]
 		}
 	}
 
 	def sendAriaTellStatus(gid: String): TaskStatus = {
-		val ts: TaskStatus = null
+		val ts: TaskStatus = new TaskStatus
 		if (_xmlRpcClient != null) {
-			_xmlRpcClient.execute("aria2.tellStatus", Array[Object](Array[String](gid)))
+			val retObject = _xmlRpcClient.execute("aria2.tellStatus", Array[Object](Array[String](gid)))
 		}
 		ts
+	}
+
+	def sendAriaUri(uri: String): String = {
+		var downloadGID: String = null
+		if (_xmlRpcClient != null) {
+			val params = Array[Object](Array[String](uri))
+			downloadGID = _xmlRpcClient.execute("aria2.addUri", params).asInstanceOf[String]
+		}
+		// DEBUG
+		System.out.println("Added torrent uri, returned value: " + downloadGID)
+		downloadGID
 	}
 
 	def tryStop() {
