@@ -4,6 +4,7 @@ import org.jivesoftware.smack._
 import org.apache.log4j.Level
 import org.joda.time.DateTime
 import org.jivesoftware.smack.packet.{Presence, Message}
+import net.fluxo.dd.dbo.Task
 
 /**
  * User: viper
@@ -11,7 +12,7 @@ import org.jivesoftware.smack.packet.{Presence, Message}
  * Time: 11:51 AM
  *
  */
-class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppAccount: String, xmppPassword: String) extends Runnable {
+class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppAccount: String, xmppPassword: String, parent: DaemonThread) extends Runnable {
 
 	@volatile
 	private var _isRunning = true
@@ -245,22 +246,45 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 		LogWriter.writeLog("Trying to shut down XMPP Monitoring thread before shutdown...", Level.INFO)
 		_isRunning = false
 	}
-}
 
-class XMPPChatListener extends ChatManagerListener {
-	def chatCreated(chat: Chat, createdLocally: Boolean) {
-		chat.addMessageListener(new XMPPMessageListener)
-	}
-}
-
-class XMPPMessageListener extends MessageListener {
-	def processMessage(chat: Chat, message: Message) {
-		if (message != null && message.getBody != null) {
-			triggerNewProcess(message.getBody)
+	class XMPPChatListener extends ChatManagerListener {
+		def chatCreated(chat: Chat, createdLocally: Boolean) {
+			chat.addMessageListener(new XMPPMessageListener)
 		}
 	}
 
-	def triggerNewProcess(msg: String) {
-		LogWriter.writeLog("Received message: " + msg, Level.INFO)
+	class XMPPMessageListener extends MessageListener {
+		def processMessage(chat: Chat, message: Message) {
+			if (message != null && message.getBody != null) {
+				val response: String = parseMessage(message.getBody, message.getFrom)
+				chat.sendMessage(response)
+			}
+		}
+
+		def parseMessage(msg: String, owner: String): String = {
+			LogWriter.writeLog("Received message: " + msg, Level.INFO)
+			val words: Array[String] = msg.split(" ")
+			if (words.length < 3) return "ERR LENGTH"
+			if (!words(0).equals("DD")) return "ERR NOTIFIER"
+			//DEBUG
+			System.out.println("uri: " + words(2))
+			words(1) match {
+				case "ADD_URI" =>
+					parent.sendAriaUri(words(2), owner)
+				case "STATUS" =>
+					val tasks: Array[Task] = parent.getUserDownloadsStatus(owner)
+					val sb: StringBuilder = new StringBuilder
+					for (t <- tasks) {
+						val progress: Double = (t.TaskCompletedLength.asInstanceOf[Double] / t.TaskTotalLength.asInstanceOf[Double]) * 100
+						val dlName: String = {
+							if (t.TaskDirectory.getOrElse(null).length > 1) t.TaskDirectory.getOrElse(null)
+							else t.TaskFile.getOrElse(null)
+						}
+						sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
+					}
+					sb.toString()
+				case _ => "ERR CMD"
+			}
+		}
 	}
 }

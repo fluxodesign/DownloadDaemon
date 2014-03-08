@@ -1,8 +1,10 @@
 package net.fluxo.dd
 
-import java.sql.{DriverManager, Connection}
+import java.sql.{Timestamp, DriverManager, Connection}
 import org.apache.log4j.Level
 import net.fluxo.dd.dbo.Task
+import org.joda.time.DateTime
+import scala.collection.mutable
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -28,8 +30,116 @@ class DbManager {
 		}
 	}
 
-	def addTask(task: Task) {
-		val insertStatement = """INSERT INTO input(gid,input,start,rpc_port) VALUES(?,?,?,?)"""
+	def addTask(task: Task): Boolean = {
+		val insertStatement = """INSERT INTO input(gid,input,start,owner) VALUES(?,?,?,?)"""
+		var response: Boolean = true
+		try {
+			val ps = _conn.prepareStatement(insertStatement)
+			ps.setString(1, task.TaskGID.getOrElse(null))
+			ps.setString(2, task.TaskInput.getOrElse(null))
+			ps.setTimestamp(3, new Timestamp(task.TaskStarted))
+			ps.setString(4, task.TaskOwner.getOrElse(null))
+			val inserted = ps.executeUpdate()
+			if (inserted == 0) {
+				LogWriter.writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				response = false
+			}
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error inserting new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	def updateTask(task: Task): Boolean = {
+		var response: Boolean = true
+		val updateStatement = """UPDATE input SET status = ?, completed_length = ?, total_length = ? WHERE gid = ? AND owner = ?"""
+		try {
+			val ps = _conn.prepareStatement(updateStatement)
+			ps.setString(1, task.TaskStatus.getOrElse(null))
+			ps.setLong(2, task.TaskCompletedLength)
+			ps.setLong(3, task.TaskTotalLength)
+			ps.setString(4, task.TaskGID.getOrElse(null))
+			ps.setString(5, task.TaskOwner.getOrElse(null))
+			val updated = ps.executeUpdate()
+			if (updated == 0) {
+				LogWriter.writeLog("Failed to update task with GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				response = false
+			}
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error updating task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	def finishTask(task: Task): Boolean = {
+		var response: Boolean = true
+		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE gid = ? AND owner = ?"""
+		try {
+			val ps = _conn.prepareStatement(updateStatement)
+			ps.setTimestamp(1, new Timestamp(DateTime.now().getMillis))
+			ps.setBoolean(2, true)
+			ps.setString(3, task.TaskStatus.getOrElse(null))
+			ps.setLong(4, task.TaskCompletedLength)
+			ps.setString(5, task.TaskGID.getOrElse(null))
+			ps.setString(6, task.TaskOwner.getOrElse(null))
+			val updated = ps.executeUpdate()
+			if (updated == 0) {
+				LogWriter.writeLog("Failed to update finished task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				response = false
+			}
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error updating status for finished task with GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	def queryTasks(owner: String): Array[Task] = {
+		val queryStatement = """SELECT * FROM input WHERE owner = ? AND completed = ?"""
+		val mlist = new mutable.MutableList[Task]
+		try {
+			val ps = _conn.prepareStatement(queryStatement)
+			ps.setString(1, owner)
+			ps.setBoolean(2, false)
+			val rs = ps.executeQuery()
+			while (rs.next()) {
+				mlist.+=(new Task {
+					TaskGID_=(rs.getString("gid"))
+					TaskInput_=(rs.getString("input"))
+					TaskStarted_=(rs.getTimestamp("start").getTime)
+					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+					IsTaskCompleted_=(rs.getBoolean("completed"))
+					TaskOwner_=(rs.getString("owner"))
+					TaskDirectory_=(rs.getString("directory"))
+					TaskFile_=(rs.getString("file"))
+					TaskStatus_=(rs.getString("status"))
+					TaskTotalLength_=(rs.getLong("total_length"))
+					TaskCompletedLength_=(rs.getLong("completed_length"))
+				})
+			}
+			ps.close()
+			rs.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error querying active task(s) for owner " + owner, Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+		}
+		mlist.toArray
 	}
 
 	def cleanup() {

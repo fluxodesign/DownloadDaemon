@@ -3,12 +3,13 @@ package net.fluxo.dd
 import org.apache.log4j.Level
 import java.io._
 import java.net.{URL, ServerSocket}
-import net.fluxo.dd.dbo.{TaskStatus, Config}
+import net.fluxo.dd.dbo.{Task, TaskStatus, Config}
 import java.util.Properties
 import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
 import org.apache.xmlrpc.common.{XmlRpcStreamConfig, XmlRpcController, TypeFactoryImpl}
 import org.apache.xmlrpc.serializer.{StringSerializer, TypeSerializer}
 import org.xml.sax.{SAXException, ContentHandler}
+import org.joda.time.DateTime
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -47,14 +48,17 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			return
 		} else {
 			activateAria2()
+			// DEBUG
+			/*System.out.println("_aria2Process null? " + _aria2Process == null)
 			if (_aria2Process != null) {
 				val url: String = "http://127.0.0.1:" + _config.RPCPort + "/rpc"
 				val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
 				xmlClientConfig.setServerURL(new URL(url))
+				LogWriter.writeLog("Starting XML-RPC client...", Level.INFO)
 				_xmlRpcClient = new XmlRpcClient()
 				_xmlRpcClient.setConfig(xmlClientConfig)
 				_xmlRpcClient.setTypeFactory(new XmlRpcTypeFactory(_xmlRpcClient))
-			}
+			}*/
 		}
 		if (_isRunning) {
 			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan)
@@ -63,9 +67,9 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_threadDlMonitor.start()
 			val xmppMon: XMPPMonitor = {
 				if (_config.XMPPProvider.getOrElse(null).toLowerCase.equals("google")) {
-					new XMPPMonitor("google", "talk.google.com", 5222, _config.XMPPAccount.getOrElse(null), _config.XMPPPassword.getOrElse(null))
+					new XMPPMonitor("google", "talk.google.com", 5222, _config.XMPPAccount.getOrElse(null), _config.XMPPPassword.getOrElse(null), this)
 				} else if (_config.XMPPProvider.getOrElse(null).toLowerCase.equals("facebook")) {
-					new XMPPMonitor("facebook", "chat.facebook.com", 5222, _config.XMPPAccount.getOrElse(null), _config.XMPPPassword.getOrElse(null))
+					new XMPPMonitor("facebook", "chat.facebook.com", 5222, _config.XMPPAccount.getOrElse(null), _config.XMPPPassword.getOrElse(null), this)
 				} else null
 			}
 			_tXMPPMonitor = Some(xmppMon)
@@ -138,10 +142,15 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		new Thread(new AriaThread).start()
 	}
 
-	def sendAriaForceShutdown() {
-		if (_xmlRpcClient != null) {
-			val params: Array[Object] = new Array(0)
-			 _xmlRpcClient.execute("aria2.forceShutdown", params).asInstanceOf[String]
+	def startXmlRpcClient() {
+		if (_aria2Process != null) {
+			val url: String = "http://127.0.0.1:" + _config.RPCPort + "/rpc"
+			val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
+			xmlClientConfig.setServerURL(new URL(url))
+			LogWriter.writeLog("Starting XML-RPC client...", Level.INFO)
+			_xmlRpcClient = new XmlRpcClient()
+			_xmlRpcClient.setConfig(xmlClientConfig)
+			_xmlRpcClient.setTypeFactory(new XmlRpcTypeFactory(_xmlRpcClient))
 		}
 	}
 
@@ -153,21 +162,32 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		ts
 	}
 
-	def sendAriaUri(uri: String): String = {
-		var downloadGID: String = null
-		if (_xmlRpcClient != null) {
-			val params = Array[Object](Array[String](uri))
-			downloadGID = _xmlRpcClient.execute("aria2.addUri", params).asInstanceOf[String]
+	def sendAriaUri(uri: String, owner: String): String = {
+		var downloadGID: String = "ERR ADD_TASK FAILED"
+		if (_xmlRpcClient == null) {
+			startXmlRpcClient()
 		}
-		// DEBUG
-		System.out.println("Added torrent uri, returned value: " + downloadGID)
+		val params = Array[Object](Array[String](uri))
+		downloadGID = _xmlRpcClient.execute("aria2.addUri", params).asInstanceOf[String]
+		val newTask: Task = new Task {
+			TaskGID_=(downloadGID)
+			TaskInput_=(uri)
+			TaskStarted_=(DateTime.now.getMillis)
+			TaskOwner_=(owner)
+		}
+		dbMan.addTask(newTask)
 		downloadGID
 	}
 
+	def getUserDownloadsStatus(owner: String): Array[Task] = {
+		dbMan.queryTasks(owner)
+	}
+
 	def tryStop() {
-		// force shutdown aria2
-		LogWriter.writeLog("Shutting down aria2...", Level.INFO)
-		sendAriaForceShutdown()
+		// Destroy aria2 process..
+		if (_aria2Process != null) {
+			_aria2Process.destroy()
+		}
 		/// TODO
 		if (_tDlMonitor.isDefined) {
 			_tDlMonitor.getOrElse(null).stop()
@@ -199,7 +219,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 
 	class AriaThread extends Runnable {
 		override def run() {
-			_aria2Process = new ProcessBuilder("aria2c", "--enable-rpc", "--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
+			_aria2Process = new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + _config.RPCPort,
+				"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
 				"--seed-ratio=0.1", "--rpc-listen-all=false").start()
 			_aria2Process.waitFor()
 		}
