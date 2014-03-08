@@ -25,7 +25,7 @@ object LogWriter {
 				if (isMailAppenderActive) mailLogger.trace(message)
 			case Level.INFO =>
 				rootLogger.info(message)
-				if (isMailAppenderActive) mailLogger.info(message)
+				//if (isMailAppenderActive) mailLogger.info(message)
 			case Level.FATAL =>
 				rootLogger.fatal(message)
 				if (isMailAppenderActive) mailLogger.fatal(message)
@@ -34,7 +34,7 @@ object LogWriter {
 				if (isMailAppenderActive) mailLogger.error(message)
 			case Level.DEBUG =>
 				rootLogger.debug(message)
-				if (isMailAppenderActive) mailLogger.debug(message)
+				//if (isMailAppenderActive) mailLogger.debug(message)
 		}
 	}
 

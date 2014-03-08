@@ -75,12 +75,12 @@
         <dependency>
             <groupId>jivesoftware</groupId>
             <artifactId>smack</artifactId>
-            <version>3.1.0</version>
+            <version>3.4.1-0cec571</version>
         </dependency>
         <dependency>
             <groupId>jivesoftware</groupId>
             <artifactId>smackx</artifactId>
-            <version>3.1.0</version>
+            <version>3.4.1-0cec571</version>
         </dependency>
 	</dependencies>
 

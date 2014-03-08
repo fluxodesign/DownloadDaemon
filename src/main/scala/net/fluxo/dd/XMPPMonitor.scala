@@ -3,7 +3,7 @@ package net.fluxo.dd
 import org.jivesoftware.smack._
 import org.apache.log4j.Level
 import org.joda.time.DateTime
-import org.jivesoftware.smack.packet.Message
+import org.jivesoftware.smack.packet.{Presence, Message}
 
 /**
  * User: viper
@@ -11,7 +11,7 @@ import org.jivesoftware.smack.packet.Message
  * Time: 11:51 AM
  *
  */
-class XMPPMonitor(xmppServer: String, xmppPort: Int, xmppAccount: String, xmppPassword: String) extends Runnable {
+class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppAccount: String, xmppPassword: String) extends Runnable {
 
 	@volatile
 	private var _isRunning = true
@@ -20,12 +20,11 @@ class XMPPMonitor(xmppServer: String, xmppPort: Int, xmppAccount: String, xmppPa
 	private var _xmppConnected: Boolean = false
 	private var _xmppAuthenticated: Boolean = false
 
-	def this(googleAccount: String, googlePassword: String) {
-		this("", 0, googleAccount, googlePassword)
-	}
-
 	def setup() {
-		_smackConfig = new ConnectionConfiguration(xmppServer, xmppPort)
+		_smackConfig = {
+			if (xmppProvider.equals("google")) new ConnectionConfiguration(xmppServer, xmppPort, "gmail.com")
+			else new ConnectionConfiguration(xmppServer, xmppPort, xmppServer)
+		}
 		_smackConfig.setReconnectionAllowed(true)
 		_smackConfig.setSendPresence(true)
 		_smackConfig.setSASLAuthenticationEnabled(true)
@@ -55,7 +54,9 @@ class XMPPMonitor(xmppServer: String, xmppPort: Int, xmppAccount: String, xmppPa
 				case xmppEx: XMPPException =>
 				    LogWriter.writeLog("Failed to connect to chat server", Level.ERROR)
 					LogWriter.writeLog(xmppEx.getMessage, Level.ERROR)
-					LogWriter.writeLog("XMPP ERROR: " + xmppEx.getXMPPError.getMessage, Level.ERROR)
+					if (xmppEx.getXMPPError != null) {
+						LogWriter.writeLog("XMPP ERROR: " + xmppEx.getXMPPError.getMessage, Level.ERROR)
+					}
 					LogWriter.writeLog(LogWriter.stackTraceToString(xmppEx), Level.ERROR)
 				case ex: Exception =>
 					LogWriter.writeLog("Failed to connect to chat server", Level.ERROR)
@@ -71,14 +72,18 @@ class XMPPMonitor(xmppServer: String, xmppPort: Int, xmppAccount: String, xmppPa
 		while (!_xmppAuthenticated && retries > 0) {
 			try {
 				_xmppc.login(xmppAccount, xmppPassword)
-				_xmppAuthenticated = true
+				_xmppAuthenticated = _xmppc.isAuthenticated
 				LogWriter.writeLog("XMPP Credentials authenticated", Level.INFO)
 				setupListener()
+				val presence: Presence = new Presence(Presence.Type.available)
+				_xmppc.sendPacket(presence)
 			} catch {
 				case xmppEx: XMPPException =>
 				    LogWriter.writeLog("Failed to authenticate to XMPP server", Level.ERROR)
 					LogWriter.writeLog(xmppEx.getMessage, Level.ERROR)
-					LogWriter.writeLog("XMPP ERROR: " + xmppEx.getXMPPError.getMessage, Level.ERROR)
+					if (xmppEx.getXMPPError != null) {
+						LogWriter.writeLog("XMPP ERROR: " + xmppEx.getXMPPError.getMessage, Level.ERROR)
+					}
 				    LogWriter.writeLog(LogWriter.stackTraceToString(xmppEx), Level.ERROR)
 					retries -= 1
 			}
@@ -209,7 +214,7 @@ class XMPPMonitor(xmppServer: String, xmppPort: Int, xmppAccount: String, xmppPa
 					}
 				}
 			case "sentryTask" =>
-				if (!isServerReachable(xmppServer)) {
+				if (!isServerReachable(xmppServer) && !_xmppc.isConnected) {
 					whatToDo = "tryReachServer"
 					_isXmppServerReachable = false
 				} else if (!_xmppc.isConnected || !_xmppc.isAuthenticated) {

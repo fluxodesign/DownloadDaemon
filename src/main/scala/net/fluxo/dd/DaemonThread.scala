@@ -26,7 +26,6 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	private var _tXMPPMonitor: Option[XMPPMonitor] = None
 	private var _threadXMPPMonitor: Thread = null
 	private val _config = readConfiguration
-	private val _runningGoogle = _config.GoogleAccount.isDefined && _config.GooglePassword.isDefined
 
 	override def run() {
 		_isRunning = true
@@ -63,9 +62,15 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_threadDlMonitor = new Thread(_tDlMonitor.getOrElse(null))
 			_threadDlMonitor.start()
 			val xmppMon: XMPPMonitor = {
-				if (_runningGoogle) new XMPPMonitor()
-				else new XMPPMonitor()
+				if (_config.XMPPProvider.getOrElse(null).toLowerCase.equals("google")) {
+					new XMPPMonitor("google", "talk.google.com", 5222, _config.XMPPAccount.getOrElse(null), _config.XMPPPassword.getOrElse(null))
+				} else if (_config.XMPPProvider.getOrElse(null).toLowerCase.equals("facebook")) {
+					new XMPPMonitor("facebook", "chat.facebook.com", 5222, _config.XMPPAccount.getOrElse(null), _config.XMPPPassword.getOrElse(null))
+				} else null
 			}
+			_tXMPPMonitor = Some(xmppMon)
+			_threadXMPPMonitor = new Thread(_tXMPPMonitor.getOrElse(null))
+			_threadXMPPMonitor.start()
 		}
 	}
 
@@ -80,10 +85,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		try {
 			prop.load(new FileInputStream("./dd.properties"))
 			cfg.RPCPort_= (java.lang.Integer.parseInt(prop.getProperty("rpc_port")))
-			cfg.GoogleAccount_= (prop.getProperty("google_account"))
-			cfg.GooglePassword_=(prop.getProperty("google_password"))
-			cfg.XMPPServer_=(prop.getProperty("xmpp_server"))
-			cfg.XMPPPort_=(java.lang.Integer.parseInt(prop.getProperty("xmpp_port")))
+			cfg.XMPPProvider_=(prop.getProperty("xmpp_provider"))
 			cfg.XMPPAccount_=(prop.getProperty("xmpp_account"))
 			cfg.XMPPPassword_=(prop.getProperty("xmpp_password"))
 			cfg.DownloadDir_=(prop.getProperty("download_dir"))
@@ -133,9 +135,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 
 	def activateAria2() {
 		LogWriter.writeLog("Starting aria2c...", Level.INFO)
-		_aria2Process = new ProcessBuilder("aria2c", "--enable-rpc", "--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
-		"--seed-ratio=0.1", "--rpc-listen-all=false").start()
-		_aria2Process.waitFor()
+		new Thread(new AriaThread).start()
 	}
 
 	def sendAriaForceShutdown() {
@@ -166,11 +166,16 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 
 	def tryStop() {
 		// force shutdown aria2
+		LogWriter.writeLog("Shutting down aria2...", Level.INFO)
 		sendAriaForceShutdown()
 		/// TODO
 		if (_tDlMonitor.isDefined) {
 			_tDlMonitor.getOrElse(null).stop()
 			_threadDlMonitor.interrupt()
+		}
+		if (_tXMPPMonitor.isDefined) {
+			_tXMPPMonitor.getOrElse(null).stop()
+			_threadXMPPMonitor.interrupt()
 		}
 	}
 
@@ -189,6 +194,14 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 				case _ => super.getSerializer(pConfig, pObject)
 			}
 			response
+		}
+	}
+
+	class AriaThread extends Runnable {
+		override def run() {
+			_aria2Process = new ProcessBuilder("aria2c", "--enable-rpc", "--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
+				"--seed-ratio=0.1", "--rpc-listen-all=false").start()
+			_aria2Process.waitFor()
 		}
 	}
 }
