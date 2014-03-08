@@ -48,17 +48,6 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			return
 		} else {
 			activateAria2()
-			// DEBUG
-			/*System.out.println("_aria2Process null? " + _aria2Process == null)
-			if (_aria2Process != null) {
-				val url: String = "http://127.0.0.1:" + _config.RPCPort + "/rpc"
-				val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
-				xmlClientConfig.setServerURL(new URL(url))
-				LogWriter.writeLog("Starting XML-RPC client...", Level.INFO)
-				_xmlRpcClient = new XmlRpcClient()
-				_xmlRpcClient.setConfig(xmlClientConfig)
-				_xmlRpcClient.setTypeFactory(new XmlRpcTypeFactory(_xmlRpcClient))
-			}*/
 		}
 		if (_isRunning) {
 			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan)

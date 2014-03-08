@@ -266,8 +266,6 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 			val words: Array[String] = msg.split(" ")
 			if (words.length < 3) return "ERR LENGTH"
 			if (!words(0).equals("DD")) return "ERR NOTIFIER"
-			//DEBUG
-			System.out.println("uri: " + words(2))
 			words(1) match {
 				case "ADD_URI" =>
 					parent.sendAriaUri(words(2), owner)
