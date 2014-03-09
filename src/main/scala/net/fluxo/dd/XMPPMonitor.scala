@@ -23,7 +23,8 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 
 	def setup() {
 		_smackConfig = {
-			if (xmppProvider.equals("google")) new ConnectionConfiguration(xmppServer, xmppPort, "gmail.com")
+			//if (xmppProvider.equals("google")) new ConnectionConfiguration(xmppServer, xmppPort, "gmail.com")
+			if (xmppProvider.equals("google")) new ConnectionConfiguration(xmppServer, xmppPort, "googlemail.com")
 			else new ConnectionConfiguration(xmppServer, xmppPort, xmppServer)
 		}
 		_smackConfig.setReconnectionAllowed(true)
