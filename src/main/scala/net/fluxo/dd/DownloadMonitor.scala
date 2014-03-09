@@ -7,14 +7,21 @@ import org.apache.log4j.Level
  * Date: 6/03/14
  * Time: 10:09 PM
  */
-class DownloadMonitor(dbMan: DbManager) extends Runnable {
+class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 
 	@volatile
 	private var _isRunning: Boolean = true
 
 	override def run() {
+		//check for unfinished downloads and restart them...
+		parent.restartAriaDownloads()
 		while (_isRunning) {
 			try {
+				val tasks = dbMan.queryUnfinishedTasks()
+				for (t <- tasks) {
+					parent.sendAriaTellStatus(t.TaskGID.getOrElse(null))
+				}
+
 				Thread.interrupted()
 				Thread.sleep(secondToMillis(10))
 			} catch {

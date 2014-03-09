@@ -264,11 +264,11 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 		def parseMessage(msg: String, owner: String): String = {
 			LogWriter.writeLog("Received message: " + msg, Level.INFO)
 			val words: Array[String] = msg.split(" ")
-			if (words.length < 3) return "ERR LENGTH"
+			if (words.length < 2) return "ERR LENGTH"
 			if (!words(0).equals("DD")) return "ERR NOTIFIER"
 			words(1) match {
 				case "ADD_URI" =>
-					parent.sendAriaUri(words(2), owner)
+					parent.sendAriaUri(words(2), owner, null)
 				case "STATUS" =>
 					val tasks: Array[Task] = parent.getUserDownloadsStatus(owner)
 					val sb: StringBuilder = new StringBuilder

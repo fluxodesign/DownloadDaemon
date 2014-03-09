@@ -131,8 +131,8 @@ class DbManager {
 					TaskCompletedLength_=(rs.getLong("completed_length"))
 				})
 			}
-			ps.close()
 			rs.close()
+			ps.close()
 		} catch {
 			case ex: Exception =>
 				LogWriter.writeLog("Error querying active task(s) for owner " + owner, Level.ERROR)
@@ -140,6 +140,59 @@ class DbManager {
 				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 		}
 		mlist.toArray
+	}
+
+	def queryUnfinishedTasks(): Array[Task] = {
+		val queryStatement = """SELECT * FROM input WHERE completed = ?"""
+		val mlist = new mutable.MutableList[Task]
+		try {
+			val ps = _conn.prepareStatement(queryStatement)
+			ps.setBoolean(1, false)
+			val rs = ps.executeQuery()
+			while (rs.next()) {
+				mlist.+=(new Task {
+					TaskGID_=(rs.getString("gid"))
+					TaskInput_=(rs.getString("input"))
+					TaskStarted_=(rs.getTimestamp("start").getTime)
+					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+					IsTaskCompleted_=(rs.getBoolean("completed"))
+					TaskOwner_=(rs.getString("owner"))
+					TaskDirectory_=(rs.getString("directory"))
+					TaskFile_=(rs.getString("file"))
+					TaskStatus_=(rs.getString("status"))
+					TaskTotalLength_=(rs.getLong("total_length"))
+					TaskCompletedLength_=(rs.getLong("completed_length"))
+				})
+			}
+			rs.close()
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error querying all active task(s)", Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+		}
+		mlist.toArray
+	}
+
+	def replaceGID(oldGID: String, newGID: String, owner: String) {
+		val updateStatement = """UPDATE input SET gid = ? WHERE gid = ? AND owner = ?"""
+		try {
+			val ps = _conn.prepareStatement(updateStatement)
+			ps.setString(1, newGID)
+			ps.setString(2, oldGID)
+			ps.setString(3, owner)
+			val updated = ps.executeUpdate()
+			if (updated == 0) {
+				LogWriter.writeLog("Failed to replace new GID for GID: " + oldGID, Level.ERROR)
+			}
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error replacing new GID for GID: " + oldGID, Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+		}
 	}
 
 	def cleanup() {

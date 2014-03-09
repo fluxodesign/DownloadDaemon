@@ -50,7 +50,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			activateAria2()
 		}
 		if (_isRunning) {
-			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan)
+			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan, this)
 			_tDlMonitor = Some(dlMon)
 			_threadDlMonitor = new Thread(_tDlMonitor.getOrElse(null))
 			_threadDlMonitor.start()
@@ -146,30 +146,59 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	def sendAriaTellStatus(gid: String): TaskStatus = {
 		val ts: TaskStatus = new TaskStatus
 		if (_xmlRpcClient != null) {
-			val retObject = _xmlRpcClient.execute("aria2.tellStatus", Array[Object](Array[String](gid)))
+			// DEBUG
+			System.out.println("Querying status for GID " + gid)
+			val params = Array[Object](gid)
+			val retObject = _xmlRpcClient.execute("aria2.tellStatus", params)
+			// Returned XML-RPC is a HashMap...
+			val jMap = retObject.asInstanceOf[java.util.HashMap[String, Object]]
+			val iterator = jMap.entrySet().iterator()
+			while (iterator.hasNext) {
+				val entry: java.util.Map.Entry[String, Object] = iterator.next()
+				// DEBUG
+				if (entry.getKey.equals("files")) {
+					val vals = entry.getValue.asInstanceOf[Array[Object]]
+					System.out.println(entry.getKey + "-->")
+					for (o <- vals) {
+						System.out.println(o)
+					}
+				} else System.out.println(entry.getKey + " --> " + entry.getValue)
+			}
 		}
 		ts
 	}
 
-	def sendAriaUri(uri: String, owner: String): String = {
+	def sendAriaUri(uri: String, owner: String, t: Task): String = {
 		var downloadGID: String = "ERR ADD_TASK FAILED"
 		if (_xmlRpcClient == null) {
 			startXmlRpcClient()
 		}
 		val params = Array[Object](Array[String](uri))
 		downloadGID = _xmlRpcClient.execute("aria2.addUri", params).asInstanceOf[String]
-		val newTask: Task = new Task {
-			TaskGID_=(downloadGID)
-			TaskInput_=(uri)
-			TaskStarted_=(DateTime.now.getMillis)
-			TaskOwner_=(owner)
+		if (t == null) {
+			val newTask: Task = new Task {
+				TaskGID_=(downloadGID)
+				TaskInput_=(uri)
+				TaskStarted_=(DateTime.now.getMillis)
+				TaskOwner_=(owner)
+			}
+			dbMan.addTask(newTask)
+		} else {
+			dbMan.replaceGID(t.TaskGID.getOrElse(null), downloadGID, t.TaskOwner.getOrElse(null))
 		}
-		dbMan.addTask(newTask)
 		downloadGID
 	}
 
 	def getUserDownloadsStatus(owner: String): Array[Task] = {
 		dbMan.queryTasks(owner)
+	}
+
+	def restartAriaDownloads() {
+		val activeTasks = dbMan.queryUnfinishedTasks()
+		for (t <- activeTasks) {
+			LogWriter.writeLog("Resuming download for " + t.TaskGID.getOrElse(null), Level.INFO)
+			sendAriaUri(t.TaskInput.getOrElse(null), t.TaskOwner.getOrElse(null), t)
+		}
 	}
 
 	def tryStop() {
