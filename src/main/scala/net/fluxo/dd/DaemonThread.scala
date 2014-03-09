@@ -168,6 +168,28 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		ts
 	}
 
+	def sendAriaTellActive() {
+		if (_xmlRpcClient == null) {
+			startXmlRpcClient()
+		}
+		val params = Array[Object]()
+		val retObject = _xmlRpcClient.execute("aria2.tellActive", params)
+		// Returned XML-RPC is a HashMap...
+		val jMap = retObject.asInstanceOf[java.util.HashMap[String, Object]]
+		val iterator = jMap.entrySet().iterator()
+		while (iterator.hasNext) {
+			val entry: java.util.Map.Entry[String, Object] = iterator.next()
+			// DEBUG
+			if (entry.getKey.equals("files")) {
+				val vals = entry.getValue.asInstanceOf[Array[Object]]
+				System.out.println(entry.getKey + "-->")
+				for (o <- vals) {
+					System.out.println(o)
+				}
+			} else System.out.println(entry.getKey + " --> " + entry.getValue)
+		}
+	}
+
 	def sendAriaUri(uri: String, owner: String, t: Task): String = {
 		var downloadGID: String = "ERR ADD_TASK FAILED"
 		if (_xmlRpcClient == null) {

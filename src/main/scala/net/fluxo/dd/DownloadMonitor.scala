@@ -19,7 +19,8 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 			try {
 				val tasks = dbMan.queryUnfinishedTasks()
 				for (t <- tasks) {
-					parent.sendAriaTellStatus(t.TaskGID.getOrElse(null))
+					//parent.sendAriaTellStatus(t.TaskGID.getOrElse(null))
+					parent.sendAriaTellActive()
 				}
 
 				Thread.interrupted()
