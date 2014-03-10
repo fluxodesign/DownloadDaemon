@@ -62,6 +62,10 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 					if (!_isRunning) {
 						cleanup()
 					}
+				case e: Exception =>
+					if (!_isRunning) {
+						cleanup()
+					}
 			}
 		}
 	}
