@@ -10,6 +10,7 @@ import org.apache.xmlrpc.common.{XmlRpcStreamConfig, XmlRpcController, TypeFacto
 import org.apache.xmlrpc.serializer.{StringSerializer, TypeSerializer}
 import org.xml.sax.{SAXException, ContentHandler}
 import org.joda.time.DateTime
+import java.util
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -165,7 +166,9 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		if (_xmlRpcClient == null) {
 			startXmlRpcClient()
 		}
-		val params = Array[Object]()
+		val params = new util.ArrayList[Int]()
+		params.add(0)
+		params.add(100)
 		val retObject = _xmlRpcClient.execute("aria2.tellStopped", params)
 		retObject.asInstanceOf[Array[Object]]
 	}
