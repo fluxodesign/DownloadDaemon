@@ -57,16 +57,17 @@ class DbManager {
 
 	def updateTask(task: Task): Boolean = {
 		var response: Boolean = true
-		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
+		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
 		try {
 			val ps = _conn.prepareStatement(updateStatement)
 			ps.setString(1, task.TaskPackage.getOrElse(null))
 			ps.setString(2, task.TaskStatus.getOrElse(null))
 			ps.setLong(3, task.TaskCompletedLength)
 			ps.setLong(4, task.TaskTotalLength)
-			ps.setString(5, task.TaskGID.getOrElse(null))
-			ps.setString(6, task.TaskTailGID.getOrElse(null))
-			ps.setString(7, task.TaskOwner.getOrElse(null))
+			ps.setString(5, task.TaskInfoHash.getOrElse("XXX"))
+			ps.setString(6, task.TaskGID.getOrElse(null))
+			ps.setString(7, task.TaskTailGID.getOrElse(null))
+			ps.setString(8, task.TaskOwner.getOrElse(null))
 			val updated = ps.executeUpdate()
 			if (updated == 0) {
 				LogWriter.writeLog("Failed to update task with GID " + task.TaskGID.getOrElse(null), Level.ERROR)
@@ -106,26 +107,50 @@ class DbManager {
 		response
 	}
 
-	def finishTask(task: Task): Boolean = {
+	def queryFinishTask(tailGID: String, infoHash: String, tl: Long): Int = {
+		var count = 0
+		val queryStatement = """SELECT COUNT(*) AS count FROM input WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND completed = false"""
+		try {
+			val ps = _conn.prepareStatement(queryStatement)
+			ps.setString(1, tailGID)
+			ps.setString(2, infoHash)
+			ps.setLong(3, tl)
+			val rs = ps.executeQuery()
+			while (rs.next()) {
+				count = rs.getInt("count")
+			}
+			rs.close()
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error querying almost finish task(s) with tail GID " + tailGID, Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+		}
+		count
+	}
+
+	def finishTask(status: String, cl: Long, tailGID: String, infoHash: String, tl: Long): Boolean = {
 		var response: Boolean = true
-		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE gid = ? AND owner = ?"""
+		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE tail_gid = ? AND info_hash = ? AND total_length = ?"""
 		try {
 			val ps = _conn.prepareStatement(updateStatement)
 			ps.setTimestamp(1, new Timestamp(DateTime.now().getMillis))
 			ps.setBoolean(2, true)
-			ps.setString(3, task.TaskStatus.getOrElse(null))
-			ps.setLong(4, task.TaskCompletedLength)
-			ps.setString(5, task.TaskGID.getOrElse(null))
-			ps.setString(6, task.TaskOwner.getOrElse(null))
+			ps.setString(3, status)
+			ps.setLong(4, cl)
+			ps.setString(5, tailGID)
+			ps.setString(6, infoHash)
+			ps.setLong(7, tl)
 			val updated = ps.executeUpdate()
 			if (updated == 0) {
-				LogWriter.writeLog("Failed to update finished task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter.writeLog("Failed to update finished task for tail GID " + tailGID, Level.ERROR)
 				response = false
 			}
 			ps.close()
 		} catch {
 			case ex: Exception =>
-				LogWriter.writeLog("Error updating status for finished task with GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter.writeLog("Error updating status for finished task with GID " + tailGID, Level.ERROR)
 				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 				if (response) response = false
@@ -154,6 +179,7 @@ class DbManager {
 					TaskStatus_=(rs.getString("status"))
 					TaskTotalLength_=(rs.getLong("total_length"))
 					TaskCompletedLength_=(rs.getLong("completed_length"))
+					TaskInfoHash_=(rs.getString("info_hash"))
 				})
 			}
 			rs.close()
@@ -187,6 +213,7 @@ class DbManager {
 					TaskStatus_=(rs.getString("status"))
 					TaskTotalLength_=(rs.getLong("total_length"))
 					TaskCompletedLength_=(rs.getLong("completed_length"))
+					TaskInfoHash_=(rs.getString("info_hash"))
 				})
 			}
 			rs.close()
@@ -220,6 +247,7 @@ class DbManager {
 				t.TaskStatus_=(rs.getString("status"))
 				t.TaskTotalLength_=(rs.getLong("total_length"))
 				t.TaskCompletedLength_=(rs.getLong("completed_length"))
+				t.TaskInfoHash_=(rs.getString("info_hash"))
 			}
 			rs.close()
 			ps.close()

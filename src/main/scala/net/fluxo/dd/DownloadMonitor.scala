@@ -52,7 +52,13 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 				// if a download is over, the "aria2.tellStopped" should show it...
 				val finishedDownloads = parent.sendAriaTellStopped()
 				for (o <- finishedDownloads) {
-					System.out.println("FINISHED: " + o)
+					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
+					val status = extractValueFromHashMap(jMap, "status").toString
+					val gid = extractValueFromHashMap(jMap, "gid").toString
+					val infoHash = extractValueFromHashMap(jMap, "infoHash").toString
+					val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
+					val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
+					if (dbMan.queryFinishTask(gid, infoHash, tl) > 0) dbMan.finishTask(status, cl, gid, infoHash, tl)
 				}
 
 				Thread.interrupted()

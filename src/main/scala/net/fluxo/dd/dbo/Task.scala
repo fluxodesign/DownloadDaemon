@@ -83,4 +83,11 @@ class Task {
 	def TaskCompletedLength_= (value: Long) {
 		_completedLength = value
 	}
+
+	private var _infoHash: Option[String] = None
+
+	def TaskInfoHash: Option[String] = _infoHash
+	def TaskInfoHash_=(value: String) {
+		_infoHash = Some(value)
+	}
 }
