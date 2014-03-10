@@ -20,13 +20,15 @@ object FluxoDownloadDaemon {
 	}
 
 	def attachShutdownHook() {
-		Runtime.getRuntime.addShutdownHook(new Thread {
+		val t: Thread = new Thread {
 			override def run() {
 				LogWriter.writeLog("Shutdown attempted...", Level.INFO)
 				LogWriter.writeLog("Shutting down database...", Level.INFO)
 				_dbMan.cleanup()
 				_dt.tryStop()
 			}
-		})
+		}
+		t.setDaemon(true)
+		Runtime.getRuntime.addShutdownHook(t)
 	}
 }

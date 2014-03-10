@@ -144,12 +144,11 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	}
 
 	def sendAriaTellStatus(gid: String): Object = {
-		var retObject:Object = null
-		if (_xmlRpcClient != null) {
-			val params = Array[Object](gid)
-			retObject = _xmlRpcClient.execute("aria2.tellStatus", params)
+		if (_xmlRpcClient == null) {
+			startXmlRpcClient()
 		}
-		retObject
+		val params = Array[Object](gid)
+		_xmlRpcClient.execute("aria2.tellStatus", params)
 	}
 
 	def sendAriaTellActive(): Array[Object] = {
@@ -159,6 +158,15 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		val params = Array[Object]()
 		val retObject = _xmlRpcClient.execute("aria2.tellActive", params)
 		// Returned XML-RPC is an Array Java HashMap...
+		retObject.asInstanceOf[Array[Object]]
+	}
+
+	def sendAriaTellStopped(): Array[Object] = {
+		if (_xmlRpcClient == null) {
+			startXmlRpcClient()
+		}
+		val params = Array[Object]("0", "100")
+		val retObject = _xmlRpcClient.execute("aria2.tellStopped", params)
 		retObject.asInstanceOf[Array[Object]]
 	}
 

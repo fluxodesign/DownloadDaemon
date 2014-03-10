@@ -37,14 +37,22 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 					val task = {
 						if (tailGID.length > 0) dbMan.queryTaskTailGID(tailGID) else null
 					}
-					task.TaskCompletedLength_=(extractValueFromHashMap(jMap, "completedLength").toString.toLong)
-					task.TaskTotalLength_=(extractValueFromHashMap(jMap, "totalLength").toString.toLong)
+					val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
+					task.TaskCompletedLength_=(cl)
+					val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
+					task.TaskTotalLength_=(tl)
 					task.TaskStatus_=(extractValueFromHashMap(jMap, "status").toString)
 					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
 					val btDetailsMap = extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
 					val infoMap = extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
 					task.TaskPackage_=(extractValueFromHashMap(infoMap, "name").toString)
 					dbMan.updateTask(task)
+				}
+
+				// if a download is over, the "aria2.tellStopped" should show it...
+				val finishedDownloads = parent.sendAriaTellStopped()
+				for (o <- finishedDownloads) {
+					System.out.println("FINISHED: " + o)
 				}
 
 				Thread.interrupted()
