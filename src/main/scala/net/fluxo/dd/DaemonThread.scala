@@ -165,7 +165,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		if (_xmlRpcClient == null) {
 			startXmlRpcClient()
 		}
-		val params = Array[Object](Array[Int](0, 100))
+		val params = Array[Object]()
 		val retObject = _xmlRpcClient.execute("aria2.tellStopped", params)
 		retObject.asInstanceOf[Array[Object]]
 	}
