@@ -1,6 +1,8 @@
 package net.fluxo.dd
 
 import org.apache.log4j.Level
+import java.io.File
+import org.apache.commons.io.FileUtils
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -58,7 +60,18 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 					val infoHash = extractValueFromHashMap(jMap, "infoHash").toString
 					val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
 					val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
-					if (dbMan.queryFinishTask(gid, infoHash, tl) > 0) dbMan.finishTask(status, cl, gid, infoHash, tl)
+					val qf = dbMan.queryFinishTask(gid, infoHash, tl)
+					if (qf.CPCount > 0) {
+						dbMan.finishTask(status, cl, gid, infoHash, tl)
+						// move the package to a directory specified in config...
+						if (parent.configDownloadDir().length > 0) {
+							val packageDir = new File(qf.CPPackage.getOrElse(null))
+							val destDir = new File(parent.configDownloadDir())
+							if (packageDir.isDirectory && packageDir.exists() && destDir.isDirectory && destDir.exists()) {
+								FileUtils.moveDirectory(packageDir, destDir)
+							}
+						}
+					}
 				}
 
 				Thread.interrupted()

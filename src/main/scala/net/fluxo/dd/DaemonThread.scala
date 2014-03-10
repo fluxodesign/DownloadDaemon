@@ -92,6 +92,10 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		cfg
 	}
 
+	def configDownloadDir(): String = {
+		_config.DownloadDir.getOrElse("")
+	}
+
 	def hasAria2: Boolean = {
 		var status = false
 		try {

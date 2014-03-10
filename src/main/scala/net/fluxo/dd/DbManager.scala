@@ -2,7 +2,7 @@ package net.fluxo.dd
 
 import java.sql.{Timestamp, DriverManager, Connection}
 import org.apache.log4j.Level
-import net.fluxo.dd.dbo.Task
+import net.fluxo.dd.dbo.{CountPackage, Task}
 import org.joda.time.DateTime
 import scala.collection.mutable
 
@@ -107,9 +107,9 @@ class DbManager {
 		response
 	}
 
-	def queryFinishTask(tailGID: String, infoHash: String, tl: Long): Int = {
-		var count = 0
-		val queryStatement = """SELECT COUNT(*) AS count FROM input WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND completed = false"""
+	def queryFinishTask(tailGID: String, infoHash: String, tl: Long): CountPackage = {
+		val cp: CountPackage = new CountPackage
+		val queryStatement = """SELECT COUNT(*) AS count, package FROM input WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND completed = false"""
 		try {
 			val ps = _conn.prepareStatement(queryStatement)
 			ps.setString(1, tailGID)
@@ -117,7 +117,8 @@ class DbManager {
 			ps.setLong(3, tl)
 			val rs = ps.executeQuery()
 			while (rs.next()) {
-				count = rs.getInt("count")
+				cp.CPCount_=(rs.getInt("count"))
+				cp.CPPackage_=(rs.getString("package"))
 			}
 			rs.close()
 			ps.close()
@@ -127,7 +128,7 @@ class DbManager {
 				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 		}
-		count
+		cp
 	}
 
 	def finishTask(status: String, cl: Long, tailGID: String, infoHash: String, tl: Long): Boolean = {
