@@ -263,11 +263,12 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 
 		def parseMessage(msg: String, owner: String): String = {
 			LogWriter.writeLog("Received message: " + msg, Level.INFO)
-			val words: Array[String] = msg.split(" ")
+			val words: Array[String] = msg.split("\\s+")
 			if (words.length < 2) return "ERR LENGTH"
 			if (!words(0).equals("DD")) return "ERR NOTIFIER"
 			words(1) match {
 				case "ADD_URI" =>
+					if (words.length < 3) return "ERR LENGTH"
 					parent.sendAriaUri(words(2), owner, null)
 				case "STATUS" =>
 					val tasks: Array[Task] = parent.getUserDownloadsStatus(owner)
@@ -275,8 +276,8 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					for (t <- tasks) {
 						val progress: Double = (t.TaskCompletedLength.asInstanceOf[Double] / t.TaskTotalLength.asInstanceOf[Double]) * 100
 						val dlName: String = {
-							if (t.TaskDirectory.getOrElse(null).length > 1) t.TaskDirectory.getOrElse(null)
-							else t.TaskFile.getOrElse(null)
+							if (t.TaskPackage.getOrElse(null).length > 1) t.TaskPackage.getOrElse(null)
+							else "Unknown Download"
 						}
 						sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
 					}

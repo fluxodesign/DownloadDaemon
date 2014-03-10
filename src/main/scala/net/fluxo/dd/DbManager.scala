@@ -57,14 +57,16 @@ class DbManager {
 
 	def updateTask(task: Task): Boolean = {
 		var response: Boolean = true
-		val updateStatement = """UPDATE input SET status = ?, completed_length = ?, total_length = ? WHERE gid = ? AND owner = ?"""
+		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
 		try {
 			val ps = _conn.prepareStatement(updateStatement)
-			ps.setString(1, task.TaskStatus.getOrElse(null))
-			ps.setLong(2, task.TaskCompletedLength)
-			ps.setLong(3, task.TaskTotalLength)
-			ps.setString(4, task.TaskGID.getOrElse(null))
-			ps.setString(5, task.TaskOwner.getOrElse(null))
+			ps.setString(1, task.TaskPackage.getOrElse(null))
+			ps.setString(2, task.TaskStatus.getOrElse(null))
+			ps.setLong(3, task.TaskCompletedLength)
+			ps.setLong(4, task.TaskTotalLength)
+			ps.setString(5, task.TaskGID.getOrElse(null))
+			ps.setString(6, task.TaskTailGID.getOrElse(null))
+			ps.setString(7, task.TaskOwner.getOrElse(null))
 			val updated = ps.executeUpdate()
 			if (updated == 0) {
 				LogWriter.writeLog("Failed to update task with GID " + task.TaskGID.getOrElse(null), Level.ERROR)
@@ -74,6 +76,29 @@ class DbManager {
 		} catch {
 			case ex: Exception =>
 				LogWriter.writeLog("Error updating task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	def updateTaskTailGID(gid: String, tailGid: String): Boolean = {
+		var response: Boolean = true
+		val updateStatement = """UPDATE input SET tail_gid = ? WHERE gid = ?"""
+		try {
+			val ps = _conn.prepareStatement(updateStatement)
+			ps.setString(1, tailGid)
+			ps.setString(2, gid)
+			val updated = ps.executeUpdate()
+			if (updated == 0) {
+				LogWriter.writeLog("Failed to update tail GID for GID " + gid, Level.ERROR)
+				response = false
+			}
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error updating tail GID for GID " + gid, Level.ERROR)
 				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 				if (response) response = false
@@ -119,13 +144,13 @@ class DbManager {
 			while (rs.next()) {
 				mlist.+=(new Task {
 					TaskGID_=(rs.getString("gid"))
+					TaskTailGID_=(rs.getString("tail_gid"))
 					TaskInput_=(rs.getString("input"))
 					TaskStarted_=(rs.getTimestamp("start").getTime)
 					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
 					IsTaskCompleted_=(rs.getBoolean("completed"))
 					TaskOwner_=(rs.getString("owner"))
-					TaskDirectory_=(rs.getString("directory"))
-					TaskFile_=(rs.getString("file"))
+					TaskPackage_=(rs.getString("package"))
 					TaskStatus_=(rs.getString("status"))
 					TaskTotalLength_=(rs.getLong("total_length"))
 					TaskCompletedLength_=(rs.getLong("completed_length"))
@@ -152,13 +177,13 @@ class DbManager {
 			while (rs.next()) {
 				mlist.+=(new Task {
 					TaskGID_=(rs.getString("gid"))
+					TaskTailGID_=(rs.getString("tail_gid"))
 					TaskInput_=(rs.getString("input"))
 					TaskStarted_=(rs.getTimestamp("start").getTime)
 					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
 					IsTaskCompleted_=(rs.getBoolean("completed"))
 					TaskOwner_=(rs.getString("owner"))
-					TaskDirectory_=(rs.getString("directory"))
-					TaskFile_=(rs.getString("file"))
+					TaskPackage_=(rs.getString("package"))
 					TaskStatus_=(rs.getString("status"))
 					TaskTotalLength_=(rs.getLong("total_length"))
 					TaskCompletedLength_=(rs.getLong("completed_length"))
@@ -175,8 +200,40 @@ class DbManager {
 		mlist.toArray
 	}
 
+	def queryTaskTailGID(tailGid: String): Task = {
+		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ?"""
+		val t = new Task
+		try {
+			val ps = _conn.prepareStatement(queryStatement)
+			ps.setString(1, tailGid)
+			ps.setBoolean(2, false)
+			val rs = ps.executeQuery()
+			while (rs.next()) {
+				t.TaskGID_=(rs.getString("gid"))
+				t.TaskTailGID_=(rs.getString("tail_gid"))
+				t.TaskInput_=(rs.getString("input"))
+				t.TaskStarted_=(rs.getTimestamp("start").getTime)
+				t.TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+				t.IsTaskCompleted_=(rs.getBoolean("completed"))
+				t.TaskOwner_=(rs.getString("owner"))
+				t.TaskPackage_=(rs.getString("package"))
+				t.TaskStatus_=(rs.getString("status"))
+				t.TaskTotalLength_=(rs.getLong("total_length"))
+				t.TaskCompletedLength_=(rs.getLong("completed_length"))
+			}
+			rs.close()
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error querying task with tail GID " + tailGid, Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+		}
+		t
+	}
+
 	def replaceGID(oldGID: String, newGID: String, owner: String) {
-		val updateStatement = """UPDATE input SET gid = ? WHERE gid = ? AND owner = ?"""
+		val updateStatement = """UPDATE input SET gid = ?, tail_gid = ? WHERE gid = ? AND owner = ?"""
 		try {
 			val ps = _conn.prepareStatement(updateStatement)
 			ps.setString(1, newGID)

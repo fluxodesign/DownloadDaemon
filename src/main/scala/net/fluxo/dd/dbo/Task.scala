@@ -14,6 +14,13 @@ class Task {
 		_gid = Some(value)
 	}
 
+	private var _tailGID: Option[String] = None
+
+	def TaskTailGID: Option[String] = _tailGID
+	def TaskTailGID_= (value: String) {
+		_tailGID = Some(value)
+	}
+
 	private var _input: Option[String] = None
 
 	def TaskInput: Option[String] = _input
@@ -49,18 +56,11 @@ class Task {
 		_owner = Some(value)
 	}
 
-	private var _directory: Option[String] = None
+	private var _package: Option[String] = None
 
-	def TaskDirectory: Option[String] = _directory
-	def TaskDirectory_= (value: String) {
-		_directory = Some(value)
-	}
-
-	private var _file: Option[String] = None
-
-	def TaskFile: Option[String] = _file
-	def TaskFile_= (value: String) {
-		_file = Some(value)
+	def TaskPackage: Option[String] = _package
+	def TaskPackage_= (value: String) {
+		_package = Some(value)
 	}
 
 	private var _status: Option[String] = None

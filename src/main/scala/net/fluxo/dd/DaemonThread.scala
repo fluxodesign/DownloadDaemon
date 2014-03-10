@@ -3,7 +3,7 @@ package net.fluxo.dd
 import org.apache.log4j.Level
 import java.io._
 import java.net.{URL, ServerSocket}
-import net.fluxo.dd.dbo.{Task, TaskStatus, Config}
+import net.fluxo.dd.dbo.{Task, Config}
 import java.util.Properties
 import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
 import org.apache.xmlrpc.common.{XmlRpcStreamConfig, XmlRpcController, TypeFactoryImpl}
@@ -143,51 +143,23 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		}
 	}
 
-	def sendAriaTellStatus(gid: String): TaskStatus = {
-		val ts: TaskStatus = new TaskStatus
+	def sendAriaTellStatus(gid: String): Object = {
+		var retObject:Object = null
 		if (_xmlRpcClient != null) {
-			// DEBUG
-			System.out.println("Querying status for GID " + gid)
 			val params = Array[Object](gid)
-			val retObject = _xmlRpcClient.execute("aria2.tellStatus", params)
-			// Returned XML-RPC is a HashMap...
-			val jMap = retObject.asInstanceOf[java.util.HashMap[String, Object]]
-			val iterator = jMap.entrySet().iterator()
-			while (iterator.hasNext) {
-				val entry: java.util.Map.Entry[String, Object] = iterator.next()
-				// DEBUG
-				if (entry.getKey.equals("files")) {
-					val vals = entry.getValue.asInstanceOf[Array[Object]]
-					System.out.println(entry.getKey + "-->")
-					for (o <- vals) {
-						System.out.println(o)
-					}
-				} else System.out.println(entry.getKey + " --> " + entry.getValue)
-			}
+			retObject = _xmlRpcClient.execute("aria2.tellStatus", params)
 		}
-		ts
+		retObject
 	}
 
-	def sendAriaTellActive() {
+	def sendAriaTellActive(): Array[Object] = {
 		if (_xmlRpcClient == null) {
 			startXmlRpcClient()
 		}
 		val params = Array[Object]()
 		val retObject = _xmlRpcClient.execute("aria2.tellActive", params)
-		// Returned XML-RPC is a HashMap...
-		val jMap = retObject.asInstanceOf[java.util.HashMap[String, Object]]
-		val iterator = jMap.entrySet().iterator()
-		while (iterator.hasNext) {
-			val entry: java.util.Map.Entry[String, Object] = iterator.next()
-			// DEBUG
-			if (entry.getKey.equals("files")) {
-				val vals = entry.getValue.asInstanceOf[Array[Object]]
-				System.out.println(entry.getKey + "-->")
-				for (o <- vals) {
-					System.out.println(o)
-				}
-			} else System.out.println(entry.getKey + " --> " + entry.getValue)
-		}
+		// Returned XML-RPC is an Array Java HashMap...
+		retObject.asInstanceOf[Array[Object]]
 	}
 
 	def sendAriaUri(uri: String, owner: String, t: Task): String = {
@@ -202,6 +174,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 				TaskGID_=(downloadGID)
 				TaskInput_=(uri)
 				TaskStarted_=(DateTime.now.getMillis)
+				TaskEnded_=(DateTime.now.minusYears(10).getMillis)
 				TaskOwner_=(owner)
 			}
 			dbMan.addTask(newTask)

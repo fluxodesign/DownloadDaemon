@@ -19,8 +19,32 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 			try {
 				val tasks = dbMan.queryUnfinishedTasks()
 				for (t <- tasks) {
-					//parent.sendAriaTellStatus(t.TaskGID.getOrElse(null))
-					parent.sendAriaTellActive()
+					val parentStatus = parent.sendAriaTellStatus(t.TaskGID.getOrElse(null))
+					// 'parentStatus' is actually a Java HashMap...
+					val jMap = parentStatus.asInstanceOf[java.util.HashMap[String, Object]]
+					val tgObj = extractValueFromHashMap(jMap, "followedBy").asInstanceOf[Array[Object]]
+					if (tgObj.length > 0) {
+						dbMan.updateTaskTailGID(t.TaskGID.getOrElse(null), tgObj(0).asInstanceOf[String])
+						t.TaskTailGID_=(tgObj(0).asInstanceOf[String])
+					}
+				}
+
+				val progressReport = parent.sendAriaTellActive()
+				// 'progressReport' is an array of Objects; we need to cast EACH Object INTO a Java HashMap...
+				for (o <- progressReport) {
+					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
+					val tailGID = extractValueFromHashMap(jMap, "gid").toString
+					val task = {
+						if (tailGID.length > 0) dbMan.queryTaskTailGID(tailGID) else null
+					}
+					task.TaskCompletedLength_=(extractValueFromHashMap(jMap, "completedLength").asInstanceOf[Long])
+					task.TaskTotalLength_=(extractValueFromHashMap(jMap, "totalLength").asInstanceOf[Long])
+					task.TaskStatus_=(extractValueFromHashMap(jMap, "status").toString)
+					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
+					val btDetailsMap = extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
+					val infoMap = extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
+					task.TaskPackage_=(extractValueFromHashMap(infoMap, "name").toString)
+					dbMan.updateTask(task)
 				}
 
 				Thread.interrupted()
@@ -32,6 +56,16 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 					}
 			}
 		}
+	}
+
+	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
+		var ret: Object = null
+		val it = map.entrySet().iterator()
+		while (it.hasNext) {
+			val entry = it.next()
+			if (entry.getKey.equals(key)) ret = entry.getValue
+		}
+		ret
 	}
 
 	def cleanup() {
