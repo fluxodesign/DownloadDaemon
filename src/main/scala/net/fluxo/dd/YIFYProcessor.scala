@@ -4,6 +4,8 @@ import java.net.{MalformedURLException, URL, HttpURLConnection}
 import org.apache.log4j.Level
 import java.io.{InputStreamReader, BufferedReader, IOException}
 import org.jsoup.Jsoup
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.client.methods.HttpGet
 
 /**
  * User: viper
@@ -31,8 +33,16 @@ class YIFYProcessor {
 		if (rating >= 0 && rating <= 9) request.append("&rating=" + rating)
 		// send the request...
 		try {
-			val doc = Jsoup.connect(request.toString())
-			response.append(doc.get().html())
+			val htClient = HttpClientBuilder.create().build()
+			val htGet = new HttpGet(request.toString())
+			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
+			val htResponse = htClient.execute(htGet)
+			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
+			var line = br.readLine()
+			while (line != null) {
+				response.append(line)
+				line = br.readLine()
+			}
 			/*val httpConn = url.openConnection().asInstanceOf[HttpURLConnection]
 			val br = new BufferedReader(new InputStreamReader(httpConn.getInputStream))
 			var line: String = null
