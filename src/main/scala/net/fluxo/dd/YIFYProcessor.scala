@@ -35,6 +35,8 @@ class YIFYProcessor {
 			val br = new BufferedReader(new InputStreamReader(httpConn.getInputStream))
 			var line: String = null
 			while ((line = br.readLine()) != null) {
+				// DEBUG
+				System.out.println("REPLY: " + line)
 				response.append(line)
 			}
 			if (response.toString().length == 0) response append "EMPTY"
