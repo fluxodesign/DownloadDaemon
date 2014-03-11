@@ -32,7 +32,7 @@ class YIFYProcessor {
 		// send the request...
 		try {
 			val doc = Jsoup.connect(request.toString())
-			response.append(doc.toString)
+			response.append(doc.get().html())
 			/*val httpConn = url.openConnection().asInstanceOf[HttpURLConnection]
 			val br = new BufferedReader(new InputStreamReader(httpConn.getInputStream))
 			var line: String = null
@@ -59,7 +59,7 @@ class YIFYProcessor {
 		val response = new StringBuilder
 		try {
 			val doc = Jsoup.connect(request.toString())
-			response.append(doc.toString)
+			response.append(doc.get().html())
 			/*val url = new URL(request.toString())
 			val httpConn = url.openConnection().asInstanceOf[HttpURLConnection]
 			val br = new BufferedReader(new InputStreamReader(httpConn.getInputStream))
