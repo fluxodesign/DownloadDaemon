@@ -5,9 +5,7 @@ import org.apache.log4j.Level
 import java.io.{InputStreamReader, BufferedReader, IOException}
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
-import org.json.simple.{JSONArray, JSONValue}
-import scala.util.parsing.json.JSONObject
-import org.json.simple.parser.JSONParser
+import org.json.simple.JSONArray
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -45,7 +43,9 @@ class YIFYProcessor {
 				response.append(line)
 				line = br.readLine()
 			}
+			processImages(response.toString())
 			br.close()
+			htClient.close()
 		} catch {
 			case mue: MalformedURLException =>
 				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
@@ -72,6 +72,7 @@ class YIFYProcessor {
 				line = br.readLine()
 			}
 			br.close()
+			htClient.close()
 		} catch {
 			case mue: MalformedURLException =>
 				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
