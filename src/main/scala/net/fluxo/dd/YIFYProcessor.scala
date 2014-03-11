@@ -1,14 +1,16 @@
 package net.fluxo.dd
 
-import java.net.{MalformedURLException, URL, HttpURLConnection}
+import java.net.MalformedURLException
 import org.apache.log4j.Level
 import java.io.{InputStreamReader, BufferedReader, IOException}
-import org.jsoup.Jsoup
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
+import org.json.simple.{JSONArray, JSONValue}
+import scala.util.parsing.json.JSONObject
+import org.json.simple.parser.JSONParser
 
 /**
- * User: viper
+ * User: Ronald Kurniawan (viper)
  * Date: 11/03/14
  * Time: 10:06 AM
  *
@@ -43,16 +45,7 @@ class YIFYProcessor {
 				response.append(line)
 				line = br.readLine()
 			}
-			/*val httpConn = url.openConnection().asInstanceOf[HttpURLConnection]
-			val br = new BufferedReader(new InputStreamReader(httpConn.getInputStream))
-			var line: String = null
-			while ((line = br.readLine()) != null) {
-				// DEBUG
-				System.out.println("REPLY: " + line)
-				response.append(line)
-			}
-			if (response.toString().length == 0) response append "EMPTY"
-			httpConn.disconnect()*/
+			br.close()
 		} catch {
 			case mue: MalformedURLException =>
 				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
@@ -68,16 +61,17 @@ class YIFYProcessor {
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/movie.json?id=").append(id)
 		val response = new StringBuilder
 		try {
-			val doc = Jsoup.connect(request.toString())
-			response.append(doc.get().html())
-			/*val url = new URL(request.toString())
-			val httpConn = url.openConnection().asInstanceOf[HttpURLConnection]
-			val br = new BufferedReader(new InputStreamReader(httpConn.getInputStream))
-			var line: String = null
-			while (line = br readLine()) != null) {
-				response append line
+			val htClient = HttpClientBuilder.create().build()
+			val htGet = new HttpGet(request.toString() + id)
+			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
+			val htResponse = htClient.execute(htGet)
+			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
+			var line = br.readLine()
+			while (line != null) {
+				response.append(line)
+				line = br.readLine()
 			}
-			httpConn disconnect()*/
+			br.close()
 		} catch {
 			case mue: MalformedURLException =>
 				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
@@ -87,6 +81,25 @@ class YIFYProcessor {
 				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
 		response toString()
+	}
+
+	private def processImages(content: String): String = {
+		val jsObj = content.asInstanceOf[org.json.simple.JSONObject]
+		val jsArray = jsObj.get("MovieList").asInstanceOf[JSONArray]
+		val iterator = jsArray.iterator()
+		while (iterator.hasNext) {
+			val coverImage = iterator.next().asInstanceOf[org.json.simple.JSONObject].get("CoverImage")
+			// now we get our "raw" image url; we need to decode json forward slash to simple forward slash
+			val newCoverImage = coverImage.toString.replaceAllLiterally("\\/", "/")
+			// DEBUG
+			System.out.println("newCoverImage: " + newCoverImage)
+			// now we need to analyse the url, create directory related to this url in our directory
+			// fetch the image and put it inside our new directory
+			// remodel our image url into http://<our-outside-ip/.....
+			// and re-encode the forward slash to json forward slash
+			// reinject the remodelled url back into the text
+		}
+		content
 	}
 }
 
