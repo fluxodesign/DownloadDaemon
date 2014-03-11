@@ -253,4 +253,16 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_aria2Process.waitFor()
 		}
 	}
+
+	class WgetExternalIP() extends Runnable {
+		override def run() {
+			val wgetProc = new ProcessBuilder("wget", "-q", "-O", "- http://myexternalip.com/raw").redi
+			wgetProc.re
+			wgetProc.waitFor()
+			val br = new BufferedReader(new InputStreamReader(wgetProc.getInputStream))
+			externalIP = br.readLine()
+			br.close()
+
+		}
+	}
 }
