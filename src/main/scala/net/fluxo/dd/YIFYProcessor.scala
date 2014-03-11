@@ -48,4 +48,29 @@ class YIFYProcessor {
 		}
 		response.toString()
 	}
+
+	def procMovieDetails(id: Int): String = {
+		val request: StringBuilder = new StringBuilder("http://yts.re/api/movie.json?id=").append(id)
+		val response = new StringBuilder
+		try {
+			val url = new URL(request.toString())
+			val httpConn = url.openConnection().asInstanceOf[HttpURLConnection]
+			val br = new BufferedReader(new InputStreamReader(httpConn.getInputStream))
+			var line: String = null
+			while ((line = br readLine()) != null) {
+				response append line
+			}
+			httpConn disconnect()
+		} catch {
+			case mue: MalformedURLException =>
+				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
+			case ioe: IOException =>
+				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
+		}
+		response toString()
+	}
 }
+
+object YIFYP extends YIFYProcessor

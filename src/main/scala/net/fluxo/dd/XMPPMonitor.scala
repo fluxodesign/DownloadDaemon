@@ -8,7 +8,7 @@ import net.fluxo.dd.dbo.Task
 import org.apache.commons.validator.routines.IntegerValidator
 
 /**
- * User: viper
+ * User: Ronald Kurniawan (viper)
  * Date: 7/03/14
  * Time: 11:51 AM
  *
@@ -284,7 +284,44 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					}
 					sb.toString()
 				case "YIFI" =>
-
+					// the next command should be "LIST" or " DETAILS"
+					// "LIST" has 3 parameters (total 6)
+					// "DETAILS" has 1 parameter (total 4)
+					if (words.length != 6 || words.length != 4) "ERR LENGTH"
+					else {
+						words(2) match {
+							case "LIST" =>
+								if (words.length != 6) "ERR LENGTH"
+								else {
+									val intValidator = new IntegerValidator
+									val page = {
+										if ((intValidator validate words(3)) != null) intValidator.validate(words(3)).intValue()
+										else 1
+									}
+									val quality = {
+										if ((intValidator validate words(4)) != null) intValidator.validate(words(4)).intValue()
+										else 0
+									}
+									val rating = {
+										if ((intValidator validate words(5)) != null) intValidator.validate(words(5)).intValue()
+										else 0
+									}
+									YIFYP procListMovie(page, quality, rating)
+								}
+							case "DETAILS" =>
+								if (words.length != 4) "ERR LENGTH"
+								else {
+									val intValidator = new IntegerValidator
+									val id = {
+										if ((intValidator validate words(3)) != null) intValidator.validate(words(3)).intValue()
+										else -1
+									}
+									if (id > 0) YIFYP procMovieDetails id
+									else "ERR CMD"
+								}
+							case _  => "ERR CMD"
+						}
+					}
 				case _ => "ERR CMD"
 			}
 		}
