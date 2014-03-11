@@ -37,6 +37,7 @@ class YIFYProcessor {
 			while ((line = br.readLine()) != null) {
 				response.append(line)
 			}
+			if (response.toString().length == 0) response append "EMPTY"
 			httpConn.disconnect()
 		} catch {
 			case mue: MalformedURLException =>
