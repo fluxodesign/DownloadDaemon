@@ -3,6 +3,7 @@ package net.fluxo.dd
 import java.net.{MalformedURLException, URL, HttpURLConnection}
 import org.apache.log4j.Level
 import java.io.{InputStreamReader, BufferedReader, IOException}
+import org.jsoup.Jsoup
 
 /**
  * User: viper
@@ -30,8 +31,9 @@ class YIFYProcessor {
 		if (rating >= 0 && rating <= 9) request.append("&rating=" + rating)
 		// send the request...
 		try {
-			val url = new URL(request.toString())
-			val httpConn = url.openConnection().asInstanceOf[HttpURLConnection]
+			val doc = Jsoup.connect(request.toString())
+			response.append(doc.toString)
+			/*val httpConn = url.openConnection().asInstanceOf[HttpURLConnection]
 			val br = new BufferedReader(new InputStreamReader(httpConn.getInputStream))
 			var line: String = null
 			while ((line = br.readLine()) != null) {
@@ -40,7 +42,7 @@ class YIFYProcessor {
 				response.append(line)
 			}
 			if (response.toString().length == 0) response append "EMPTY"
-			httpConn.disconnect()
+			httpConn.disconnect()*/
 		} catch {
 			case mue: MalformedURLException =>
 				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
@@ -56,14 +58,16 @@ class YIFYProcessor {
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/movie.json?id=").append(id)
 		val response = new StringBuilder
 		try {
-			val url = new URL(request.toString())
+			val doc = Jsoup.connect(request.toString())
+			response.append(doc.toString)
+			/*val url = new URL(request.toString())
 			val httpConn = url.openConnection().asInstanceOf[HttpURLConnection]
 			val br = new BufferedReader(new InputStreamReader(httpConn.getInputStream))
 			var line: String = null
-			while ((line = br readLine()) != null) {
+			while (line = br readLine()) != null) {
 				response append line
 			}
-			httpConn disconnect()
+			httpConn disconnect()*/
 		} catch {
 			case mue: MalformedURLException =>
 				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
