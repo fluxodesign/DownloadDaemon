@@ -283,11 +283,11 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
 					}
 					sb.toString()
-				case "YIFI" =>
+				case "YIFY" =>
 					// the next command should be "LIST" or " DETAILS"
 					// "LIST" has 3 parameters (total 6)
 					// "DETAILS" has 1 parameter (total 4)
-					if (words.length != 6 || words.length != 4) "ERR LENGTH"
+					if (words.length != 6 || words.length != 4) "ERR LENGTH, expected 4 or 6, found " + words.length
 					else {
 						words(2) match {
 							case "LIST" =>
