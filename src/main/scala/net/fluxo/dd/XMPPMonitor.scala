@@ -5,6 +5,7 @@ import org.apache.log4j.Level
 import org.joda.time.DateTime
 import org.jivesoftware.smack.packet.{Presence, Message}
 import net.fluxo.dd.dbo.Task
+import org.apache.commons.validator.routines.IntegerValidator
 
 /**
  * User: viper
@@ -268,7 +269,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 			if (!words(0).equals("DD")) return "ERR NOTIFIER"
 			words(1) match {
 				case "ADD_URI" =>
-					if (words.length < 3) return "ERR LENGTH"
+					if (words.length < 3) "ERR LENGTH"
 					parent.sendAriaUri(words(2), owner, null)
 				case "STATUS" =>
 					val tasks: Array[Task] = parent.getUserDownloadsStatus(owner)
@@ -282,6 +283,8 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
 					}
 					sb.toString()
+				case "YIFI" =>
+
 				case _ => "ERR CMD"
 			}
 		}
