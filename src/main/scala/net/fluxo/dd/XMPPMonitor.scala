@@ -291,7 +291,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					else {
 						words(2) match {
 							case "LIST" =>
-								if (words.length != 6) "ERR LENGTH"
+								if (words.length != 6) "ERR LENGTH: \"LIST\" requires 6 params, found " + words.length
 								else {
 									val intValidator = new IntegerValidator
 									val page = {
@@ -309,7 +309,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 									YIFYP procListMovie(page, quality, rating)
 								}
 							case "DETAILS" =>
-								if (words.length != 4) "ERR LENGTH"
+								if (words.length != 4) "ERR LENGTH: \"DETAILS\" requires 4 params, found " + words.length
 								else {
 									val intValidator = new IntegerValidator
 									val id = {
