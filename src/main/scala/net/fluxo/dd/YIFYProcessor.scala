@@ -93,7 +93,7 @@ class YIFYProcessor {
 			// now we get our "raw" image url; we need to decode json forward slash to simple forward slash
 			val newCoverImage = coverImage.toString.replaceAllLiterally("\\/", "/")
 			// DEBUG
-			System.out.println("newCoverImage: " + newCoverImage)
+			LogWriter.writeLog("newCoverImage: " + newCoverImage, Level.INFO)
 			// now we need to analyse the url, create directory related to this url in our directory
 			// fetch the image and put it inside our new directory
 			// remodel our image url into http://<our-outside-ip/.....
