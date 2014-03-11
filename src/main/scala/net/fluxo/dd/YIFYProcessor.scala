@@ -16,17 +16,12 @@ import org.apache.commons.io.FilenameUtils
  */
 class YIFYProcessor {
 
-	var externalIP: String = "0"
-
 	/*
 		quality: 0 = ALL, 1 = 720p, 2 = 1080p, 3 = 3D
 		page: page to request
         rating: minimum rating to request, 0 - 9, default 0 (ALL)
 	 */
-	def procListMovie(page: Int, quality:Int, rating: Int): String = {
-		if (externalIP.equals("0")) {
-			new Thread(new WgetExternalIP).start()
-		}
+	def procListMovie(page: Int, quality:Int, rating: Int, externalIP: String): String = {
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=15")
 		val response = new StringBuilder
 		if (quality <= 3 && quality >= 0) request.append("&quality=").append(quality  match {
@@ -49,9 +44,6 @@ class YIFYProcessor {
 				response.append(line)
 				line = br.readLine()
 			}
-			val count = processImages(response.toString())
-			response.clear()
-			response.append(count)
 			br.close()
 			htClient.close()
 		} catch {
@@ -62,7 +54,7 @@ class YIFYProcessor {
 				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
-		response.toString()
+		processImages(response.toString(), externalIP)
 	}
 
 	def procMovieDetails(id: Int): String = {
@@ -92,7 +84,7 @@ class YIFYProcessor {
 		response toString()
 	}
 
-	private def processImages(content: String): String = {
+	private def processImages(content: String, externalIP: String): String = {
 		var newContent = content
 		val jsObj = JSONValue.parseWithException(content).asInstanceOf[org.json.simple.JSONObject]
 		val jsArray = jsObj.get("MovieList").asInstanceOf[JSONArray]
@@ -103,20 +95,25 @@ class YIFYProcessor {
 			var newCoverImage = coverImage.replaceAllLiterally("\\/", "/")
 			// now we need to analyse the url, create directory related to this url in our directory
 			val path = new URL(newCoverImage).getPath
-			val dirName =FilenameUtils.getFullPath(path)
+			val dirName = FilenameUtils.getFullPath(path)
 			val dir = new File(dirName)
 			if (!dir.exists()) dir.mkdir()
 			// fetch the image and put it inside our new directory (wget -P ./location)
 			new Thread(new WgetImage(newCoverImage, dirName)).start()
 			// remodel our image url into http://<our-outside-ip>/.....
-			val oldServer = new URL(newCoverImage).getAuthority
-			newCoverImage = newCoverImage.replace(oldServer, externalIP)
-			// and re-encode the forward slash to json forward slash
-			newCoverImage = newCoverImage.replaceAllLiterally("/", "\\/")
-			// reinject the remodelled url back into the text
-			// DEBUG
-			System.out.println("newCoverImage: " + newCoverImage)
-			newContent = newContent.replace(coverImage, newCoverImage)
+			if (!externalIP.equals("127.0.0.1")) {
+				val oldServer = new URL(newCoverImage).getAuthority
+				// DEBUG
+				System.out.println("EXTERNAL IP: " + externalIP)
+				System.out.println("OLD SERVER: " + oldServer)
+				newCoverImage = newCoverImage.replace(oldServer, externalIP)
+				// and re-encode the forward slash to json forward slash
+				newCoverImage = newCoverImage.replaceAllLiterally("/", "\\/")
+				// reinject the remodelled url back into the text
+				// DEBUG
+				System.out.println("newCoverImage: " + newCoverImage)
+				newContent = newContent.replace(coverImage, newCoverImage)
+			}
 		}
 		newContent
 	}
@@ -128,17 +125,6 @@ class YIFYProcessor {
 		}
 	}
 
-	class WgetExternalIP() extends Runnable {
-		override def run() {
-			val wgetProc = new ProcessBuilder("wget", "-q", "-O", "- http://myexternalip.com/raw").redi
-			wgetProc.re
-			wgetProc.waitFor()
-			val br = new BufferedReader(new InputStreamReader(wgetProc.getInputStream))
-			externalIP = br.readLine()
-			br.close()
-
-		}
-	}
 }
 
 object YIFYP extends YIFYProcessor

@@ -6,6 +6,7 @@ import org.joda.time.DateTime
 import org.jivesoftware.smack.packet.{Presence, Message}
 import net.fluxo.dd.dbo.Task
 import org.apache.commons.validator.routines.IntegerValidator
+import java.io.{InputStreamReader, BufferedReader}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -21,6 +22,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 	private var _xmppc: XMPPConnection = _
 	private var _xmppConnected: Boolean = false
 	private var _xmppAuthenticated: Boolean = false
+	private var _externalIP: Option[String] = Some("127.0.0.1")
 
 	def setup() {
 		_smackConfig = {
@@ -32,6 +34,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 		_smackConfig.setSASLAuthenticationEnabled(true)
 		_smackConfig.setRosterLoadedAtLogin(true)
 		_smackConfig.setSecurityMode(ConnectionConfiguration.SecurityMode.enabled)
+		new Thread(new WgetExternalIP).start()
 	}
 
 	def connect(): Boolean = {
@@ -248,6 +251,23 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 		_isRunning = false
 	}
 
+	class WgetExternalIP() extends Runnable {
+		override def run() {
+			val wgetProc = new ProcessBuilder("wget", "-q", "-O", "-", "http://myexternalip.com/raw").start()
+			val br = new BufferedReader(new InputStreamReader(wgetProc.getInputStream))
+			val sb = new StringBuilder
+			var line = br.readLine()
+			while (line != null) {
+				sb.append(line)
+				line = br.readLine()
+			}
+			wgetProc.waitFor()
+			_externalIP = Some(sb toString())
+			br.close()
+			LogWriter.writeLog("External IP: " + _externalIP.getOrElse("N/A"), Level.INFO)
+		}
+	}
+
 	class XMPPChatListener extends ChatManagerListener {
 		def chatCreated(chat: Chat, createdLocally: Boolean) {
 			chat.addMessageListener(new XMPPMessageListener)
@@ -294,27 +314,27 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								if (words.length != 6) "ERR LENGTH: \"LIST\" requires 6 params, found " + words.length
 								else {
 									val intValidator = new IntegerValidator
-									val page = {
-										if ((intValidator validate words(3)) != null) intValidator.validate(words(3)).intValue()
-										else 1
+									val page: Int = {
+										val intObj: Option[Integer] = Some(intValidator validate words(3))
+										intObj.getOrElse(1).asInstanceOf[Int]
 									}
-									val quality = {
-										if ((intValidator validate words(4)) != null) intValidator.validate(words(4)).intValue()
-										else 0
+									val quality: Int = {
+										val intObj: Option[Integer] = Some(intValidator validate words(4))
+										intObj.getOrElse(0).asInstanceOf[Int]
 									}
-									val rating = {
-										if ((intValidator validate words(5)) != null) intValidator.validate(words(5)).intValue()
-										else 0
+									val rating: Int = {
+										val intObj: Option[Integer] = Some(intValidator validate words(5))
+										intObj.getOrElse(0).asInstanceOf[Int]
 									}
-									YIFYP procListMovie(page, quality, rating)
+									YIFYP procListMovie(page, quality, rating, _externalIP.getOrElse("127.0.0.1"))
 								}
 							case "DETAILS" =>
 								if (words.length != 4) "ERR LENGTH: \"DETAILS\" requires 4 params, found " + words.length
 								else {
 									val intValidator = new IntegerValidator
-									val id = {
-										if ((intValidator validate words(3)) != null) intValidator.validate(words(3)).intValue()
-										else -1
+									val id: Int = {
+										val intObj: Option[Integer] = Some(intValidator validate words(3))
+										intObj.getOrElse(-1).asInstanceOf[Int]
 									}
 									if (id > 0) YIFYP procMovieDetails id
 									else "ERR CMD"
