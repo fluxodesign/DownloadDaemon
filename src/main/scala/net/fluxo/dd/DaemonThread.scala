@@ -65,6 +65,9 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_tXMPPMonitor = Some(xmppMon)
 			_threadXMPPMonitor = new Thread(_tXMPPMonitor.getOrElse(null))
 			_threadXMPPMonitor.start()
+
+			val httpd: HttpDaemon = new HttpDaemon(8080)
+			new Thread(httpd).start()
 		}
 	}
 
