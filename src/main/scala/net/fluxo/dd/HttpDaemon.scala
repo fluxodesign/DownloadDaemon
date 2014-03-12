@@ -22,7 +22,7 @@ class HttpDaemon(port: Int) extends Runnable {
 		val staticHandler = new ResourceHandler()
 		val welcomeFiles: Array[String] = Array("favicon.ico", "index.html")
 		staticHandler.setWelcomeFiles(welcomeFiles)
-		staticHandler.setBaseResource(Resource.newResource("."))
+		staticHandler.setResourceBase(".")
 
 		val contextHandlerCollections = new ContextHandlerCollection()
 		contextHandlerCollections.setHandlers(Array(staticHandler))
