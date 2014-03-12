@@ -19,11 +19,6 @@ class HttpDaemon(port: Int) extends Runnable {
 	}
 
 	def setup() {
-		/*val staticHandler = new ResourceHandler()
-		val welcomeFiles: Array[String] = Array("favicon.ico", "index.html")
-		staticHandler.setWelcomeFiles(welcomeFiles)
-		staticHandler.setResourceBase(".")*/
-
 		val wap = new WebAppContext()
 		wap.setContextPath("/")
 		wap.setWar(".")
