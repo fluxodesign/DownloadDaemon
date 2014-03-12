@@ -1,8 +1,9 @@
 package net.fluxo.dd
 
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.handler.{DefaultHandler, HandlerList, ContextHandlerCollection, ResourceHandler}
+import org.eclipse.jetty.server.handler.{HandlerCollection, DefaultHandler, ResourceHandler}
 import org.apache.log4j.Level
+import org.eclipse.jetty.webapp.WebAppContext
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -18,15 +19,19 @@ class HttpDaemon(port: Int) extends Runnable {
 	}
 
 	def setup() {
-		val staticHandler = new ResourceHandler()
+		/*val staticHandler = new ResourceHandler()
 		val welcomeFiles: Array[String] = Array("favicon.ico", "index.html")
 		staticHandler.setWelcomeFiles(welcomeFiles)
-		staticHandler.setResourceBase(".")
+		staticHandler.setResourceBase(".")*/
 
-		val handlerList = new HandlerList()
-		handlerList.setHandlers(Array(staticHandler, new DefaultHandler()))
+		val wap = new WebAppContext()
+		wap.setContextPath("/")
+		wap.setWar(".")
 
-		_server.setHandler(handlerList)
+		val handlerCollection = new HandlerCollection()
+		handlerCollection.setHandlers(Array(wap))
+
+		_server.setHandler(handlerCollection)
 		_server.setStopAtShutdown(true)
 
 		try {
