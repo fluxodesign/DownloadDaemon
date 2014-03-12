@@ -95,24 +95,23 @@ class YIFYProcessor {
 			var newCoverImage = coverImage.replaceAllLiterally("\\/", "/")
 			// now we need to analyse the url, create directory related to this url in our directory
 			val path = new URL(newCoverImage).getPath
-			val dirName = FilenameUtils.getFullPath(path)
+			val dirName = "." + FilenameUtils.getFullPath(path)
 			val dir = new File(dirName)
-			if (!dir.exists()) dir.mkdir()
-			// fetch the image and put it inside our new directory (wget -P ./location)
-			new Thread(new WgetImage(newCoverImage, dirName)).start()
+			if (!dir.exists()) {
+				dir.mkdirs()
+				// fetch the image and put it inside our new directory (wget -P ./location)
+				new Thread(new WgetImage(newCoverImage, dirName)).start()
+			}
 			// remodel our image url into http://<our-outside-ip>/.....
 			if (!externalIP.equals("127.0.0.1")) {
 				val oldServer = new URL(newCoverImage).getAuthority
-				// DEBUG
-				System.out.println("EXTERNAL IP: " + externalIP)
-				System.out.println("OLD SERVER: " + oldServer)
 				newCoverImage = newCoverImage.replace(oldServer, externalIP)
 				// and re-encode the forward slash to json forward slash
 				newCoverImage = newCoverImage.replaceAllLiterally("/", "\\/")
+				val oldcoverImage = coverImage.replaceAllLiterally("/", "\\/")
 				// reinject the remodelled url back into the text
-				// DEBUG
-				System.out.println("newCoverImage: " + newCoverImage)
-				newContent = newContent.replace(coverImage, newCoverImage)
+				//newContent = newContent replaceAllLiterally(coverImage, newCoverImage)
+				if (newContent.indexOf(oldcoverImage) > -1) newContent = newContent.replace(oldcoverImage, newCoverImage)
 			}
 		}
 		newContent
@@ -120,7 +119,7 @@ class YIFYProcessor {
 
 	class WgetImage(url: String, location: String) extends Runnable {
 		override def run() {
-			val wgetProc = new ProcessBuilder("wget", "-P ./" + location, url).start()
+			val wgetProc = new ProcessBuilder("wget", "--directory-prefix=" + location, url).start()
 			wgetProc.waitFor()
 		}
 	}
