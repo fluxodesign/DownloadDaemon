@@ -1,7 +1,7 @@
 package net.fluxo.dd
 
 import org.eclipse.jetty.server.Server
-import org.eclipse.jetty.server.handler.{HandlerList, ContextHandlerCollection, ResourceHandler}
+import org.eclipse.jetty.server.handler.{DefaultHandler, HandlerList, ContextHandlerCollection, ResourceHandler}
 import org.apache.log4j.Level
 
 /**
@@ -24,7 +24,7 @@ class HttpDaemon(port: Int) extends Runnable {
 		staticHandler.setResourceBase(".")
 
 		val handlerList = new HandlerList()
-		handlerList.setHandlers(Array(staticHandler))
+		handlerList.setHandlers(Array(staticHandler, new DefaultHandler()))
 
 		_server.setHandler(handlerList)
 		_server.setStopAtShutdown(true)
