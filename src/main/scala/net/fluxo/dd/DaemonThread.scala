@@ -103,6 +103,10 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		_config.DownloadDir.getOrElse("")
 	}
 
+	def configHttpdPort(): Int = {
+		_config.HTTPDPort
+	}
+
 	def hasAria2: Boolean = {
 		var status = false
 		try {

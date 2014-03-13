@@ -21,7 +21,7 @@ class YIFYProcessor {
 		page: page to request
         rating: minimum rating to request, 0 - 9, default 0 (ALL)
 	 */
-	def procListMovie(page: Int, quality:Int, rating: Int, externalIP: String): String = {
+	def procListMovie(page: Int, quality:Int, rating: Int, externalIP: String, port: Int): String = {
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=15")
 		val response = new StringBuilder
 		if (quality <= 3 && quality >= 0) request.append("&quality=").append(quality  match {
@@ -54,7 +54,7 @@ class YIFYProcessor {
 				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
-		processImages(response.toString(), externalIP)
+		processImages(response.toString(), externalIP, port)
 	}
 
 	def procMovieDetails(id: Int): String = {
@@ -84,7 +84,7 @@ class YIFYProcessor {
 		response toString()
 	}
 
-	private def processImages(content: String, externalIP: String): String = {
+	private def processImages(content: String, externalIP: String, port: Int): String = {
 		var newContent = content
 		val jsObj = JSONValue.parseWithException(content).asInstanceOf[org.json.simple.JSONObject]
 		val jsArray = jsObj.get("MovieList").asInstanceOf[JSONArray]
@@ -105,7 +105,7 @@ class YIFYProcessor {
 			// remodel our image url into http://<our-outside-ip>/.....
 			if (!externalIP.equals("127.0.0.1")) {
 				val oldServer = new URL(newCoverImage).getAuthority
-				newCoverImage = newCoverImage.replace(oldServer, externalIP)
+				newCoverImage = newCoverImage.replace(oldServer, externalIP + ":" + port)
 				// and re-encode the forward slash to json forward slash
 				newCoverImage = newCoverImage.replaceAllLiterally("/", "\\/")
 				val oldcoverImage = coverImage.replaceAllLiterally("/", "\\/")

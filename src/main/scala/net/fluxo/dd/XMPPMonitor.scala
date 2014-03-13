@@ -326,7 +326,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 										val intObj: Option[Integer] = Some(intValidator validate words(5))
 										intObj.getOrElse(0).asInstanceOf[Int]
 									}
-									YIFYP procListMovie(page, quality, rating, _externalIP.getOrElse("127.0.0.1"))
+									YIFYP procListMovie(page, quality, rating, _externalIP.getOrElse("127.0.0.1"), parent.configHttpdPort())
 								}
 							case "DETAILS" =>
 								if (words.length != 4) "ERR LENGTH: \"DETAILS\" requires 4 params, found " + words.length
