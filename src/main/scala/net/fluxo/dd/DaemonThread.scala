@@ -27,6 +27,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	private var _threadDlMonitor: Thread = null
 	private var _tXMPPMonitor: Option[XMPPMonitor] = None
 	private var _threadXMPPMonitor: Thread = null
+	private var _tHttpd: Option[HttpDaemon] = None
+	private var _threadHttpD: Thread = null
 	private val _config = readConfiguration
 
 	override def run() {
@@ -65,9 +67,10 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_tXMPPMonitor = Some(xmppMon)
 			_threadXMPPMonitor = new Thread(_tXMPPMonitor.getOrElse(null))
 			_threadXMPPMonitor.start()
-
-			val httpd: HttpDaemon = new HttpDaemon(8080)
-			new Thread(httpd).start()
+			val httpd: HttpDaemon = new HttpDaemon(_config.HTTPDPort)
+			_tHttpd = Some(httpd)
+			_threadHttpD = new Thread(_tHttpd.getOrElse(null))
+			_threadHttpD.start()
 		}
 	}
 
@@ -82,6 +85,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		try {
 			prop.load(new FileInputStream("./dd.properties"))
 			cfg.RPCPort_= (java.lang.Integer.parseInt(prop.getProperty("rpc_port")))
+			cfg.HTTPDPort_=(java.lang.Integer.parseInt(prop.getProperty("httpd_port")))
 			cfg.XMPPProvider_=(prop.getProperty("xmpp_provider"))
 			cfg.XMPPAccount_=(prop.getProperty("xmpp_account"))
 			cfg.XMPPPassword_=(prop.getProperty("xmpp_password"))

@@ -22,6 +22,13 @@ class Config {
 		_rpcPort = value
 	}
 
+	private var _httpdPort: Int = 8080
+
+	def HTTPDPort: Int = _httpdPort
+	def HTTPDPort_= (value: Int) {
+		_httpdPort = value
+	}
+
 	private var _xmppProvider: Option[String] = None
 
 	def XMPPProvider: Option[String] = _xmppProvider
