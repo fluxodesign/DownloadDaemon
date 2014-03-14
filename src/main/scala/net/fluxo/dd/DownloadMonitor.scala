@@ -20,6 +20,8 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 		while (_isRunning) {
 			try {
 				// if a download is over, the "aria2.tellStopped" should show it...
+				// DEBUG
+				System.out.println("about to query finished downloads")
 				val finishedDownloads = parent.sendAriaTellStopped()
 				// DEBUG
 				System.out.println("finished downloads: " + finishedDownloads.length)
