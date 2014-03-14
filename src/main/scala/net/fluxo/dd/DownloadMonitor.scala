@@ -38,6 +38,8 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 				}
 
 				val progressReport = parent.sendAriaTellActive()
+				// DEBUG
+				System.out.println("active downloads: " + progressReport.length)
 				// 'progressReport' is an array of Objects; we need to cast EACH Object INTO a Java HashMap...
 				for (o <- progressReport) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
@@ -59,6 +61,8 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 
 				// if a download is over, the "aria2.tellStopped" should show it...
 				val finishedDownloads = parent.sendAriaTellStopped()
+				// DEBUG
+				System.out.println("finished downloads: " + finishedDownloads.length)
 				for (o <- finishedDownloads) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val status = extractValueFromHashMap(jMap, "status").toString
