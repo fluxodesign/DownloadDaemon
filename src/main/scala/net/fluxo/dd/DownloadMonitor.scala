@@ -79,14 +79,12 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 			} catch {
 				case ie: InterruptedException =>
 					LogWriter.writeLog(ie.getMessage, Level.ERROR)
-					LogWriter.writeLog("caused by " + ie.getCause.getMessage, Level.ERROR)
 					LogWriter.writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
 					if (!_isRunning) {
 						cleanup()
 					}
 				case e: Exception =>
 					LogWriter.writeLog(e.getMessage, Level.ERROR)
-					LogWriter.writeLog("caused by " + e.getCause.getMessage, Level.ERROR)
 					LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 					if (!_isRunning) {
 						cleanup()
