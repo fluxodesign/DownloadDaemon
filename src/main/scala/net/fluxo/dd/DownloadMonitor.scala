@@ -25,6 +25,12 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 					// 'parentStatus' is actually a Java HashMap...
 					val jMap = parentStatus.asInstanceOf[java.util.HashMap[String, Object]]
 					val tgObj = extractValueFromHashMap(jMap, "followedBy").asInstanceOf[Array[Object]]
+
+					// DEBUG
+					val tgnull = tgObj(0) == null
+					if (tgnull) {
+						System.out.println("new tailGID: null")
+					} else System.out.println("new tailGID: " + tgObj(0).asInstanceOf[String])
 					if (tgObj.length > 0) {
 						dbMan.updateTaskTailGID(t.TaskGID.getOrElse(null), tgObj(0).asInstanceOf[String])
 						t.TaskTailGID_=(tgObj(0).asInstanceOf[String])
