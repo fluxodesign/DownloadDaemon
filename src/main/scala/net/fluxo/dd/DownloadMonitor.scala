@@ -69,7 +69,7 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 							val destDir = new File(parent.configDownloadDir())
 							if (packageDir.isDirectory && packageDir.exists() && destDir.isDirectory && destDir.exists()) {
 								FileUtils.moveDirectory(packageDir, destDir)
-							}
+							} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
 						}
 					}
 				}
@@ -78,10 +78,16 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 				Thread.sleep(secondToMillis(10))
 			} catch {
 				case ie: InterruptedException =>
+					LogWriter.writeLog(ie.getMessage, Level.ERROR)
+					LogWriter.writeLog("caused by " + ie.getCause.getMessage, Level.ERROR)
+					LogWriter.writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
 					if (!_isRunning) {
 						cleanup()
 					}
 				case e: Exception =>
+					LogWriter.writeLog(e.getMessage, Level.ERROR)
+					LogWriter.writeLog("caused by " + e.getCause.getMessage, Level.ERROR)
+					LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 					if (!_isRunning) {
 						cleanup()
 					}
