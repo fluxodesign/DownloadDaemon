@@ -19,6 +19,31 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 		parent.restartAriaDownloads()
 		while (_isRunning) {
 			try {
+				// if a download is over, the "aria2.tellStopped" should show it...
+				val finishedDownloads = parent.sendAriaTellStopped()
+				// DEBUG
+				System.out.println("finished downloads: " + finishedDownloads.length)
+				for (o <- finishedDownloads) {
+					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
+					val status = extractValueFromHashMap(jMap, "status").toString
+					val gid = extractValueFromHashMap(jMap, "gid").toString
+					val infoHash = extractValueFromHashMap(jMap, "infoHash").toString
+					val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
+					val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
+					val qf = dbMan.queryFinishTask(gid, infoHash, tl)
+					if (qf.CPCount > 0) {
+						dbMan.finishTask(status, cl, gid, infoHash, tl)
+						// move the package to a directory specified in config...
+						if (parent.configDownloadDir().length > 0) {
+							val packageDir = new File(qf.CPPackage.getOrElse(null))
+							val destDir = new File(parent.configDownloadDir())
+							if (packageDir.isDirectory && packageDir.exists() && destDir.isDirectory && destDir.exists()) {
+								FileUtils.moveDirectory(packageDir, destDir)
+							} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
+						}
+					}
+				}
+
 				val tasks = dbMan.queryUnfinishedTasks()
 				// DEBUG
 				System.out.println("unfinished tasks: " + tasks.length)
@@ -59,7 +84,7 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 				}
 
 				// if a download is over, the "aria2.tellStopped" should show it...
-				val finishedDownloads = parent.sendAriaTellStopped()
+				/*val finishedDownloads = parent.sendAriaTellStopped()
 				// DEBUG
 				System.out.println("finished downloads: " + finishedDownloads.length)
 				for (o <- finishedDownloads) {
@@ -81,7 +106,7 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 							} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
 						}
 					}
-				}
+				}*/
 
 				Thread.interrupted()
 				Thread.sleep(secondToMillis(10))
