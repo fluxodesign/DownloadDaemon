@@ -23,7 +23,10 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 				// DEBUG
 				System.out.println("unfinished tasks: " + tasks.length)
 				for (t <- tasks) {
+					LogWriter.writeLog("Querying active task status for TaskGID " + t.TaskGID.getOrElse(null), Level.INFO)
 					val parentStatus = parent.sendAriaTellStatus(t.TaskGID.getOrElse(null))
+					// DEBUG
+					System.out.println("got parent status!")
 					// 'parentStatus' is actually a Java HashMap...
 					val jMap = parentStatus.asInstanceOf[java.util.HashMap[String, Object]]
 					val tgObj = extractValueFromHashMap(jMap, "followedBy").asInstanceOf[Array[Object]]
