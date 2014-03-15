@@ -21,12 +21,8 @@ import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcCont
  */
 class UpdateProgressJob extends Job {
 
-	var dbMan: DbManager = null
+	var dbMan: DbManager = DbControl
 	var _xmlRpcClient: XmlRpcClient = null
-
-	def setObjects(o: DbManager) {
-		dbMan = o
-	}
 
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
