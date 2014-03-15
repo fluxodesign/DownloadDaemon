@@ -22,6 +22,13 @@ class Config {
 		_rpcPort = value
 	}
 
+	private var _rpcLimit: Int = 10
+
+	def RPCLimit: Int = _rpcLimit
+	def RPCLimit_=(value: Int) {
+		_rpcLimit = value
+	}
+
 	private var _httpdPort: Int = 8080
 
 	def HTTPDPort: Int = _httpdPort

@@ -29,13 +29,12 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	private var _threadXMPPMonitor: Thread = null
 	private var _tHttpd: Option[HttpDaemon] = None
 	private var _threadHttpD: Thread = null
-	private val _config = readConfiguration
 
 	override def run() {
 		_isRunning = true
 		dbMan.setup()
 		LogWriter.writeLog("Daemon started on " + LogWriter.currentDateTime, Level.INFO)
-		if (_config.isEmpty) {
+		if (OUtils.ReadConfig.isEmpty) {
 			LogWriter.writeLog("DownloadDaemon configuration is empty", Level.ERROR)
 			_isRunning = false
 			return
@@ -45,66 +44,26 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_isRunning = false
 			return
 		}
-		if (isRPCPortInUse) {
-			LogWriter.writeLog("RPC Port " +  _config.RPCPort + " is in use; assumed aria2 has been started", Level.INFO)
-			_isRunning = false
-			return
-		} else {
-			activateAria2()
-		}
 		if (_isRunning) {
 			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan, this)
 			_tDlMonitor = Some(dlMon)
 			_threadDlMonitor = new Thread(_tDlMonitor.getOrElse(null))
 			_threadDlMonitor.start()
 			val xmppMon: XMPPMonitor = {
-				if (_config.XMPPProvider.getOrElse(null).toLowerCase.equals("google")) {
-					new XMPPMonitor("google", "talk.google.com", 5222, _config.XMPPAccount.getOrElse(null), _config.XMPPPassword.getOrElse(null), this)
-				} else if (_config.XMPPProvider.getOrElse(null).toLowerCase.equals("facebook")) {
-					new XMPPMonitor("facebook", "chat.facebook.com", 5222, _config.XMPPAccount.getOrElse(null), _config.XMPPPassword.getOrElse(null), this)
+				if (OUtils.ReadConfig.XMPPProvider.getOrElse(null).toLowerCase.equals("google")) {
+					new XMPPMonitor("google", "talk.google.com", 5222, OUtils.ReadConfig.XMPPAccount.getOrElse(null), OUtils.ReadConfig.XMPPPassword.getOrElse(null), this)
+				} else if (OUtils.ReadConfig.XMPPProvider.getOrElse(null).toLowerCase.equals("facebook")) {
+					new XMPPMonitor("facebook", "chat.facebook.com", 5222, OUtils.ReadConfig.XMPPAccount.getOrElse(null), OUtils.ReadConfig.XMPPPassword.getOrElse(null), this)
 				} else null
 			}
 			_tXMPPMonitor = Some(xmppMon)
 			_threadXMPPMonitor = new Thread(_tXMPPMonitor.getOrElse(null))
 			_threadXMPPMonitor.start()
-			val httpd: HttpDaemon = new HttpDaemon(_config.HTTPDPort)
+			val httpd: HttpDaemon = new HttpDaemon(OUtils.ReadConfig.HTTPDPort)
 			_tHttpd = Some(httpd)
 			_threadHttpD = new Thread(_tHttpd.getOrElse(null))
 			_threadHttpD.start()
 		}
-	}
-
-	def isTorrentDirExists: Boolean = {
-		val dir = new File("./torrents")
-		dir.exists() && dir.isDirectory && dir.canRead
-	}
-
-	def readConfiguration: Config = {
-		val prop: Properties = new Properties
-		var cfg: Config = new Config
-		try {
-			prop.load(new FileInputStream("./dd.properties"))
-			cfg.RPCPort_= (java.lang.Integer.parseInt(prop.getProperty("rpc_port")))
-			cfg.HTTPDPort_=(java.lang.Integer.parseInt(prop.getProperty("httpd_port")))
-			cfg.XMPPProvider_=(prop.getProperty("xmpp_provider"))
-			cfg.XMPPAccount_=(prop.getProperty("xmpp_account"))
-			cfg.XMPPPassword_=(prop.getProperty("xmpp_password"))
-			cfg.DownloadDir_=(prop.getProperty("download_dir"))
-		} catch {
-			case e: Exception =>
-				LogWriter.writeLog("Error reading properties file dd.properties", Level.ERROR)
-				LogWriter.writeLog(e.getMessage + " caused by " + e.getCause.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
-		}
-		cfg
-	}
-
-	def configDownloadDir(): String = {
-		_config.DownloadDir.getOrElse("")
-	}
-
-	def configHttpdPort(): Int = {
-		_config.HTTPDPort
 	}
 
 	def hasAria2: Boolean = {
@@ -125,7 +84,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		status
 	}
 
-	def isRPCPortInUse: Boolean = {
+	/*def isRPCPortInUse: Boolean = {
 		var status = false
 		var ss: ServerSocket = null
 		try {
@@ -140,9 +99,9 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			}
 		}
 		status
-	}
+	}*/
 
-	def activateAria2() {
+	/*def activateAria2() {
 		LogWriter.writeLog("Starting aria2c...", Level.INFO)
 		new Thread(new AriaThread).start()
 	}
@@ -222,7 +181,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			LogWriter.writeLog("Resuming download for " + t.TaskGID.getOrElse(null), Level.INFO)
 			sendAriaUri(t.TaskInput.getOrElse(null), t.TaskOwner.getOrElse(null), t)
 		}
-	}
+	}*/
 
 	def tryStop() {
 		// Destroy aria2 process..
@@ -240,7 +199,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		}
 	}
 
-	class XmlRpcStringSerializer extends StringSerializer {
+	/*class XmlRpcStringSerializer extends StringSerializer {
 		@throws(classOf[SAXException])
 		override def write(pHandler: ContentHandler, pObject: Object) {
 			write(pHandler, StringSerializer.STRING_TAG, pObject.toString)
@@ -265,5 +224,5 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 				"--seed-ratio=0.1", "--rpc-listen-all=false").start()
 			_aria2Process.waitFor()
 		}
-	}
+	}*/
 }
