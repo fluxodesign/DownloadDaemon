@@ -1,8 +1,19 @@
 package net.fluxo.dd
 
 import org.apache.log4j.Level
-import java.io.File
+import java.io.{IOException, FileInputStream, File}
 import org.apache.commons.io.FileUtils
+import org.quartz.impl.StdSchedulerFactory
+import org.quartz._
+import org.apache.xmlrpc.client.{XmlRpcClient, XmlRpcClientConfigImpl}
+import java.net.URL
+import java.util
+import net.fluxo.dd.dbo.Task
+import org.joda.time.DateTime
+import java.util.Properties
+import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
+import org.xml.sax.{ContentHandler, SAXException}
+import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcController}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -13,39 +24,34 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 
 	@volatile
 	private var _isRunning: Boolean = true
+	private val _scheduler: Scheduler = StdSchedulerFactory.getDefaultScheduler
 
 	override def run() {
 		//check for unfinished downloads and restart them...
 		parent.restartAriaDownloads()
-		while (_isRunning) {
-			try {
-				// if a download is over, the "aria2.tellStopped" should show it...
-				// DEBUG
-				System.out.println("about to query finished downloads")
-				val finishedDownloads = parent.sendAriaTellStopped()
-				// DEBUG
-				System.out.println("finished downloads: " + finishedDownloads.length)
-				for (o <- finishedDownloads) {
-					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
-					val status = extractValueFromHashMap(jMap, "status").toString
-					val gid = extractValueFromHashMap(jMap, "gid").toString
-					val infoHash = extractValueFromHashMap(jMap, "infoHash").toString
-					val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
-					val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
-					val qf = dbMan.queryFinishTask(gid, infoHash, tl)
-					if (qf.CPCount > 0) {
-						dbMan.finishTask(status, cl, gid, infoHash, tl)
-						// move the package to a directory specified in config...
-						if (parent.configDownloadDir().length > 0) {
-							val packageDir = new File(qf.CPPackage.getOrElse(null))
-							val destDir = new File(parent.configDownloadDir())
-							if (packageDir.isDirectory && packageDir.exists() && destDir.isDirectory && destDir.exists()) {
-								FileUtils.moveDirectory(packageDir, destDir)
-							} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
-						}
-					}
-				}
 
+		try {
+			_scheduler.start()
+
+			val jobDetail: JobDetail = JobBuilder.newJob(classOf[UpdateProgressJob])
+				.withIdentity("UpdateJob", "UpdateGroup")
+				.build()
+
+			val trigger: Trigger = TriggerBuilder.newTrigger().withIdentity("UpdateTrigger", "UpdateGroup")
+				.startNow()
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInMinutes(3).repeatForever())
+				.build()
+			_scheduler.scheduleJob(jobDetail, trigger)
+		} catch {
+			case se: SchedulerException =>
+				LogWriter.writeLog("Quartz Scheduler ERROR: " + se.getMessage + " caused by " + se.getUnderlyingException.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(se), Level.ERROR)
+			case ioe: IOException =>
+				LogWriter.writeLog("Quartz Scheduler IO/ERROR: " + ioe.getMessage + " caused by " + ioe.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
+		}
+		/*while (_isRunning) {
+			try {
 				val tasks = dbMan.queryUnfinishedTasks()
 				// DEBUG
 				System.out.println("unfinished tasks: " + tasks.length)
@@ -86,7 +92,7 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 				}
 
 				// if a download is over, the "aria2.tellStopped" should show it...
-				/*val finishedDownloads = parent.sendAriaTellStopped()
+				val finishedDownloads = parent.sendAriaTellStopped()
 				// DEBUG
 				System.out.println("finished downloads: " + finishedDownloads.length)
 				for (o <- finishedDownloads) {
@@ -108,7 +114,7 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 							} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
 						}
 					}
-				}*/
+				}
 
 				Thread.interrupted()
 				Thread.sleep(secondToMillis(10))
@@ -126,10 +132,10 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 						cleanup()
 					}
 			}
-		}
+		}*/
 	}
 
-	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
+	/*def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
 		var ret: Object = null
 		val it = map.entrySet().iterator()
 		while (it.hasNext) {
@@ -137,7 +143,7 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 			if (entry.getKey.equals(key)) ret = entry.getValue
 		}
 		ret
-	}
+	}*/
 
 	def cleanup() {
 		LogWriter.writeLog("DownloadMonitor thread is shut down!", Level.INFO)
@@ -152,4 +158,5 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 	def secondToMillis(secs: Long): Long = {
 		secs * 1000
 	}
+
 }
