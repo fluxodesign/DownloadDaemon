@@ -143,7 +143,7 @@ class UpdateProgressJob extends Job {
 	}
 
 	def startXmlRpcClient() {
-		if (isRPCPortInUse) {
+		if (!isRPCPortInUse) {
 			val url: String = "http://127.0.0.1:" + readConfiguration("rpc_port") + "/rpc"
 			val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
 			xmlClientConfig.setServerURL(new URL(url))
