@@ -18,8 +18,8 @@ class AriaProcessor {
 	def processRequest(uri: String): String = {
 		// find a free port between starting rpc port to (starting rpc port + limit)
 		var rpcPort = -1
-		for (x <- OUtils.ReadConfig.RPCPort to OUtils.ReadConfig.RPCPort + OUtils.ReadConfig.RPCLimit) {
-			if (!OUtils.PortInUse(x)) {
+		for (x <- OUtils.readConfig.RPCPort to OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
+			if (!OUtils.portInUse(x)) {
 				rpcPort = x
 				break
 			}
@@ -30,11 +30,11 @@ class AriaProcessor {
 
 	private
 
-	class AriaThread(port: Int, uri: String) extends Runnable {
+	class AriaThread(port: Int, uri: String, gid: String) extends Runnable {
 		override def run() {
 			val process = new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
 				"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
-				"--seed-ratio=0.1", "--rpc-listen-all=false", uri).start()
+				"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false", uri).start()
 			process.waitFor()
 		}
 	}

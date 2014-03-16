@@ -1,7 +1,7 @@
 package net.fluxo.dd
 
 import net.fluxo.dd.dbo.Config
-import java.util.Properties
+import java.util.{Random, Properties}
 import java.io.{IOException, FileInputStream}
 import org.apache.log4j.Level
 import java.net.ServerSocket
@@ -15,7 +15,7 @@ class Utils {
 
 	private var _config: Option[Config] = None
 
-	def ReadConfig: Config = {
+	def readConfig: Config = {
 		if (_config.isEmpty) _config = Some(readConfiguration)
 		_config.getOrElse(null)
 	}
@@ -41,7 +41,7 @@ class Utils {
 		cfg
 	}
 
-	def PortInUse(port: Int): Boolean = {
+	def portInUse(port: Int): Boolean = {
 		var status = false
 		var ss: ServerSocket = null
 		try {
@@ -58,12 +58,13 @@ class Utils {
 		status
 	}
 
-	def GenerateGID(): String = {
+	def generateGID(): String = {
 		val char16: Array[Char] = new Array[Char](16)
 		//[0-9A-F]
+		val randomizer = new Random()
 		for (x <- 0 until 16) {
 			char16(x) = {
-
+				val wordOrDigit = randomizer.nextBoolean()
 			}
 		}
 		char16.toString

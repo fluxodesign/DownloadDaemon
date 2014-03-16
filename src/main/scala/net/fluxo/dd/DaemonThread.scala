@@ -2,15 +2,6 @@ package net.fluxo.dd
 
 import org.apache.log4j.Level
 import java.io._
-import java.net.{URL, ServerSocket}
-import net.fluxo.dd.dbo.{Task, Config}
-import java.util.Properties
-import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
-import org.apache.xmlrpc.common.{XmlRpcStreamConfig, XmlRpcController, TypeFactoryImpl}
-import org.apache.xmlrpc.serializer.{StringSerializer, TypeSerializer}
-import org.xml.sax.{SAXException, ContentHandler}
-import org.joda.time.DateTime
-import java.util
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -21,8 +12,6 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 
 	@volatile
 	private var _isRunning: Boolean = false
-	private var _xmlRpcClient: XmlRpcClient = _
-	private var _aria2Process: Process = _
 	private var _tDlMonitor: Option[DownloadMonitor] = None
 	private var _threadDlMonitor: Thread = null
 	private var _tXMPPMonitor: Option[XMPPMonitor] = None
@@ -34,7 +23,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		_isRunning = true
 		dbMan.setup()
 		LogWriter.writeLog("Daemon started on " + LogWriter.currentDateTime, Level.INFO)
-		if (OUtils.ReadConfig.isEmpty) {
+		if (OUtils.readConfig.isEmpty) {
 			LogWriter.writeLog("DownloadDaemon configuration is empty", Level.ERROR)
 			_isRunning = false
 			return
@@ -50,16 +39,16 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_threadDlMonitor = new Thread(_tDlMonitor.getOrElse(null))
 			_threadDlMonitor.start()
 			val xmppMon: XMPPMonitor = {
-				if (OUtils.ReadConfig.XMPPProvider.getOrElse(null).toLowerCase.equals("google")) {
-					new XMPPMonitor("google", "talk.google.com", 5222, OUtils.ReadConfig.XMPPAccount.getOrElse(null), OUtils.ReadConfig.XMPPPassword.getOrElse(null), this)
-				} else if (OUtils.ReadConfig.XMPPProvider.getOrElse(null).toLowerCase.equals("facebook")) {
-					new XMPPMonitor("facebook", "chat.facebook.com", 5222, OUtils.ReadConfig.XMPPAccount.getOrElse(null), OUtils.ReadConfig.XMPPPassword.getOrElse(null), this)
+				if (OUtils.readConfig.XMPPProvider.getOrElse(null).toLowerCase.equals("google")) {
+					new XMPPMonitor("google", "talk.google.com", 5222, OUtils.readConfig.XMPPAccount.getOrElse(null), OUtils.readConfig.XMPPPassword.getOrElse(null), this)
+				} else if (OUtils.readConfig.XMPPProvider.getOrElse(null).toLowerCase.equals("facebook")) {
+					new XMPPMonitor("facebook", "chat.facebook.com", 5222, OUtils.readConfig.XMPPAccount.getOrElse(null), OUtils.readConfig.XMPPPassword.getOrElse(null), this)
 				} else null
 			}
 			_tXMPPMonitor = Some(xmppMon)
 			_threadXMPPMonitor = new Thread(_tXMPPMonitor.getOrElse(null))
 			_threadXMPPMonitor.start()
-			val httpd: HttpDaemon = new HttpDaemon(OUtils.ReadConfig.HTTPDPort)
+			val httpd: HttpDaemon = new HttpDaemon(OUtils.readConfig.HTTPDPort)
 			_tHttpd = Some(httpd)
 			_threadHttpD = new Thread(_tHttpd.getOrElse(null))
 			_threadHttpD.start()
@@ -184,10 +173,6 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	}*/
 
 	def tryStop() {
-		// Destroy aria2 process..
-		if (_aria2Process != null) {
-			_aria2Process.destroy()
-		}
 		/// TODO
 		if (_tDlMonitor.isDefined) {
 			_tDlMonitor.getOrElse(null).stop()
