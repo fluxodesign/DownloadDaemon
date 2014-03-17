@@ -26,9 +26,13 @@ class AriaProcessor {
 				break()
 			}
 		}
+		// DEBUG
+		System.out.println("Using port: " + rpcPort)
 		if (rpcPort < 0) return "All download slots taken, try again later"
 		var newGid = OUtils.generateGID()
 		while (DbControl.isTaskGIDUsed(newGid)) newGid = OUtils.generateGID()
+		// DEBUG
+		System.out.println("new GID generated: " + newGid)
 		new Thread(new AriaThread(rpcPort, uri, newGid, owner, true)).start()
 		"OK " + newGid
 	}
