@@ -22,7 +22,12 @@ class AriaProcessor {
 		System.out.println("Starting processRequest()...")
 		// find a free port between starting rpc port to (starting rpc port + limit)
 		var rpcPort = -1
+		// DEBUG
+		System.out.println("Starting RPC port: " + OUtils.readConfig.RPCPort)
+		System.out.println("Ending RPC port: " + (OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit))
 		for (x <- OUtils.readConfig.RPCPort to OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
+			// DEBUG
+			System.out.println("Checking port: " + x)
 			if (!OUtils.portInUse(x)) {
 				rpcPort = x
 				break()
