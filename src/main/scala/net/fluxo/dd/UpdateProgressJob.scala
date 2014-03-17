@@ -35,6 +35,8 @@ class UpdateProgressJob extends Job {
 				client.setTypeFactory(new XmlRpcTypeFactory(client))
 
 				val activeTasks = sendAriaTellActive(client)
+				// DEBUG
+				System.out.println("Active task(s) for port " + a.AriaPort + ": " + activeTasks.length)
 				for (o <- activeTasks) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val tailGID = extractValueFromHashMap(jMap, "gid").toString
@@ -54,6 +56,8 @@ class UpdateProgressJob extends Job {
 				}
 
 				val finishedTasks = sendAriaTellStopped(client)
+				// DEBUG
+				System.out.println("Finished task(s) for port: " + a.AriaPort + ": " + finishedTasks.length)
 				for (o <- finishedTasks) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val status = extractValueFromHashMap(jMap, "status").toString
