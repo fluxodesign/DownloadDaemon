@@ -43,6 +43,8 @@ class Utils {
 	}
 
 	def portInUse(port: Int): Boolean = {
+		// DEBUG
+		System.out.println("Checking port " + port + "...")
 		var status = false
 		var ss: ServerSocket = null
 		try {

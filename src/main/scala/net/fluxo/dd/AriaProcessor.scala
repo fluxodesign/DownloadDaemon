@@ -29,6 +29,8 @@ class AriaProcessor {
 			// DEBUG
 			System.out.println("Checking port: " + x)
 			if (!OUtils.portInUse(x)) {
+				// DEBUG
+				System.out.println("Inside checking loop...")
 				rpcPort = x
 				break()
 			}
