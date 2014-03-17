@@ -131,6 +131,28 @@ class DbManager {
 		cp
 	}
 
+	def isTaskGIDUsed(gid: String): Boolean = {
+		var response: Boolean = false
+		val queryStatement = """SELECT COUNT(*) AS count FROM input WHERE gid = ? AND completed = ?"""
+		try {
+			val ps = _conn.prepareStatement(queryStatement)
+			ps.setString(1, gid)
+			ps.setBoolean(2, false)
+			val rs = ps.executeQuery()
+			while (rs.next()) {
+				if (rs.getInt("count") > 0) response = true
+			}
+			rs.close()
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error querying task GID for unfinished tasks: " + gid, Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+		}
+		response
+	}
+
 	def finishTask(status: String, cl: Long, tailGID: String, infoHash: String, tl: Long): Boolean = {
 		var response: Boolean = true
 		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE tail_gid = ? AND info_hash = ? AND total_length = ?"""

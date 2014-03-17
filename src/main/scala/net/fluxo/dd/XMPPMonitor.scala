@@ -290,9 +290,9 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 			words(1) match {
 				case "ADD_URI" =>
 					if (words.length < 3) "ERR LENGTH"
-					parent.sendAriaUri(words(2), owner, null)
+					OAria.processRequest(words(2), owner)
 				case "STATUS" =>
-					val tasks: Array[Task] = parent.getUserDownloadsStatus(owner)
+					val tasks: Array[Task] = DbControl.queryTasks(owner)
 					val sb: StringBuilder = new StringBuilder
 					for (t <- tasks) {
 						val progress: Double = (t.TaskCompletedLength.asInstanceOf[Double] / t.TaskTotalLength.asInstanceOf[Double]) * 100
@@ -326,7 +326,8 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 										val intObj: Option[Integer] = Some(intValidator validate words(5))
 										intObj.getOrElse(0).asInstanceOf[Int]
 									}
-									YIFYP procListMovie(page, quality, rating, _externalIP.getOrElse("127.0.0.1"), parent.configHttpdPort())
+									YIFYP procListMovie(page, quality, rating, _externalIP.getOrElse("127.0.0.1"),
+										OUtils.readConfig.HTTPDPort)
 								}
 							case "DETAILS" =>
 								if (words.length != 4) "ERR LENGTH: \"DETAILS\" requires 4 params, found " + words.length

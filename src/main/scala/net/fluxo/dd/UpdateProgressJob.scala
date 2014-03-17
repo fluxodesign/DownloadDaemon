@@ -3,13 +3,10 @@ package net.fluxo.dd
 import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
 import org.quartz.{Job, JobExecutionContext, JobExecutionException}
 import org.apache.log4j.Level
-import java.io.{IOException, FileInputStream, File}
+import java.io.File
 import org.apache.commons.io.FileUtils
-import java.util.Properties
-import java.net.{ServerSocket, URL}
+import java.net.URL
 import java.util
-import net.fluxo.dd.dbo.Task
-import org.joda.time.DateTime
 import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
 import org.xml.sax.{ContentHandler, SAXException}
 import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcController}
@@ -21,74 +18,66 @@ import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcCont
  */
 class UpdateProgressJob extends Job {
 
-	var dbMan: DbManager = DbControl
-	var _xmlRpcClient: XmlRpcClient = null
-
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
 		try {
-			val tasks = dbMan.queryUnfinishedTasks()
-			// DEBUG
-			System.out.println("unfinished tasks: " + tasks.length)
-			for (t <- tasks) {
-				LogWriter.writeLog("Querying active task status for TaskGID " + t.TaskGID.getOrElse(null), Level.INFO)
-				val parentStatus = sendAriaTellStatus(t.TaskGID.getOrElse(null))
-				// DEBUG
-				System.out.println("got parent status!")
-				// 'parentStatus' is actually a Java HashMap...
-				val jMap = parentStatus.asInstanceOf[java.util.HashMap[String, Object]]
-				val tgObj = extractValueFromHashMap(jMap, "followedBy").asInstanceOf[Array[Object]]
-				if (tgObj.length > 0 && tgObj(0) != null) {
-					dbMan.updateTaskTailGID(t.TaskGID.getOrElse(null), tgObj(0).asInstanceOf[String])
-					t.TaskTailGID_=(tgObj(0).asInstanceOf[String])
-				}
-			}
+			val iterator = OAria.ActiveProcesses.iterator()
+			while (iterator.hasNext) {
+				var flagCompleted: Boolean = false
+				// get an RPC client for a particular port...
+				val a = iterator.next()
+				val url = "http://127.0.0.1:" + a.AriaPort + "/rpc"
+				val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
+				xmlClientConfig.setServerURL(new URL(url))
+				LogWriter.writeLog("Starting XML-RPC client...", Level.INFO)
+				val client = new XmlRpcClient()
+				client.setConfig(xmlClientConfig)
+				client.setTypeFactory(new XmlRpcTypeFactory(client))
 
-			val progressReport = sendAriaTellActive()
-			// DEBUG
-			System.out.println("active downloads: " + progressReport.length)
-			// 'progressReport' is an array of Objects; we need to cast EACH Object INTO a Java HashMap...
-			for (o <- progressReport) {
-				val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
-				val tailGID = extractValueFromHashMap(jMap, "gid").toString
-				val task = {
-					if (tailGID.length > 0) dbMan.queryTaskTailGID(tailGID) else null
+				val activeTasks = sendAriaTellActive(client)
+				for (o <- activeTasks) {
+					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
+					val tailGID = extractValueFromHashMap(jMap, "gid").toString
+					val task = {
+						if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else null
+					}
+					val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
+					task.TaskCompletedLength_=(cl)
+					val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
+					task.TaskTotalLength_=(tl)
+					task.TaskStatus_=(extractValueFromHashMap(jMap, "status").toString)
+					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
+					val btDetailsMap = extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
+					val infoMap = extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
+					task.TaskPackage_=(extractValueFromHashMap(infoMap, "name").toString)
+					DbControl.updateTask(task)
 				}
-				val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
-				task.TaskCompletedLength_=(cl)
-				val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
-				task.TaskTotalLength_=(tl)
-				task.TaskStatus_=(extractValueFromHashMap(jMap, "status").toString)
-				// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
-				val btDetailsMap = extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
-				val infoMap = extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
-				task.TaskPackage_=(extractValueFromHashMap(infoMap, "name").toString)
-				dbMan.updateTask(task)
-			}
 
-			// if a download is over, the "aria2.tellStopped" should show it...
-			val finishedDownloads = sendAriaTellStopped()
-			// DEBUG
-			System.out.println("finished downloads: " + finishedDownloads.length)
-			for (o <- finishedDownloads) {
-				val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
-				val status = extractValueFromHashMap(jMap, "status").toString
-				val gid = extractValueFromHashMap(jMap, "gid").toString
-				val infoHash = extractValueFromHashMap(jMap, "infoHash").toString
-				val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
-				val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
-				val qf = dbMan.queryFinishTask(gid, infoHash, tl)
-				if (qf.CPCount > 0) {
-					dbMan.finishTask(status, cl, gid, infoHash, tl)
-					// move the package to a directory specified in config...
-					if (readConfiguration("download_dir").length > 0) {
-						val packageDir = new File(qf.CPPackage.getOrElse(null))
-						val destDir = new File(readConfiguration("download_dir"))
-						if (packageDir.isDirectory && packageDir.exists() && destDir.isDirectory && destDir.exists()) {
-							FileUtils.moveDirectory(packageDir, destDir)
-						} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
+				val finishedTasks = sendAriaTellStopped(client)
+				for (o <- finishedTasks) {
+					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
+					val status = extractValueFromHashMap(jMap, "status").toString
+					val gid = extractValueFromHashMap(jMap, "gid").toString
+					val infoHash = extractValueFromHashMap(jMap, "infoHash").toString
+					val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
+					val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
+					val qf = DbControl.queryFinishTask(gid, infoHash, tl)
+					if (qf.CPCount > 0) {
+						DbControl.finishTask(status, cl, gid, infoHash, tl)
+						flagCompleted = true
+						// move the package to a directory specified in config...
+						if (OUtils.readConfig.DownloadDir.getOrElse(null).length > 0) {
+							val packageDir = new File(qf.CPPackage.getOrElse(null))
+							val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse(null))
+							if (packageDir.isDirectory && packageDir.exists() && destDir.isDirectory && destDir.exists()) {
+								FileUtils.moveDirectory(packageDir, destDir)
+							} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
+						}
 					}
 				}
+
+				// shutdown this aria2 process when it's update is finished...
+				if (activeTasks.length == 0 && flagCompleted) sendAriaTellShutdown(client)
 			}
 		} catch {
 			case ie: InterruptedException =>
@@ -98,38 +87,6 @@ class UpdateProgressJob extends Job {
 				LogWriter.writeLog(e.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 		}
-	}
-
-	def isRPCPortInUse: Boolean = {
-		var status = false
-		var ss: ServerSocket = null
-		try {
-			ss = new ServerSocket(Integer.parseInt(readConfiguration("rpc_port")))
-			ss.setReuseAddress(true)
-		} catch {
-			case ioe: IOException =>
-				status = true
-		} finally {
-			if (ss != null) {
-				ss.close()
-			}
-		}
-		status
-	}
-
-	def readConfiguration(property: String): String = {
-		val prop: Properties = new Properties
-		var retVal: String = null
-		try {
-			prop.load(new FileInputStream("./dd.properties"))
-			retVal = prop.getProperty(property, "")
-		} catch {
-			case e: Exception =>
-				LogWriter.writeLog("Error reading properties file dd.properties", Level.ERROR)
-				LogWriter.writeLog(e.getMessage + " caused by " + e.getCause.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
-		}
-		retVal
 	}
 
 	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
@@ -142,69 +99,30 @@ class UpdateProgressJob extends Job {
 		ret
 	}
 
-	def startXmlRpcClient() {
-		if (!isRPCPortInUse) {
-			val url: String = "http://127.0.0.1:" + readConfiguration("rpc_port") + "/rpc"
-			val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
-			xmlClientConfig.setServerURL(new URL(url))
-			LogWriter.writeLog("Starting XML-RPC client...", Level.INFO)
-			_xmlRpcClient = new XmlRpcClient()
-			_xmlRpcClient.setConfig(xmlClientConfig)
-			_xmlRpcClient.setTypeFactory(new XmlRpcTypeFactory(_xmlRpcClient))
-		}
-	}
-
-	def sendAriaTellStatus(gid: String): Object = {
-		if (_xmlRpcClient == null) {
-			startXmlRpcClient()
-		}
+	def sendAriaTellStatus(gid: String, client: XmlRpcClient): Object = {
 		//val params = Array[Object](gid)
 		val params = new util.ArrayList[Object]()
 		params.add(gid)
-		_xmlRpcClient.execute("aria2.tellStatus", params)
+		client.execute("aria2.tellStatus", params)
 	}
 
-	def sendAriaTellActive(): Array[Object] = {
-		if (_xmlRpcClient == null) {
-			startXmlRpcClient()
-		}
+	def sendAriaTellActive(client: XmlRpcClient): Array[Object] = {
 		val params = Array[Object]()
-		val retObject = _xmlRpcClient.execute("aria2.tellActive", params)
+		val retObject = client.execute("aria2.tellActive", params)
 		// Returned XML-RPC is an Array Java HashMap...
 		retObject.asInstanceOf[Array[Object]]
 	}
 
-	def sendAriaTellStopped(): Array[Object] = {
-		if (_xmlRpcClient == null) {
-			startXmlRpcClient()
-		}
+	def sendAriaTellStopped(client: XmlRpcClient): Array[Object] = {
 		val params = new util.ArrayList[Int]()
 		params.add(0)
 		params.add(100)
-		val retObject = _xmlRpcClient.execute("aria2.tellStopped", params)
+		val retObject = client.execute("aria2.tellStopped", params)
 		retObject.asInstanceOf[Array[Object]]
 	}
 
-	def sendAriaUri(uri: String, owner: String, t: Task): String = {
-		var downloadGID: String = "ERR ADD_TASK FAILED"
-		if (_xmlRpcClient == null) {
-			startXmlRpcClient()
-		}
-		val params = Array[Object](Array[String](uri))
-		downloadGID = _xmlRpcClient.execute("aria2.addUri", params).asInstanceOf[String]
-		if (t == null) {
-			val newTask: Task = new Task {
-				TaskGID_=(downloadGID)
-				TaskInput_=(uri)
-				TaskStarted_=(DateTime.now.getMillis)
-				TaskEnded_=(DateTime.now.minusYears(10).getMillis)
-				TaskOwner_=(owner)
-			}
-			dbMan.addTask(newTask)
-		} else {
-			dbMan.replaceGID(t.TaskGID.getOrElse(null), downloadGID, t.TaskOwner.getOrElse(null))
-		}
-		downloadGID
+	def sendAriaTellShutdown(client: XmlRpcClient) {
+		client.execute("aria2.shutdown", Array[Object]())
 	}
 
 	class XmlRpcStringSerializer extends StringSerializer {

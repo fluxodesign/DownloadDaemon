@@ -14,6 +14,7 @@ import java.net.ServerSocket
 class Utils {
 
 	private var _config: Option[Config] = None
+	private val _randomizer: Random = new Random(System.currentTimeMillis())
 
 	def readConfig: Config = {
 		if (_config.isEmpty) _config = Some(readConfiguration)
@@ -59,15 +60,13 @@ class Utils {
 	}
 
 	def generateGID(): String = {
-		val char16: Array[Char] = new Array[Char](16)
 		//[0-9A-F]
-		val randomizer = new Random()
-		for (x <- 0 until 16) {
-			char16(x) = {
-				val wordOrDigit = randomizer.nextBoolean()
-			}
+		val randomValue = _randomizer.nextLong()
+		val sb = new StringBuilder(java.lang.Long.toHexString(randomValue))
+		while (sb.length < 16) {
+			sb.insert(0, "0")
 		}
-		char16.toString
+		sb.toString()
 	}
 }
 
