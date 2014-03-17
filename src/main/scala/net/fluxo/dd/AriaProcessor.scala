@@ -36,7 +36,7 @@ class AriaProcessor {
 		if (rpcPort < 0) return "All download slots taken, try again later"
 		var newGid = OUtils.generateGID()
 		while (DbControl.isTaskGIDUsed(newGid)) newGid = OUtils.generateGID()
-		new Thread(new AriaThread(rpcPort, uri, newGid, owner, true)).start()
+		new Thread(new AriaThread(rpcPort, uri, newGid, owner, false)).start()
 		"OK " + newGid
 	}
 
