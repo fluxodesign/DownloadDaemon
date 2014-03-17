@@ -66,7 +66,7 @@ class AriaProcessor {
 		override def run() {
 			val process = new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
 				"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
-				"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false", "\"" + uri + "\"").start()
+				"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false").start()
 
 			val br = new BufferedReader(new InputStreamReader(process.getInputStream))
 			var line = br.readLine()
