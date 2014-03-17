@@ -5,6 +5,7 @@ import java.util
 import scala.util.control.Breaks._
 import org.joda.time.DateTime
 import org.apache.log4j.Level
+import java.io.{BufferedReader, InputStreamReader}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -61,6 +62,13 @@ class AriaProcessor {
 			val process = new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
 				"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
 				"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false", "\"" + uri + "\"").start()
+
+			val br = new BufferedReader(new InputStreamReader(process.getInputStream))
+			var line = br.readLine()
+			while (line != null) {
+				System.out.println(line)
+				line = br.readLine()
+			}
 			if (!restarting) {
 				DbControl.addTask(new Task {
 					TaskGID_=(gid)

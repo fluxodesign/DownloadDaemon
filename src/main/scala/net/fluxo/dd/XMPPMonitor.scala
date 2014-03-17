@@ -290,8 +290,6 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 			words(1) match {
 				case "ADD_URI" =>
 					if (words.length < 3) "ERR LENGTH"
-					// DEBUG
-					System.out.println("Inside ADD_URI")
 					OAria.processRequest(words(2), owner)
 				case "STATUS" =>
 					val tasks: Array[Task] = DbControl.queryTasks(owner)
