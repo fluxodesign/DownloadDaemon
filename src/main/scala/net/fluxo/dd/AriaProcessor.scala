@@ -25,14 +25,14 @@ class AriaProcessor {
 		// DEBUG
 		System.out.println("Starting RPC port: " + OUtils.readConfig.RPCPort)
 		System.out.println("Ending RPC port: " + (OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit))
-		for (x <- OUtils.readConfig.RPCPort to OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
-			// DEBUG
-			System.out.println("Checking port: " + x)
-			if (!OUtils.portInUse(x)) {
+		breakable {
+			for (x <- OUtils.readConfig.RPCPort to OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
 				// DEBUG
-				System.out.println("Inside checking loop...")
-				rpcPort = x
-				break()
+				System.out.println("Checking port: " + x)
+				if (!OUtils.portInUse(x)) {
+					rpcPort = x
+					break
+				}
 			}
 		}
 		// DEBUG
