@@ -133,11 +133,10 @@ class DbManager {
 
 	def isTaskGIDUsed(gid: String): Boolean = {
 		var response: Boolean = false
-		val queryStatement = """SELECT COUNT(*) AS count FROM input WHERE gid = ? AND completed = ?"""
+		val queryStatement = """SELECT COUNT(*) AS count FROM input WHERE gid = ?"""
 		try {
 			val ps = _conn.prepareStatement(queryStatement)
 			ps.setString(1, gid)
-			ps.setBoolean(2, false)
 			val rs = ps.executeQuery()
 			while (rs.next()) {
 				if (rs.getInt("count") > 0) response = true
@@ -179,6 +178,40 @@ class DbManager {
 				if (response) response = false
 		}
 		response
+	}
+
+	def queryTask(gid: String): Array[Task] = {
+		val queryStatement = """SELECT * FROM input WHERE gid = ?"""
+		val mlist = new mutable.MutableList[Task]
+		try {
+			val ps = _conn.prepareStatement(queryStatement)
+			ps.setString(1, gid)
+			val rs = ps.executeQuery()
+			while (rs.next()) {
+				mlist.+=(new Task {
+					TaskGID_=(rs.getString("gid"))
+					TaskTailGID_=(rs.getString("tail_gid"))
+					TaskInput_=(rs.getString("input"))
+					TaskStarted_=(rs.getTimestamp("start").getTime)
+					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+					IsTaskCompleted_=(rs.getBoolean("completed"))
+					TaskOwner_=(rs.getString("owner"))
+					TaskPackage_=(rs.getString("package"))
+					TaskStatus_=(rs.getString("status"))
+					TaskTotalLength_=(rs.getLong("total_length"))
+					TaskCompletedLength_=(rs.getLong("completed_length"))
+					TaskInfoHash_=(rs.getString("info_hash"))
+				})
+			}
+			rs.close()
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error querying task with GID " + gid, Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+		}
+		mlist.toArray
 	}
 
 	def queryTasks(owner: String): Array[Task] = {

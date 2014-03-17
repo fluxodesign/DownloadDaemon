@@ -34,6 +34,19 @@ class UpdateProgressJob extends Job {
 				client.setConfig(xmlClientConfig)
 				client.setTypeFactory(new XmlRpcTypeFactory(client))
 
+				// we need to acquire the TAIL GID if this is a new download, or a restart...
+				val tasks = DbControl.queryTask(a.AriaTaskGid.getOrElse(null))
+				if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
+					if (tasks(0).TaskTailGID.getOrElse("").isEmpty || a.AriaTaskRestarting) {
+						val ts = sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
+						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
+						val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
+						if (tg.length > 0 && tg(0) != null) {
+							DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
+						}
+					}
+				}
+
 				val activeTasks = sendAriaTellActive(client)
 				// DEBUG
 				System.out.println("Active task(s) for port " + a.AriaPort + ": " + activeTasks.length)

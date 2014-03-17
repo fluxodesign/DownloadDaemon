@@ -68,58 +68,21 @@ class AriaProcessor {
 				"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
 				"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false", uri).start()
 
-			// trying to get the "followedBy" status...
-			val url = "http://127.0.0.1:" + port + "/rpc"
-			val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
-			xmlClientConfig.setServerURL(new URL(url))
-			LogWriter.writeLog("Starting XML-RPC client...", Level.INFO)
-			val client = new XmlRpcClient()
-			client.setConfig(xmlClientConfig)
-			client.setTypeFactory(new XmlRpcTypeFactory(client))
-			val status = sendAriaTellStatus(gid, client).asInstanceOf[java.util.HashMap[String, Object]]
-			val tailGID = OUtils.extractValueFromHashMap(status, "followedBy").asInstanceOf[Array[Object]]
-
 			if (!restarting) {
 				DbControl.addTask(new Task {
 					TaskGID_=(gid)
 					TaskInput_=(uri)
-					if (tailGID.length > 0 && tailGID(0) != null) TaskTailGID_=(tailGID(0).asInstanceOf[String])
 					TaskOwner_=(owner)
 					TaskStarted_=(DateTime.now().getMillis)
 				})
-			} else {
-				if (tailGID.length > 0 && tailGID(0) != null) DbControl.updateTaskTailGID(gid, tailGID(0).asInstanceOf[String])
 			}
 			ActiveProcesses.add(new AriaProcess {
 				AriaPort_=(port)
 				AriaProcess_=(process)
+				AriaTaskGid_=(gid)
+				AriaTaskRestarting_=(restarting)
 			})
 			process.waitFor()
-		}
-
-		def sendAriaTellStatus(gid: String, client: XmlRpcClient): Object = {
-			//val params = Array[Object](gid)
-			val params = new util.ArrayList[Object]()
-			params.add(gid)
-			client.execute("aria2.tellStatus", params)
-		}
-
-		class XmlRpcStringSerializer extends StringSerializer {
-			@throws(classOf[SAXException])
-			override def write(pHandler: ContentHandler, pObject: Object) {
-				write(pHandler, StringSerializer.STRING_TAG, pObject.toString)
-			}
-		}
-
-		class XmlRpcTypeFactory(pController: XmlRpcController) extends TypeFactoryImpl(pController) {
-			@throws(classOf[SAXException])
-			override def getSerializer(pConfig: XmlRpcStreamConfig, pObject: Object): TypeSerializer = {
-				val response: TypeSerializer = pObject match {
-					case s:String => new XmlRpcStringSerializer()
-					case _ => super.getSerializer(pConfig, pObject)
-				}
-				response
-			}
 		}
 	}
 }
