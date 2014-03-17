@@ -58,6 +58,8 @@ class Utils {
 				ss.close()
 			}
 		}
+		// DEBUG
+		System.out.println("Check status: " + status)
 		status
 	}
 
