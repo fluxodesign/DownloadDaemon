@@ -18,6 +18,8 @@ class AriaProcessor {
 	def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
 
 	def processRequest(uri: String, owner: String): String = {
+		// DEBUG
+		System.out.println("Starting processRequest()...")
 		// find a free port between starting rpc port to (starting rpc port + limit)
 		var rpcPort = -1
 		for (x <- OUtils.readConfig.RPCPort to OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
