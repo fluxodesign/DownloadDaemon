@@ -18,30 +18,19 @@ class AriaProcessor {
 	def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
 
 	def processRequest(uri: String, owner: String): String = {
-		// DEBUG
-		System.out.println("Starting processRequest()...")
 		// find a free port between starting rpc port to (starting rpc port + limit)
 		var rpcPort = -1
-		// DEBUG
-		System.out.println("Starting RPC port: " + OUtils.readConfig.RPCPort)
-		System.out.println("Ending RPC port: " + (OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit))
 		breakable {
-			for (x <- OUtils.readConfig.RPCPort to OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
-				// DEBUG
-				System.out.println("Checking port: " + x)
+			for (x <- OUtils.readConfig.RPCPort until OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
 				if (!OUtils.portInUse(x)) {
 					rpcPort = x
-					break
+					break()
 				}
 			}
 		}
-		// DEBUG
-		System.out.println("Using port: " + rpcPort)
 		if (rpcPort < 0) return "All download slots taken, try again later"
 		var newGid = OUtils.generateGID()
 		while (DbControl.isTaskGIDUsed(newGid)) newGid = OUtils.generateGID()
-		// DEBUG
-		System.out.println("new GID generated: " + newGid)
 		new Thread(new AriaThread(rpcPort, uri, newGid, owner, true)).start()
 		"OK " + newGid
 	}
@@ -51,10 +40,12 @@ class AriaProcessor {
 		var rpcPort = -1
 		for (t <- activeTasks) {
 			LogWriter.writeLog("Resuming download for " + t.TaskGID.getOrElse(null), Level.INFO)
-			for (x <- OUtils.readConfig.RPCPort to OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
-				if (!OUtils.portInUse(x)) {
-					rpcPort = x
-					break()
+			breakable {
+				for (x <- OUtils.readConfig.RPCPort to OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
+					if (!OUtils.portInUse(x)) {
+						rpcPort = x
+						break()
+					}
 				}
 			}
 			if (rpcPort < 0) {
@@ -69,7 +60,7 @@ class AriaProcessor {
 		override def run() {
 			val process = new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
 				"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
-				"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false", uri).start()
+				"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false", "\"" + uri + "\"").start()
 			if (!restarting) {
 				DbControl.addTask(new Task {
 					TaskGID_=(gid)
