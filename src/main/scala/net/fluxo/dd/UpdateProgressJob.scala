@@ -39,19 +39,19 @@ class UpdateProgressJob extends Job {
 				System.out.println("Active task(s) for port " + a.AriaPort + ": " + activeTasks.length)
 				for (o <- activeTasks) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
-					val tailGID = extractValueFromHashMap(jMap, "gid").toString
+					val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
 					val task = {
 						if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else null
 					}
-					val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
+					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 					task.TaskCompletedLength_=(cl)
-					val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
+					val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
 					task.TaskTotalLength_=(tl)
-					task.TaskStatus_=(extractValueFromHashMap(jMap, "status").toString)
+					task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
 					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
-					val btDetailsMap = extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
-					val infoMap = extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
-					task.TaskPackage_=(extractValueFromHashMap(infoMap, "name").toString)
+					val btDetailsMap = OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
+					val infoMap = OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
+					task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
 					DbControl.updateTask(task)
 				}
 
@@ -60,11 +60,11 @@ class UpdateProgressJob extends Job {
 				System.out.println("Finished task(s) for port: " + a.AriaPort + ": " + finishedTasks.length)
 				for (o <- finishedTasks) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
-					val status = extractValueFromHashMap(jMap, "status").toString
-					val gid = extractValueFromHashMap(jMap, "gid").toString
-					val infoHash = extractValueFromHashMap(jMap, "infoHash").toString
-					val cl = extractValueFromHashMap(jMap, "completedLength").toString.toLong
-					val tl = extractValueFromHashMap(jMap, "totalLength").toString.toLong
+					val status = OUtils.extractValueFromHashMap(jMap, "status").toString
+					val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
+					val infoHash = OUtils.extractValueFromHashMap(jMap, "infoHash").toString
+					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
+					val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
 					val qf = DbControl.queryFinishTask(gid, infoHash, tl)
 					if (qf.CPCount > 0) {
 						DbControl.finishTask(status, cl, gid, infoHash, tl)
@@ -91,16 +91,6 @@ class UpdateProgressJob extends Job {
 				LogWriter.writeLog(e.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 		}
-	}
-
-	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
-		var ret: Object = null
-		val it = map.entrySet().iterator()
-		while (it.hasNext) {
-			val entry = it.next()
-			if (entry.getKey.equals(key)) ret = entry.getValue
-		}
-		ret
 	}
 
 	def sendAriaTellStatus(gid: String, client: XmlRpcClient): Object = {

@@ -59,6 +59,16 @@ class Utils {
 		status
 	}
 
+	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
+		var ret: Object = null
+		val it = map.entrySet().iterator()
+		while (it.hasNext) {
+			val entry = it.next()
+			if (entry.getKey.equals(key)) ret = entry.getValue
+		}
+		ret
+	}
+
 	def generateGID(): String = {
 		//[0-9A-F]
 		val randomValue = _randomizer.nextLong()
