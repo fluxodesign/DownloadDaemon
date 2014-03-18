@@ -55,6 +55,8 @@ class UpdateProgressJob extends Job {
 				for (o <- activeTasks) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
+					// DEBUG
+					System.out.println("Tail GID: " + tailGID)
 					val task = {
 						if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else {
 							// DEBUG
@@ -64,8 +66,13 @@ class UpdateProgressJob extends Job {
 					}
 					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 					task.TaskCompletedLength_=(cl)
+					// DEBUG
+					System.out.println("Completed Length: " + cl)
 					val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
 					task.TaskTotalLength_=(tl)
+					// DEBUG
+					System.out.println("Total Length: " + tl)
+					System.out.println("Task GID: " + task.TaskGID.getOrElse("empty"))
 					task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
 					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
 					val btDetailsMap = OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
