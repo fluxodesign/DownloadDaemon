@@ -42,6 +42,8 @@ class UpdateProgressJob extends Job {
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
 						if (tg.length > 0 && tg(0) != null) {
+							// DEBUG
+							System.out.println("Found TailGID " + tg(0).asInstanceOf[String])
 							DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
 						}
 					}
@@ -54,7 +56,11 @@ class UpdateProgressJob extends Job {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
 					val task = {
-						if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else null
+						if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else {
+							// DEBUG
+							System.out.println("No task with tail GID " + tailGID + " found...")
+							null
+						}
 					}
 					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 					task.TaskCompletedLength_=(cl)
