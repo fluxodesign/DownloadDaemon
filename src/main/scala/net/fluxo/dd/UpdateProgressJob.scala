@@ -78,6 +78,7 @@ class UpdateProgressJob extends Job {
 					System.out.println("Total Length: " + tl)
 					System.out.println("Task GID: " + task.TaskGID.getOrElse("empty"))
 					task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
+					task.TaskInfoHash_=(OUtils.extractValueFromHashMap(jMap, "infoHash").toString)
 					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
 					val btDetailsMap = OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
 					val infoMap = OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
@@ -92,15 +93,21 @@ class UpdateProgressJob extends Job {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val status = OUtils.extractValueFromHashMap(jMap, "status").toString
 					val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
+					// DEBUG
+					System.out.println("GID for finished task: " + gid)
 					val infoHash = OUtils.extractValueFromHashMap(jMap, "infoHash").toString
 					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 					val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
 					val qf = DbControl.queryFinishTask(gid, infoHash, tl)
 					if (qf.CPCount > 0) {
+						// DEBUG
+						System.out.println("INSIDE FINISHED TASK!!")
 						DbControl.finishTask(status, cl, gid, infoHash, tl)
 						flagCompleted = true
 						// move the package to a directory specified in config...
 						if (OUtils.readConfig.DownloadDir.getOrElse(null).length > 0) {
+							// DEBUG
+							System.out.println("INSIDE MOVE_DIR ROUTINE!!")
 							val packageDir = new File(qf.CPPackage.getOrElse(null))
 							val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse(null))
 							if (packageDir.isDirectory && packageDir.exists() && destDir.isDirectory && destDir.exists()) {

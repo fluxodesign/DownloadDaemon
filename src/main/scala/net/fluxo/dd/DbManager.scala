@@ -131,6 +131,8 @@ class DbManager {
 				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 		}
+		// DEBUG
+		System.out.println("queryFinishTask: count " + cp.CPCount + "; package: " + cp.CPPackage)
 		cp
 	}
 
