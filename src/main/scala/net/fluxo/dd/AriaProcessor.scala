@@ -35,6 +35,10 @@ class AriaProcessor {
 		"OK " + newGid
 	}
 
+	def removeProcess(o: AriaProcess) {
+		if (_activeProcesses.contains(o)) _activeProcesses.remove(o)
+	}
+
 	def restartDownloads() {
 		val activeTasks = DbControl.queryUnfinishedTasks()
 		if (activeTasks.length > 0) LogWriter.writeLog("Trying to restart " + activeTasks.length + " unfinished downloads...", Level.INFO)
