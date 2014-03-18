@@ -102,7 +102,7 @@ class UpdateProgressJob extends Job {
 							System.out.println("INSIDE MOVE_DIR ROUTINE!!")
 							val packageDir = new File(qf.CPPackage.getOrElse(null))
 							val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
-							if (packageDir.isDirectory && packageDir.exists() && destDir.isDirectory && destDir.exists()) {
+							if (packageDir.isDirectory && packageDir.exists() && !destDir.exists()) {
 								FileUtils.moveDirectory(packageDir, destDir)
 							} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
 						}
