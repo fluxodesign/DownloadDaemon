@@ -82,6 +82,8 @@ class UpdateProgressJob extends Job {
 				// DEBUG
 				System.out.println("Finished task(s) for port: " + a.AriaPort + ": " + finishedTasks.length)
 				for (o <- finishedTasks) {
+					// DEBUG
+					System.out.println("FINISHED: " + o)
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val status = OUtils.extractValueFromHashMap(jMap, "status").toString
 					val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
