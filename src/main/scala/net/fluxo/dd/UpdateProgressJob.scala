@@ -36,8 +36,12 @@ class UpdateProgressJob extends Job {
 
 				// we need to acquire the TAIL GID if this is a new download, or a restart...
 				val tasks = DbControl.queryTask(a.AriaTaskGid.getOrElse(null))
+				// DEBUG
+				System.out.println("Finding task with GID " + a.AriaTaskGid.getOrElse("N/A") +", found " + tasks.length)
 				if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
 					if (tasks(0).TaskTailGID.getOrElse("").isEmpty || a.AriaTaskRestarting) {
+						// DEBUG
+						System.out.println("ABOUT TO DO UPDATE TO TAIL GID!!")
 						val ts = sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
