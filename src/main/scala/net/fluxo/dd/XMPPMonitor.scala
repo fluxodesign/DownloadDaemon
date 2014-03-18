@@ -295,7 +295,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					val tasks: Array[Task] = DbControl.queryTasks(owner)
 					val sb: StringBuilder = new StringBuilder
 					for (t <- tasks) {
-						val progress: Double = (t.TaskCompletedLength.asInstanceOf[Double] / t.TaskTotalLength.asInstanceOf[Double]) * 100
+						val progress: Int = ((t.TaskCompletedLength * 100)/ t.TaskTotalLength).toInt
 						val dlName: String = {
 							if (t.TaskPackage.getOrElse(null).length > 1) t.TaskPackage.getOrElse(null)
 							else "Unknown Download"
