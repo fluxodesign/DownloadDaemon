@@ -39,7 +39,7 @@ class UpdateProgressJob extends Job {
 				// DEBUG
 				System.out.println("Finding task with GID " + a.AriaTaskGid.getOrElse("N/A") +", found " + tasks.length)
 				if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
-					if (tasks(0).TaskTailGID.getOrElse("").isEmpty || a.AriaTaskRestarting) {
+					if (tasks(0).TaskTailGID.getOrElse("").equals("0") || a.AriaTaskRestarting) {
 						// DEBUG
 						System.out.println("ABOUT TO DO UPDATE TO TAIL GID!!")
 						val ts = sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
