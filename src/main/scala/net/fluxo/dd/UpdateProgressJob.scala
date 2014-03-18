@@ -114,7 +114,7 @@ class UpdateProgressJob extends Job {
 				// shutdown this aria2 process when it's update is finished...
 				if (activeTasks.length == 0 && flagCompleted) {
 					sendAriaTellShutdown(client)
-					OAria.removeProcess(a)
+					iterator.remove()
 				}
 			}
 		} catch {
