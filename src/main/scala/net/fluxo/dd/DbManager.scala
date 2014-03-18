@@ -43,9 +43,6 @@ class DbManager {
 			if (inserted == 0) {
 				LogWriter.writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
 				response = false
-			} else {
-				// DEBUG
-				System.out.println("Inserted 1 new task!!!")
 			}
 			ps.close()
 		} catch {
@@ -131,8 +128,6 @@ class DbManager {
 				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 		}
-		// DEBUG
-		if (cp.CPCount > 0) System.out.println("queryFinishTask: count " + cp.CPCount + "; package: " + cp.CPPackage)
 		cp
 	}
 

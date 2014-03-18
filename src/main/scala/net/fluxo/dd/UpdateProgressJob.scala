@@ -48,27 +48,16 @@ class UpdateProgressJob extends Job {
 				}
 
 				val activeTasks = sendAriaTellActive(client)
-				// DEBUG
-				System.out.println("Active task(s) for port " + a.AriaPort + ": " + activeTasks.length)
 				for (o <- activeTasks) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
-					// DEBUG
-					System.out.println("Tail GID: " + tailGID)
 					val task = {
-						if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else {
-							// DEBUG
-							System.out.println("No task with tail GID " + tailGID + " found...")
-							null
-						}
+						if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else null
 					}
 					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 					task.TaskCompletedLength_=(cl)
 					val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
 					task.TaskTotalLength_=(tl)
-					// DEBUG
-					System.out.println("Progress: " + ((cl* 100)/tl) + "%")
-					System.out.println("Task GID: " + task.TaskGID.getOrElse("empty"))
 					task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
 					task.TaskInfoHash_=(OUtils.extractValueFromHashMap(jMap, "infoHash").toString)
 					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
@@ -79,29 +68,19 @@ class UpdateProgressJob extends Job {
 				}
 
 				val finishedTasks = sendAriaTellStopped(client)
-				// DEBUG
-				System.out.println("Finished task(s) for port: " + a.AriaPort + ": " + finishedTasks.length)
 				for (o <- finishedTasks) {
-					// DEBUG
-					System.out.println("FINISHED: " + o)
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val status = OUtils.extractValueFromHashMap(jMap, "status").toString
 					val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
-					// DEBUG
-					System.out.println("GID for finished task: " + gid)
 					val infoHash = OUtils.extractValueFromHashMap(jMap, "infoHash").toString
 					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 					val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
 					val qf = DbControl.queryFinishTask(gid, infoHash, tl)
 					if (qf.CPCount > 0) {
-						// DEBUG
-						System.out.println("INSIDE FINISHED TASK!!")
 						DbControl.finishTask(status, cl, gid, infoHash, tl)
 						flagCompleted = true
 						// move the package to a directory specified in config...
 						if (OUtils.readConfig.DownloadDir.getOrElse(null).length > 0) {
-							// DEBUG
-							System.out.println("INSIDE MOVE_DIR ROUTINE!!")
 							val packageDir = new File(qf.CPPackage.getOrElse(null))
 							val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
 							if (packageDir.isDirectory && packageDir.exists() && !destDir.exists()) {

@@ -302,6 +302,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						}
 						sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
 					}
+					if (tasks.length == 0) sb.append("No active tasks are running!")
 					sb.toString()
 				case "YIFY" =>
 					// the next command should be "LIST" or " DETAILS"
