@@ -60,7 +60,7 @@ class Utils {
 	}
 
 	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
-		var ret: Object = null
+		var ret: Object = new String("XXX")
 		val it = map.entrySet().iterator()
 		while (it.hasNext) {
 			val entry = it.next()
