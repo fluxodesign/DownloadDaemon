@@ -5,11 +5,6 @@ import java.util
 import scala.util.control.Breaks._
 import org.joda.time.DateTime
 import org.apache.log4j.Level
-import org.apache.xmlrpc.client.{XmlRpcClient, XmlRpcClientConfigImpl}
-import java.net.URL
-import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
-import org.xml.sax.{ContentHandler, SAXException}
-import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcController}
 
 /**
  * User: Ronald Kurniawan (viper)

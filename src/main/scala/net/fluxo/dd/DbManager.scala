@@ -43,6 +43,9 @@ class DbManager {
 			if (inserted == 0) {
 				LogWriter.writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
 				response = false
+			} else {
+				// DEBUG
+				System.out.println("Inserted 1 new task!!!")
 			}
 			ps.close()
 		} catch {
