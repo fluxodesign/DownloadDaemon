@@ -36,18 +36,12 @@ class UpdateProgressJob extends Job {
 
 				// we need to acquire the TAIL GID if this is a new download, or a restart...
 				val tasks = DbControl.queryTask(a.AriaTaskGid.getOrElse(null))
-				// DEBUG
-				System.out.println("Finding task with GID " + a.AriaTaskGid.getOrElse("N/A") +", found " + tasks.length)
 				if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
 					if (tasks(0).TaskTailGID.getOrElse("").equals("0") || a.AriaTaskRestarting) {
-						// DEBUG
-						System.out.println("ABOUT TO DO UPDATE TO TAIL GID!!")
 						val ts = sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
 						if (tg.length > 0 && tg(0) != null) {
-							// DEBUG
-							System.out.println("Found TailGID " + tg(0).asInstanceOf[String])
 							DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
 						}
 					}
@@ -70,12 +64,10 @@ class UpdateProgressJob extends Job {
 					}
 					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 					task.TaskCompletedLength_=(cl)
-					// DEBUG
-					System.out.println("Completed Length: " + cl)
 					val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
 					task.TaskTotalLength_=(tl)
 					// DEBUG
-					System.out.println("Total Length: " + tl)
+					System.out.println("Progress: " + ((cl* 100)/tl) + "%")
 					System.out.println("Task GID: " + task.TaskGID.getOrElse("empty"))
 					task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
 					task.TaskInfoHash_=(OUtils.extractValueFromHashMap(jMap, "infoHash").toString)
@@ -109,7 +101,7 @@ class UpdateProgressJob extends Job {
 							// DEBUG
 							System.out.println("INSIDE MOVE_DIR ROUTINE!!")
 							val packageDir = new File(qf.CPPackage.getOrElse(null))
-							val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse(null))
+							val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
 							if (packageDir.isDirectory && packageDir.exists() && destDir.isDirectory && destDir.exists()) {
 								FileUtils.moveDirectory(packageDir, destDir)
 							} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)

@@ -132,7 +132,7 @@ class DbManager {
 				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 		}
 		// DEBUG
-		System.out.println("queryFinishTask: count " + cp.CPCount + "; package: " + cp.CPPackage)
+		if (cp.CPCount > 0) System.out.println("queryFinishTask: count " + cp.CPCount + "; package: " + cp.CPPackage)
 		cp
 	}
 
