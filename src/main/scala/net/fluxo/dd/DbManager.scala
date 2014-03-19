@@ -31,7 +31,7 @@ class DbManager {
 	}
 
 	def addTask(task: Task): Boolean = {
-		val insertStatement = """INSERT INTO input(gid,input,start,owner) VALUES(?,?,?,?)"""
+		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,http_username,http_password) VALUES(?,?,?,?,?,?,?)"""
 		var response: Boolean = true
 		try {
 			val ps = _conn.prepareStatement(insertStatement)
@@ -39,6 +39,9 @@ class DbManager {
 			ps.setString(2, task.TaskInput.getOrElse(null))
 			ps.setTimestamp(3, new Timestamp(task.TaskStarted))
 			ps.setString(4, task.TaskOwner.getOrElse(null))
+			ps.setBoolean(5, task.TaskIsHttp)
+			ps.setString(6, task.TaskHttpUsername.getOrElse(null))
+			ps.setString(7, task.TaskHttpPassword.getOrElse(null))
 			val inserted = ps.executeUpdate()
 			if (inserted == 0) {
 				LogWriter.writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
@@ -201,6 +204,9 @@ class DbManager {
 					TaskTotalLength_=(rs.getLong("total_length"))
 					TaskCompletedLength_=(rs.getLong("completed_length"))
 					TaskInfoHash_=(rs.getString("info_hash"))
+					TaskIsHttp_=(rs.getBoolean("is_http"))
+					TaskHttpUsername_=(rs.getString("http_username"))
+					TaskHttpPassword_=(rs.getString("http_password"))
 				})
 			}
 			rs.close()
@@ -236,6 +242,9 @@ class DbManager {
 					TaskTotalLength_=(rs.getLong("total_length"))
 					TaskCompletedLength_=(rs.getLong("completed_length"))
 					TaskInfoHash_=(rs.getString("info_hash"))
+					TaskIsHttp_=(rs.getBoolean("is_http"))
+					TaskHttpUsername_=(rs.getString("http_username"))
+					TaskHttpPassword_=(rs.getString("http_password"))
 				})
 			}
 			rs.close()
@@ -270,6 +279,9 @@ class DbManager {
 					TaskTotalLength_=(rs.getLong("total_length"))
 					TaskCompletedLength_=(rs.getLong("completed_length"))
 					TaskInfoHash_=(rs.getString("info_hash"))
+					TaskIsHttp_=(rs.getBoolean("is_http"))
+					TaskHttpUsername_=(rs.getString("http_username"))
+					TaskHttpPassword_=(rs.getString("http_password"))
 				})
 			}
 			rs.close()
@@ -304,6 +316,9 @@ class DbManager {
 				t.TaskTotalLength_=(rs.getLong("total_length"))
 				t.TaskCompletedLength_=(rs.getLong("completed_length"))
 				t.TaskInfoHash_=(rs.getString("info_hash"))
+				t.TaskIsHttp_=(rs.getBoolean("is_http"))
+				t.TaskHttpUsername_=(rs.getString("http_username"))
+				t.TaskHttpPassword_=(rs.getString("http_password"))
 			}
 			rs.close()
 			ps.close()

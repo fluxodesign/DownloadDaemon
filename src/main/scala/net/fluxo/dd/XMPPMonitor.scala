@@ -288,9 +288,15 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 			if (words.length < 2) return "ERR LENGTH"
 			if (!words(0).equals("DD")) return "ERR NOTIFIER"
 			words(1) match {
+				case "ADD_TORRENT" =>
+					if (words.length < 3) "ERR LENGTH"
+					OAria.processRequest(words(2), owner, isHttp = false, "", "")
 				case "ADD_URI" =>
 					if (words.length < 3) "ERR LENGTH"
-					OAria.processRequest(words(2), owner)
+					OAria.processRequest(words(2), owner, isHttp = true, "", "")
+				case "ADD_URI_C" =>
+					if (words.length < 5) "ERR LENGTH"
+					OAria.processRequest(words(2), owner, isHttp = true, words(3), words(4))
 				case "STATUS" =>
 					val tasks: Array[Task] = DbControl.queryTasks(owner)
 					val sb: StringBuilder = new StringBuilder

@@ -17,7 +17,7 @@ class AriaProcessor {
 
 	def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
 
-	def processRequest(uri: String, owner: String): String = {
+	def processRequest(uri: String, owner: String, isHttp: Boolean, httpUsername: String, httpPassword: String): String = {
 		// find a free port between starting rpc port to (starting rpc port + limit)
 		var rpcPort = -1
 		breakable {
@@ -31,7 +31,11 @@ class AriaProcessor {
 		if (rpcPort < 0) return "All download slots taken, try again later"
 		var newGid = OUtils.generateGID()
 		while (DbControl.isTaskGIDUsed(newGid)) newGid = OUtils.generateGID()
-		new Thread(new AriaThread(rpcPort, uri, newGid, owner, false)).start()
+		val ariaThread = new AriaThread(rpcPort, uri, newGid, owner, false, isHttp)
+		if (httpUsername.length > 0 && httpPassword.length > 0) {
+			ariaThread.setCredentials(httpUsername, httpPassword)
+		}
+		new Thread(ariaThread).start()
 		"OK " + newGid
 	}
 
@@ -57,15 +61,36 @@ class AriaProcessor {
 				LogWriter.writeLog("All download slots taken, cannot restart downloads", Level.INFO)
 				return
 			}
-			new Thread(new AriaThread(rpcPort, t.TaskInput.getOrElse(null), t.TaskGID.getOrElse(null), t.TaskOwner.getOrElse(null), true)).start()
+			val ariaThread = new AriaThread(rpcPort, t.TaskInput.getOrElse(null), t.TaskGID.getOrElse(null),
+				t.TaskOwner.getOrElse(null), true, t.TaskIsHttp)
+			if (t.TaskHttpUsername.getOrElse("").length > 0 && t.TaskHttpPassword.getOrElse("").length > 0) {
+				ariaThread.setCredentials(t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""))
+			}
+			new Thread(ariaThread).start()
 		}
 	}
 
-	class AriaThread(port: Int, uri: String, gid: String, owner: String, restarting: Boolean) extends Runnable {
+	class AriaThread(port: Int, uri: String, gid: String, owner: String, restarting: Boolean, isHttp: Boolean) extends Runnable {
+		private var _httpUsername: Option[String] = None
+		private var _httpPassword: Option[String] = None
+
+		def setCredentials(username: String, password: String) {
+			_httpUsername = Some(username)
+			_httpPassword = Some(password)
+		}
+
 		override def run() {
-			val process = new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
-				"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
-				"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false", uri).start()
+			val process = {
+				if (_httpUsername.getOrElse("").length > 0 && _httpPassword.getOrElse("").length > 0) {
+					new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
+						"--gid=" + gid, "--http-user=" + _httpUsername.getOrElse(""),
+						"--http-passwd=" + _httpPassword.getOrElse(""), "--rpc-listen-all=false", uri).start()
+				} else {
+					new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
+						"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
+						"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false", uri).start()
+				}
+			}
 
 			if (!restarting) {
 				DbControl.addTask(new Task {
@@ -73,6 +98,11 @@ class AriaProcessor {
 					TaskInput_=(uri)
 					TaskOwner_=(owner)
 					TaskStarted_=(DateTime.now().getMillis)
+					TaskIsHttp_=(isHttp)
+					if (_httpUsername.getOrElse("").length > 0 && _httpPassword.getOrElse("").length > 0) {
+						TaskHttpUsername_=(_httpUsername.getOrElse(""))
+						TaskHttpPassword_=(_httpPassword.getOrElse(""))
+					}
 				})
 			}
 			ActiveProcesses.add(new AriaProcess {
@@ -80,6 +110,7 @@ class AriaProcessor {
 				AriaProcess_=(process)
 				AriaTaskGid_=(gid)
 				AriaTaskRestarting_=(restarting)
+				AriaHttpDownload_=(isHttp)
 			})
 			process.waitFor()
 		}

@@ -26,4 +26,9 @@ class AriaProcess {
 
 	def AriaTaskRestarting: Boolean = _isRestarting
 	def AriaTaskRestarting_=(value: Boolean) { _isRestarting = value }
+
+	private var _httpDownload: Boolean = false
+
+	def AriaHttpDownload: Boolean = _httpDownload
+	def AriaHttpDownload_=(value: Boolean) { _httpDownload = value }
 }

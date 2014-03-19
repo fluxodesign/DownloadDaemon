@@ -4,7 +4,7 @@ import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
 import org.quartz.{Job, JobExecutionContext, JobExecutionException}
 import org.apache.log4j.Level
 import java.io.File
-import org.apache.commons.io.FileUtils
+import org.apache.commons.io.{FilenameUtils, FileUtils}
 import java.net.URL
 import java.util
 import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
@@ -61,9 +61,16 @@ class UpdateProgressJob extends Job {
 					task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
 					task.TaskInfoHash_=(OUtils.extractValueFromHashMap(jMap, "infoHash").toString)
 					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
-					val btDetailsMap = OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
-					val infoMap = OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
-					task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
+					if (a.AriaHttpDownload) {
+						val files = OUtils.extractValueFromHashMap(jMap, "files").asInstanceOf[java.util.HashMap[String, Object]]
+						val uris = OUtils.extractValueFromHashMap(files, "uris").asInstanceOf[java.util.HashMap[String, Object]]
+						val uri = OUtils.extractValueFromHashMap(uris, "uri").toString
+						task.TaskPackage = FilenameUtils.getName(uri)
+					} else {
+						val btDetailsMap = OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
+						val infoMap = OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
+						task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
+					}
 					DbControl.updateTask(task)
 				}
 
@@ -81,11 +88,21 @@ class UpdateProgressJob extends Job {
 						flagCompleted = true
 						// move the package to a directory specified in config...
 						if (OUtils.readConfig.DownloadDir.getOrElse(null).length > 0) {
-							val packageDir = new File(qf.CPPackage.getOrElse(null))
-							val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
-							if (packageDir.isDirectory && packageDir.exists() && !destDir.exists()) {
-								FileUtils.moveDirectory(packageDir, destDir)
-							} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
+							if (a.AriaHttpDownload) {
+								// HTTP downloads usually are just for 1 file...
+								val packageFile = new File(qf.CPPackage.getOrElse(null))
+								val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse(""))
+								if (packageFile.isFile && packageFile.exists() && destDir.isDirectory && destDir.exists()) {
+									FileUtils.moveFileToDirectory(packageFile, destDir, false)
+								} else LogWriter.writeLog("Failed to move file " + qf.CPPackage.getOrElse("{empty file}") +
+									" to " + OUtils.readConfig.DownloadDir.getOrElse("{empty target dir}"), Level.INFO)
+							} else {
+								val packageDir = new File(qf.CPPackage.getOrElse(null))
+								val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
+								if (packageDir.isDirectory && packageDir.exists() && !destDir.exists()) {
+									FileUtils.moveDirectory(packageDir, destDir)
+								} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
+							}
 						}
 					}
 				}

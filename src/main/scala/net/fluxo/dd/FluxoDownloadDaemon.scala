@@ -14,7 +14,7 @@ object FluxoDownloadDaemon {
 	private val _dt = new DaemonThread(_dbMan)
 
 	def main(args: Array[String]) {
-		System.out.println("DownloadDaemon version 0.1\n")
+		System.out.println("DownloadDaemon version 0.3.0\n")
 		attachShutdownHook()
 		_dt.start()
 	}

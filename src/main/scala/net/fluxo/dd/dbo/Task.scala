@@ -90,4 +90,19 @@ class Task {
 	def TaskInfoHash_=(value: String) {
 		_infoHash = Some(value)
 	}
+
+	private var _isHttp: Boolean = false
+
+	def TaskIsHttp: Boolean = _isHttp
+	def TaskIsHttp_=(value: Boolean) { _isHttp = value }
+
+	private var _httpUsername: Option[String] = None
+
+	def TaskHttpUsername: Option[String] = _httpUsername
+	def TaskHttpUsername_=(value: String) { _httpUsername = Some(value) }
+
+	private var _httpPassword: Option[String] = None
+
+	def TaskHttpPassword: Option[String] = _httpPassword
+	def TaskHttpPassword_=(value: String) { _httpPassword = Some(value) }
 }
