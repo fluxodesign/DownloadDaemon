@@ -46,9 +46,9 @@ class UpdateProgressJob extends Job {
 								DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
 							}
 						} else {
-							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").toString
+							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[String]
 							// DEBUG
-							System.out.println("HTTP followeBy: " + tg)
+							System.out.println("HTTP followedBy: " + tg)
 						}
 					}
 				}
