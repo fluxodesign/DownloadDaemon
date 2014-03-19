@@ -45,16 +45,14 @@ class UpdateProgressJob extends Job {
 							if (tg.length > 0 && tg(0) != null) {
 								DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
 							}
-						} else {
-							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[String]
-							// DEBUG
-							System.out.println("HTTP followedBy: " + tg)
 						}
 					}
 				}
 
 				val activeTasks = sendAriaTellActive(client)
 				for (o <- activeTasks) {
+					// DEBUG
+					System.out.println("Active Task: "  + o)
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
 					val task = {
