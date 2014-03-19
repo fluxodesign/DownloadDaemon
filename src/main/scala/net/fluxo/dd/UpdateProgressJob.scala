@@ -87,9 +87,15 @@ class UpdateProgressJob extends Job {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val status = OUtils.extractValueFromHashMap(jMap, "status").toString
 					val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
+					// DEBUG
+					System.out.println("finished GID: " + gid)
 					val infoHash = OUtils.extractValueFromHashMap(jMap, "infoHash").toString
 					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
+					// DEBUG
+					System.out.println("finished completed length: " + cl)
 					val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
+					// DEBUG
+					System.out.println("finished total length: " + tl)
 					val qf = DbControl.queryFinishTask(gid, infoHash, tl)
 					if (qf.CPCount > 0) {
 						DbControl.finishTask(status, cl, gid, infoHash, tl)
