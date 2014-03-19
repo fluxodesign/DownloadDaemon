@@ -50,6 +50,8 @@ class UpdateProgressJob extends Job {
 				}
 
 				val activeTasks = sendAriaTellActive(client)
+				// DEBUG
+				System.out.println("activeTasks: " + activeTasks.length)
 				for (o <- activeTasks) {
 					// DEBUG
 					System.out.println("Active Task: "  + o)
