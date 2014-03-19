@@ -81,6 +81,8 @@ class UpdateProgressJob extends Job {
 				}
 
 				val finishedTasks = sendAriaTellStopped(client)
+				// DEBUG
+				System.out.println("finishedTasks: " + finishedTasks.length)
 				for (o <- finishedTasks) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
 					val status = OUtils.extractValueFromHashMap(jMap, "status").toString
