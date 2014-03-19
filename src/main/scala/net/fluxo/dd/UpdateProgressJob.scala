@@ -40,9 +40,15 @@ class UpdateProgressJob extends Job {
 					if (tasks(0).TaskTailGID.getOrElse("").equals("0") || a.AriaTaskRestarting) {
 						val ts = sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
-						val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
-						if (tg.length > 0 && tg(0) != null) {
-							DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
+						if (!a.AriaHttpDownload) {
+							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
+							if (tg.length > 0 && tg(0) != null) {
+								DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
+							}
+						} else {
+							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").toString
+							// DEBUG
+							System.out.println("HTTP followeBy: " + tg)
 						}
 					}
 				}
