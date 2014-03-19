@@ -112,6 +112,36 @@ class AriaProcessor {
 				AriaTaskRestarting_=(restarting)
 				AriaHttpDownload_=(isHttp)
 			})
+			// set all necessary parameters if this is an HTTP download...
+			if (isHttp) {
+				DbControl.updateTaskTailGID(gid, gid)
+				val rpcClient = OUtils.getXmlRpcClient(port)
+				val active = OUtils.sendAriaTellActive(rpcClient)
+				if (active.length > 0) {
+					for (o <- active) {
+						val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
+						val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
+						val task = {
+							if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else null
+						}
+						val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
+						task.TaskCompletedLength_=(cl)
+						val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
+						task.TaskTotalLength_=(tl)
+						task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
+						task.TaskInfoHash_=(OUtils.extractValueFromHashMap(jMap, "infoHash").toString)
+						// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
+						val files = OUtils.extractValueFromHashMap(jMap, "files").asInstanceOf[Array[Object]]
+						// DEBUG
+						System.out.println("FILES: " + files)
+						//val uris = OUtils.extractValueFromHashMap(files, "uris").asInstanceOf[java.util.HashMap[String, Object]]
+						//val uri = OUtils.extractValueFromHashMap(uris, "uri").toString
+						//task.TaskPackage = FilenameUtils.getName(uri)
+
+						//DbControl.updateTask(task)
+					}
+				}
+			}
 			process.waitFor()
 		}
 	}

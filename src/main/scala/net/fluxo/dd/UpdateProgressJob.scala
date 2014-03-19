@@ -1,15 +1,9 @@
 package net.fluxo.dd
 
-import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
 import org.quartz.{Job, JobExecutionContext, JobExecutionException}
 import org.apache.log4j.Level
 import java.io.File
-import org.apache.commons.io.{FilenameUtils, FileUtils}
-import java.net.URL
-import java.util
-import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
-import org.xml.sax.{ContentHandler, SAXException}
-import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcController}
+import org.apache.commons.io.FileUtils
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -26,19 +20,13 @@ class UpdateProgressJob extends Job {
 				var flagCompleted: Boolean = false
 				// get an RPC client for a particular port...
 				val a = iterator.next()
-				val url = "http://127.0.0.1:" + a.AriaPort + "/rpc"
-				val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
-				xmlClientConfig.setServerURL(new URL(url))
-				LogWriter.writeLog("Starting XML-RPC client...", Level.INFO)
-				val client = new XmlRpcClient()
-				client.setConfig(xmlClientConfig)
-				client.setTypeFactory(new XmlRpcTypeFactory(client))
+				val client = OUtils.getXmlRpcClient(a.AriaPort)
 
 				// we need to acquire the TAIL GID if this is a new download, or a restart...
 				val tasks = DbControl.queryTask(a.AriaTaskGid.getOrElse(null))
 				if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
 					if (tasks(0).TaskTailGID.getOrElse("").equals("0") || a.AriaTaskRestarting) {
-						val ts = sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
+						val ts = OUtils.sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						if (!a.AriaHttpDownload) {
 							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
@@ -49,7 +37,7 @@ class UpdateProgressJob extends Job {
 					}
 				}
 
-				val activeTasks = sendAriaTellActive(client)
+				val activeTasks = OUtils.sendAriaTellActive(client)
 				// DEBUG
 				System.out.println("activeTasks: " + activeTasks.length)
 				for (o <- activeTasks) {
@@ -80,7 +68,7 @@ class UpdateProgressJob extends Job {
 					DbControl.updateTask(task)
 				}
 
-				val finishedTasks = sendAriaTellStopped(client)
+				val finishedTasks = OUtils.sendAriaTellStopped(client)
 				// DEBUG
 				System.out.println("finishedTasks: " + finishedTasks.length)
 				for (o <- finishedTasks) {
@@ -123,7 +111,7 @@ class UpdateProgressJob extends Job {
 
 				// shutdown this aria2 process when it's update is finished...
 				if (activeTasks.length == 0 && flagCompleted) {
-					sendAriaTellShutdown(client)
+					OUtils.sendAriaTellShutdown(client)
 					iterator.remove()
 				}
 			}
@@ -134,50 +122,6 @@ class UpdateProgressJob extends Job {
 			case e: Exception =>
 				LogWriter.writeLog(e.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
-		}
-	}
-
-	def sendAriaTellStatus(gid: String, client: XmlRpcClient): Object = {
-		//val params = Array[Object](gid)
-		val params = new util.ArrayList[Object]()
-		params.add(gid)
-		client.execute("aria2.tellStatus", params)
-	}
-
-	def sendAriaTellActive(client: XmlRpcClient): Array[Object] = {
-		val params = Array[Object]()
-		val retObject = client.execute("aria2.tellActive", params)
-		// Returned XML-RPC is an Array Java HashMap...
-		retObject.asInstanceOf[Array[Object]]
-	}
-
-	def sendAriaTellStopped(client: XmlRpcClient): Array[Object] = {
-		val params = new util.ArrayList[Int]()
-		params.add(0)
-		params.add(100)
-		val retObject = client.execute("aria2.tellStopped", params)
-		retObject.asInstanceOf[Array[Object]]
-	}
-
-	def sendAriaTellShutdown(client: XmlRpcClient) {
-		client.execute("aria2.shutdown", Array[Object]())
-	}
-
-	class XmlRpcStringSerializer extends StringSerializer {
-		@throws(classOf[SAXException])
-		override def write(pHandler: ContentHandler, pObject: Object) {
-			write(pHandler, StringSerializer.STRING_TAG, pObject.toString)
-		}
-	}
-
-	class XmlRpcTypeFactory(pController: XmlRpcController) extends TypeFactoryImpl(pController) {
-		@throws(classOf[SAXException])
-		override def getSerializer(pConfig: XmlRpcStreamConfig, pObject: Object): TypeSerializer = {
-			val response: TypeSerializer = pObject match {
-				case s:String => new XmlRpcStringSerializer()
-				case _ => super.getSerializer(pConfig, pObject)
-			}
-			response
 		}
 	}
 }

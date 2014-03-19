@@ -4,7 +4,12 @@ import net.fluxo.dd.dbo.Config
 import java.util.{Random, Properties}
 import java.io.{IOException, FileInputStream}
 import org.apache.log4j.Level
-import java.net.ServerSocket
+import java.net.{URL, ServerSocket}
+import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
+import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
+import org.xml.sax.{ContentHandler, SAXException}
+import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcController}
+import java.util
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -69,6 +74,17 @@ class Utils {
 		ret
 	}
 
+	def getXmlRpcClient(port: Int): XmlRpcClient = {
+		val url = "http://127.0.0.1:" + port + "/rpc"
+		val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
+		xmlClientConfig.setServerURL(new URL(url))
+		LogWriter.writeLog("Starting XML-RPC client...", Level.INFO)
+		val client = new XmlRpcClient()
+		client.setConfig(xmlClientConfig)
+		client.setTypeFactory(new XmlRpcTypeFactory(client))
+		client
+	}
+
 	def generateGID(): String = {
 		//[0-9A-F]
 		val randomValue = _randomizer.nextLong()
@@ -77,6 +93,51 @@ class Utils {
 			sb.insert(0, "0")
 		}
 		sb.toString()
+	}
+
+
+	def sendAriaTellStatus(gid: String, client: XmlRpcClient): Object = {
+		//val params = Array[Object](gid)
+		val params = new util.ArrayList[Object]()
+		params.add(gid)
+		client.execute("aria2.tellStatus", params)
+	}
+
+	def sendAriaTellActive(client: XmlRpcClient): Array[Object] = {
+		val params = Array[Object]()
+		val retObject = client.execute("aria2.tellActive", params)
+		// Returned XML-RPC is an Array Java HashMap...
+		retObject.asInstanceOf[Array[Object]]
+	}
+
+	def sendAriaTellStopped(client: XmlRpcClient): Array[Object] = {
+		val params = new util.ArrayList[Int]()
+		params.add(0)
+		params.add(100)
+		val retObject = client.execute("aria2.tellStopped", params)
+		retObject.asInstanceOf[Array[Object]]
+	}
+
+	def sendAriaTellShutdown(client: XmlRpcClient) {
+		client.execute("aria2.shutdown", Array[Object]())
+	}
+
+	class XmlRpcStringSerializer extends StringSerializer {
+		@throws(classOf[SAXException])
+		override def write(pHandler: ContentHandler, pObject: Object) {
+			write(pHandler, StringSerializer.STRING_TAG, pObject.toString)
+		}
+	}
+
+	class XmlRpcTypeFactory(pController: XmlRpcController) extends TypeFactoryImpl(pController) {
+		@throws(classOf[SAXException])
+		override def getSerializer(pConfig: XmlRpcStreamConfig, pObject: Object): TypeSerializer = {
+			val response: TypeSerializer = pObject match {
+				case s:String => new XmlRpcStringSerializer()
+				case _ => super.getSerializer(pConfig, pObject)
+			}
+			response
+		}
 	}
 }
 
