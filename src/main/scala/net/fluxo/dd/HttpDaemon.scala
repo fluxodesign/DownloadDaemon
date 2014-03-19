@@ -35,7 +35,7 @@ class HttpDaemon(port: Int) extends Runnable {
 		} catch {
 			case e: Exception =>
 				LogWriter.writeLog("Error starting embedded jetty daemon", Level.ERROR)
-				LogWriter.writeLog(e.getMessage + " caused by " + e.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(e.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 		}
 	}
