@@ -139,7 +139,7 @@ class AriaProcessor {
 						// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
 						val files = OUtils.extractValueFromHashMap(jMap, "files").asInstanceOf[Array[Object]]
 						// DEBUG
-						System.out.println("FILES: " + files(0).asInstanceOf[java.util.HashMap[String, Object]])
+						System.out.println("AriaProcessor FILES: " + files(0).asInstanceOf[java.util.HashMap[String, Object]])
 						//val uris = OUtils.extractValueFromHashMap(files, "uris").asInstanceOf[java.util.HashMap[String, Object]]
 						//val uri = OUtils.extractValueFromHashMap(uris, "uri").toString
 						//task.TaskPackage = FilenameUtils.getName(uri)
