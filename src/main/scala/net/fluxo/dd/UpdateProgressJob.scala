@@ -38,10 +38,10 @@ class UpdateProgressJob extends Job {
 				}
 
 				val activeTasks = OUtils.sendAriaTellActive(client)
-				// DEBUG
-				System.out.println("activeTasks: " + activeTasks.length)
 				for (o <- activeTasks) {
 					val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
+					// DEBUG
+					System.out.println("ACTIVE: " + jMap)
 					val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
 					val task = {
 						if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else null
@@ -53,14 +53,7 @@ class UpdateProgressJob extends Job {
 					task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
 					task.TaskInfoHash_=(OUtils.extractValueFromHashMap(jMap, "infoHash").toString)
 					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
-					if (a.AriaHttpDownload) {
-						val files = OUtils.extractValueFromHashMap(jMap, "files").asInstanceOf[Array[Object]]
-						// DEBUG
-						System.out.println("FILES: " + files)
-						//val uris = OUtils.extractValueFromHashMap(files, "uris").asInstanceOf[java.util.HashMap[String, Object]]
-						//val uri = OUtils.extractValueFromHashMap(uris, "uri").toString
-						//task.TaskPackage = FilenameUtils.getName(uri)
-					} else {
+					if (!a.AriaHttpDownload) {
 						val btDetailsMap = OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
 						val infoMap = OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
 						task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)

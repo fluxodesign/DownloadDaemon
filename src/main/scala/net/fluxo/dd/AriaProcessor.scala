@@ -144,10 +144,6 @@ class AriaProcessor {
 							val path = OUtils.extractValueFromHashMap(files, "path").asInstanceOf[String]
 							task.TaskPackage_=(FilenameUtils.getName(path))
 						}
-						//val uris = OUtils.extractValueFromHashMap(files, "uris").asInstanceOf[java.util.HashMap[String, Object]]
-						//val uri = OUtils.extractValueFromHashMap(uris, "uri").toString
-						//task.TaskPackage = FilenameUtils.getName(uri)
-
 						DbControl.updateTask(task)
 					}
 				}
