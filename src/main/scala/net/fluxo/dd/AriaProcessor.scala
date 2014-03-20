@@ -5,6 +5,7 @@ import java.util
 import scala.util.control.Breaks._
 import org.joda.time.DateTime
 import org.apache.log4j.Level
+import java.util.concurrent.TimeUnit
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -115,6 +116,11 @@ class AriaProcessor {
 			// set all necessary parameters if this is an HTTP download...
 			if (isHttp) {
 				DbControl.updateTaskTailGID(gid, gid)
+				try {
+					TimeUnit.SECONDS.sleep(5)
+				} catch {
+					case ie: InterruptedException =>
+				}
 				val rpcClient = OUtils.getXmlRpcClient(port)
 				val active = OUtils.sendAriaTellActive(rpcClient)
 				if (active.length > 0) {
