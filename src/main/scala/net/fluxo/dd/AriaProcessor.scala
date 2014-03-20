@@ -6,6 +6,7 @@ import scala.util.control.Breaks._
 import org.joda.time.DateTime
 import org.apache.log4j.Level
 import java.util.concurrent.TimeUnit
+import org.apache.commons.io.FilenameUtils
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -137,14 +138,17 @@ class AriaProcessor {
 						task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
 						task.TaskInfoHash_=(OUtils.extractValueFromHashMap(jMap, "infoHash").toString)
 						// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
-						val files = OUtils.extractValueFromHashMap(jMap, "files").asInstanceOf[Array[Object]]
-						// DEBUG
-						System.out.println("AriaProcessor FILES: " + files(0).asInstanceOf[java.util.HashMap[String, Object]])
+						val objFiles = OUtils.extractValueFromHashMap(jMap, "files").asInstanceOf[Array[Object]]
+						if (objFiles.length > 0) {
+							val files = objFiles(0).asInstanceOf[java.util.HashMap[String, Object]]
+							val path = OUtils.extractValueFromHashMap(files, "path").asInstanceOf[String]
+							task.TaskPackage_=(FilenameUtils.getName(path))
+						}
 						//val uris = OUtils.extractValueFromHashMap(files, "uris").asInstanceOf[java.util.HashMap[String, Object]]
 						//val uri = OUtils.extractValueFromHashMap(uris, "uri").toString
 						//task.TaskPackage = FilenameUtils.getName(uri)
 
-						//DbControl.updateTask(task)
+						DbControl.updateTask(task)
 					}
 				}
 			}
