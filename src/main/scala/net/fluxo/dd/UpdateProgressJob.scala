@@ -51,7 +51,10 @@ class UpdateProgressJob extends Job {
 					val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
 					task.TaskTotalLength_=(tl)
 					task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
-					task.TaskInfoHash_=(OUtils.extractValueFromHashMap(jMap, "infoHash").toString)
+					task.TaskInfoHash_=({
+						if (task.TaskIsHttp) "noinfohash"
+						else OUtils.extractValueFromHashMap(jMap, "infoHash").toString
+					})
 					// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
 					if (!a.AriaHttpDownload) {
 						val btDetailsMap = OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
@@ -70,7 +73,11 @@ class UpdateProgressJob extends Job {
 					val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
 					// DEBUG
 					System.out.println("finished GID: " + gid)
-					val infoHash = OUtils.extractValueFromHashMap(jMap, "infoHash").toString
+					val infoHash = {
+						val tasks = DbControl.queryTask(gid)
+						if (tasks.length > 0 && tasks(0).TaskIsHttp) "noinfohash"
+						else OUtils.extractValueFromHashMap(jMap, "infoHash").toString
+					}
 					val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 					// DEBUG
 					System.out.println("finished completed length: " + cl)
