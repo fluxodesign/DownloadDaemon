@@ -113,17 +113,16 @@ class UpdateProgressJob extends Job {
 			case ie: InterruptedException =>
 				LogWriter.writeLog(ie.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
-			case e: Exception =>
-				LogWriter.writeLog(e.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 			case xe: XmlRpcException =>
 				LogWriter.writeLog(xe.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(xe), Level.ERROR)
 				// if a download is hanging or call to XML-RPC server returns an error,
 				// we need to shut down the offending thread and restart the download...
 				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
 				OAria.killProcess(_currentPort)
 				OAria.restartDownloads()
+			case e: Exception =>
+				LogWriter.writeLog(e.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 		}
 	}
 }
