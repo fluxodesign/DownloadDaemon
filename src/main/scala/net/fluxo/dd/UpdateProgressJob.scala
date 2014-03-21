@@ -97,7 +97,7 @@ class UpdateProgressJob extends Job {
 								val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
 								if (packageDir.isDirectory && packageDir.exists() && !destDir.exists()) {
 									FileUtils.moveDirectory(packageDir, destDir)
-								} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " doesn't exist!", Level.INFO)
+								} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " exist!", Level.INFO)
 							}
 						}
 					}
@@ -109,9 +109,6 @@ class UpdateProgressJob extends Job {
 					iterator.remove()
 				}
 			}
-
-			// restart any stalled downloads...
-			OAria.restartDownloads()
 		} catch {
 			case ie: InterruptedException =>
 				LogWriter.writeLog(ie.getMessage, Level.ERROR)
@@ -126,6 +123,7 @@ class UpdateProgressJob extends Job {
 				// we need to shut down the offending thread and restart the download...
 				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
 				OAria.killProcess(_currentPort)
+				OAria.restartDownloads()
 		}
 	}
 }
