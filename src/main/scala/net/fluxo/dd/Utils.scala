@@ -104,35 +104,21 @@ class Utils {
 		client.execute("aria2.tellStatus", params)
 	}
 
+	@throws(classOf[XmlRpcException])
 	def sendAriaTellActive(client: XmlRpcClient): Array[Object] = {
-		val retObject = Array[Object]()
-		try {
-			val params = Array[Object]()
-			val returned = client.execute("aria2.tellActive", params)
-			// Returned XML-RPC is an Array Java HashMap...
-			return returned.asInstanceOf[Array[Object]]
-		} catch {
-			case xe: XmlRpcException =>
-				LogWriter.writeLog(xe.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(xe), Level.ERROR)
-		}
-		retObject
+		val params = Array[Object]()
+		val returned = client.execute("aria2.tellActive", params)
+		// Returned XML-RPC is an Array Java HashMap...
+		returned.asInstanceOf[Array[Object]]
 	}
 
+	@throws(classOf[XmlRpcException])
 	def sendAriaTellStopped(client: XmlRpcClient): Array[Object] = {
-		val retObject = Array[Object]()
-		try {
-			val params = new util.ArrayList[Int]()
-			params.add(0)
-			params.add(100)
-			val returned = client.execute("aria2.tellStopped", params)
-			return returned.asInstanceOf[Array[Object]]
-		} catch {
-			case xe: XmlRpcException =>
-				LogWriter.writeLog(xe.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(xe), Level.ERROR)
-		}
-		retObject
+		val params = new util.ArrayList[Int]()
+		params.add(0)
+		params.add(100)
+		val returned = client.execute("aria2.tellStopped", params)
+		returned.asInstanceOf[Array[Object]]
 	}
 
 	def sendAriaTellShutdown(client: XmlRpcClient) {

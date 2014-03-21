@@ -120,9 +120,6 @@ class UpdateProgressJob extends Job {
 				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
 				OAria.killProcess(_currentPort)
 				OAria.restartDownloads()
-			case e: Exception =>
-				LogWriter.writeLog(e.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 		}
 	}
 }
