@@ -65,8 +65,10 @@ class AriaProcessor {
 			}
 			val ariaThread = new AriaThread(rpcPort, t.TaskInput.getOrElse(null), t.TaskGID.getOrElse(null),
 				t.TaskOwner.getOrElse(null), true, t.TaskIsHttp)
-			if (t.TaskHttpUsername.getOrElse("").length > 0 && t.TaskHttpPassword.getOrElse("").length > 0) {
-				ariaThread.setCredentials(t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""))
+			if (t.TaskIsHttp) {
+				if (t.TaskHttpUsername.getOrElse("").length > 0 && t.TaskHttpPassword.getOrElse("").length > 0) {
+					ariaThread.setCredentials(t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""))
+				}
 			}
 			new Thread(ariaThread).start()
 		}

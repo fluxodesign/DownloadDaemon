@@ -120,11 +120,19 @@ class Utils {
 	}
 
 	def sendAriaTellStopped(client: XmlRpcClient): Array[Object] = {
-		val params = new util.ArrayList[Int]()
-		params.add(0)
-		params.add(100)
-		val retObject = client.execute("aria2.tellStopped", params)
-		retObject.asInstanceOf[Array[Object]]
+		val retObject = Array[Object]()
+		try {
+			val params = new util.ArrayList[Int]()
+			params.add(0)
+			params.add(100)
+			val returned = client.execute("aria2.tellStopped", params)
+			return returned.asInstanceOf[Array[Object]]
+		} catch {
+			case xe: XmlRpcException =>
+				LogWriter.writeLog(xe.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(xe), Level.ERROR)
+		}
+		retObject
 	}
 
 	def sendAriaTellShutdown(client: XmlRpcClient) {
