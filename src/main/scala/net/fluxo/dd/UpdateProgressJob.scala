@@ -100,6 +100,9 @@ class UpdateProgressJob extends Job {
 					}
 				}
 
+				// if a download is hanging or call to XML-RPC server returns an error,
+				// we need to shut down the offending thread and restart the download...
+
 				// shutdown this aria2 process when it's update is finished...
 				if (activeTasks.length == 0 && flagCompleted) {
 					OUtils.sendAriaTellShutdown(client)
