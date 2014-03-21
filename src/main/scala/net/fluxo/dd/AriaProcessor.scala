@@ -41,8 +41,17 @@ class AriaProcessor {
 		"OK " + newGid
 	}
 
-	def removeProcess(o: AriaProcess) {
-		if (_activeProcesses.contains(o)) _activeProcesses.remove(o)
+	def killProcess(port: Int) {
+		val iterator = ActiveProcesses.iterator()
+		breakable {
+			while (iterator.hasNext) {
+				val o = iterator.next()
+				if (o.AriaPort == port) {
+					o.AriaProcess.getOrElse(null).destroy()
+					break()
+				}
+			}
+		}
 	}
 
 	def restartDownloads() {

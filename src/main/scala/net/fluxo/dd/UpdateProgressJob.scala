@@ -13,6 +13,8 @@ import org.apache.xmlrpc.XmlRpcException
  */
 class UpdateProgressJob extends Job {
 
+	private var _currentPort: Int = 0
+
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
 		try {
@@ -21,6 +23,7 @@ class UpdateProgressJob extends Job {
 				var flagCompleted: Boolean = false
 				// get an RPC client for a particular port...
 				val a = iterator.next()
+				_currentPort = a.AriaPort
 				val client = OUtils.getXmlRpcClient(a.AriaPort)
 
 				// we need to acquire the TAIL GID if this is a new download, or a restart...
@@ -100,15 +103,15 @@ class UpdateProgressJob extends Job {
 					}
 				}
 
-				// if a download is hanging or call to XML-RPC server returns an error,
-				// we need to shut down the offending thread and restart the download...
-
 				// shutdown this aria2 process when it's update is finished...
 				if (activeTasks.length == 0 && flagCompleted) {
 					OUtils.sendAriaTellShutdown(client)
 					iterator.remove()
 				}
 			}
+
+			// restart any stalled downloads...
+			OAria.restartDownloads()
 		} catch {
 			case ie: InterruptedException =>
 				LogWriter.writeLog(ie.getMessage, Level.ERROR)
@@ -119,6 +122,10 @@ class UpdateProgressJob extends Job {
 			case xe: XmlRpcException =>
 				LogWriter.writeLog(xe.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(xe), Level.ERROR)
+				// if a download is hanging or call to XML-RPC server returns an error,
+				// we need to shut down the offending thread and restart the download...
+				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
+				OAria.killProcess(_currentPort)
 		}
 	}
 }
