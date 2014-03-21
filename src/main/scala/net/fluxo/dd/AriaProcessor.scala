@@ -86,11 +86,11 @@ class AriaProcessor {
 				if (_httpUsername.getOrElse("").length > 0 && _httpPassword.getOrElse("").length > 0) {
 					new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
 						"--gid=" + gid, "--http-user=" + _httpUsername.getOrElse(""),
-						"--http-passwd=" + _httpPassword.getOrElse(""), "--rpc-listen-all=false", uri).start()
+						"--http-passwd=" + _httpPassword.getOrElse(""), uri).start()
 				} else {
 					new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
 						"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
-						"--gid=" + gid, "--seed-ratio=0.1", "--rpc-listen-all=false", uri).start()
+						"--gid=" + gid, "--seed-ratio=0.1", uri).start()
 				}
 			}
 

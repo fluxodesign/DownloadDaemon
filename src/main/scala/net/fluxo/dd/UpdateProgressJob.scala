@@ -4,6 +4,7 @@ import org.quartz.{Job, JobExecutionContext, JobExecutionException}
 import org.apache.log4j.Level
 import java.io.File
 import org.apache.commons.io.FileUtils
+import org.apache.xmlrpc.XmlRpcException
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -112,6 +113,9 @@ class UpdateProgressJob extends Job {
 			case e: Exception =>
 				LogWriter.writeLog(e.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
+			case xe: XmlRpcException =>
+				LogWriter.writeLog(xe.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(xe), Level.ERROR)
 		}
 	}
 }

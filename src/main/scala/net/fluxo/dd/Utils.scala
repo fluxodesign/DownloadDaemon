@@ -10,6 +10,7 @@ import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
 import org.xml.sax.{ContentHandler, SAXException}
 import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcController}
 import java.util
+import org.apache.xmlrpc.XmlRpcException
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -104,10 +105,18 @@ class Utils {
 	}
 
 	def sendAriaTellActive(client: XmlRpcClient): Array[Object] = {
-		val params = Array[Object]()
-		val retObject = client.execute("aria2.tellActive", params)
-		// Returned XML-RPC is an Array Java HashMap...
-		retObject.asInstanceOf[Array[Object]]
+		val retObject = Array[Object]()
+		try {
+			val params = Array[Object]()
+			val returned = client.execute("aria2.tellActive", params)
+			// Returned XML-RPC is an Array Java HashMap...
+			return returned.asInstanceOf[Array[Object]]
+		} catch {
+			case xe: XmlRpcException =>
+				LogWriter.writeLog(xe.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(xe), Level.ERROR)
+		}
+		retObject
 	}
 
 	def sendAriaTellStopped(client: XmlRpcClient): Array[Object] = {
