@@ -25,6 +25,8 @@ class UpdateProgressJob extends Job {
 				val a = iterator.next()
 				_currentPort = a.AriaPort
 				if (!OUtils.portInUse(_currentPort)) {
+					// DEBUG
+					System.out.println("Removing current Aria Process from iterator...")
 					iterator.remove()
 				}
 				val client = OUtils.getXmlRpcClient(a.AriaPort)
