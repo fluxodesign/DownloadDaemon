@@ -38,7 +38,8 @@ class UpdateProgressJob extends Job {
 						val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
 						if (tg.length > 0 && tg(0) != null && !tg(0).asInstanceOf[String].equals(tasks(0).TaskTailGID.getOrElse(""))) {
 							// DEBUG
-							System.out.println("new TAIL GID required for " + tasks(0).TaskGID.getOrElse("empty"))
+							System.out.println("new TAIL GID required for " + tasks(0).TaskGID.getOrElse("empty") + ": " +
+								tg(0).asInstanceOf[String])
 							DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
 						}
 					}
