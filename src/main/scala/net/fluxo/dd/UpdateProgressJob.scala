@@ -40,7 +40,7 @@ class UpdateProgressJob extends Job {
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						if (!a.AriaHttpDownload) {
 							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
-							if (tg.length > 0 && tg(0) != null && !tg(0).asInstanceOf[String].equals(tasks(0).TaskTailGID.getOrElse(""))) {
+							if (tg.length > 0 && tg(0) != null) {
 								// DEBUG
 								System.out.println("new TAIL GID required for " + tasks(0).TaskGID.getOrElse("empty") + ": " +
 									tg(0).asInstanceOf[String])
