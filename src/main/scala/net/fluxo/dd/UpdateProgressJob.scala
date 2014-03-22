@@ -33,6 +33,8 @@ class UpdateProgressJob extends Job {
 					System.out.println("Acquiring new TAIL GID for " + tasks(0).TaskGID.getOrElse("empty"))
 					//if (tasks(0).TaskTailGID.getOrElse("").equals("0") || a.AriaTaskRestarting) {
 					if (tasks(0).TaskTailGID.getOrElse("").equals("0")) {
+						// DEBUG
+						System.out.println("new TAIL GID required for " + tasks(0).TaskGID.getOrElse("empty"))
 						val ts = OUtils.sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						if (!a.AriaHttpDownload) {
