@@ -158,19 +158,7 @@ class AriaProcessor {
 						DbControl.updateTask(task)
 					}
 				}
-			} /*else {
-				// we need to get the new TAIL GID...
-				try {
-					TimeUnit.SECONDS.sleep(5)
-				} catch { case ie: InterruptedException => }
-				val rpcClient = OUtils.getXmlRpcClient(port)
-				val status = OUtils.sendAriaTellStatus(gid, rpcClient)
-				val jmap = status.asInstanceOf[java.util.HashMap[String, Object]]
-				val tail = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
-				if (tail.length > 0 && tail(0) != null) {
-					DbControl.updateTaskTailGID(gid, tail(0).asInstanceOf[String])
-				}
-			}*/
+			}
 			process.waitFor()
 		}
 	}

@@ -124,7 +124,7 @@ class UpdateProgressJob extends Job {
 				// we need to shut down the offending thread and restart the download...
 				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
 				OAria.killProcess(_currentPort)
-				OAria.restartDownloads()
+				//OAria.restartDownloads()
 		}
 	}
 }
