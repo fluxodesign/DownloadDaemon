@@ -67,7 +67,7 @@ class UpdateProgressJob extends Job {
 						val infoMap = OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
 						task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
 					}
-					DbControl.updateTask(task)
+					if (task.TaskGID.getOrElse("").length > 0) DbControl.updateTask(task)
 				}
 
 				val finishedTasks = OUtils.sendAriaTellStopped(client)
