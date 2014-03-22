@@ -24,6 +24,9 @@ class UpdateProgressJob extends Job {
 				// get an RPC client for a particular port...
 				val a = iterator.next()
 				_currentPort = a.AriaPort
+				if (!OUtils.portInUse(_currentPort)) {
+					iterator.remove()
+				}
 				val client = OUtils.getXmlRpcClient(a.AriaPort)
 
 				// we need to acquire the TAIL GID if this is a new download, or a restart...
@@ -31,7 +34,6 @@ class UpdateProgressJob extends Job {
 				if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
 					// DEBUG
 					System.out.println("Acquiring new TAIL GID for " + tasks(0).TaskGID.getOrElse("empty"))
-					//if (tasks(0).TaskTailGID.getOrElse("").equals("0") || a.AriaTaskRestarting) {
 					val ts = OUtils.sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
 					val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 					if (!a.AriaHttpDownload) {
@@ -43,7 +45,6 @@ class UpdateProgressJob extends Job {
 							DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
 						}
 					}
-					//}
 				}
 
 				val activeTasks = OUtils.sendAriaTellActive(client)
