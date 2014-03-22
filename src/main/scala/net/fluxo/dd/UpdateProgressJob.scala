@@ -21,6 +21,7 @@ class UpdateProgressJob extends Job {
 		try {
 			// DEBUG
 			System.out.println("Processes: " + OAria.ActiveProcesses.size())
+			if (OUtils.allPortsFree) OAria.restartDownloads()
 
 			val iterator = OAria.ActiveProcesses.iterator()
 			while (iterator.hasNext) {
@@ -30,11 +31,6 @@ class UpdateProgressJob extends Job {
 					val a = iterator.next()
 					if (a.AriaTaskRestarting) break()
 					_currentPort = a.AriaPort
-					if (!OUtils.portInUse(_currentPort)) {
-						// DEBUG
-						System.out.println("Removing current Aria Process from iterator...")
-						iterator.remove()
-					}
 					val client = OUtils.getXmlRpcClient(a.AriaPort)
 
 					// we need to acquire the TAIL GID if this is a new download, or a restart...

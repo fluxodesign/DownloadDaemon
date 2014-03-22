@@ -11,6 +11,7 @@ import org.xml.sax.{ContentHandler, SAXException}
 import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcController}
 import java.util
 import org.apache.xmlrpc.XmlRpcException
+import scala.util.control.Breaks._
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -46,6 +47,19 @@ class Utils {
 				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 		}
 		cfg
+	}
+
+	def allPortsFree: Boolean = {
+		var ret: Boolean = true
+		breakable {
+			for (x <- readConfig.RPCPort until readConfig.RPCPort + readConfig.RPCLimit) {
+				if (portInUse(x)) {
+					ret = false
+					break()
+				}
+			}
+		}
+		ret
 	}
 
 	def portInUse(port: Int): Boolean = {
