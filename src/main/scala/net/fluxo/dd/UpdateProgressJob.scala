@@ -32,18 +32,17 @@ class UpdateProgressJob extends Job {
 					// DEBUG
 					System.out.println("Acquiring new TAIL GID for " + tasks(0).TaskGID.getOrElse("empty"))
 					//if (tasks(0).TaskTailGID.getOrElse("").equals("0") || a.AriaTaskRestarting) {
-					if (tasks(0).TaskTailGID.getOrElse("").equals("0")) {
-						// DEBUG
-						System.out.println("new TAIL GID required for " + tasks(0).TaskGID.getOrElse("empty"))
-						val ts = OUtils.sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
-						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
-						if (!a.AriaHttpDownload) {
-							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
-							if (tg.length > 0 && tg(0) != null) {
-								DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
-							}
+					val ts = OUtils.sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
+					val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
+					if (!a.AriaHttpDownload) {
+						val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
+						if (tg.length > 0 && tg(0) != null && !tg(0).asInstanceOf[String].equals(tasks(0).TaskTailGID.getOrElse(""))) {
+							// DEBUG
+							System.out.println("new TAIL GID required for " + tasks(0).TaskGID.getOrElse("empty"))
+							DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
 						}
 					}
+					//}
 				}
 
 				val activeTasks = OUtils.sendAriaTellActive(client)
