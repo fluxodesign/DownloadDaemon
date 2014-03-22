@@ -158,7 +158,7 @@ class AriaProcessor {
 						DbControl.updateTask(task)
 					}
 				}
-			} else {
+			} /*else {
 				// we need to get the new TAIL GID...
 				try {
 					TimeUnit.SECONDS.sleep(5)
@@ -170,7 +170,7 @@ class AriaProcessor {
 				if (tail.length > 0 && tail(0) != null) {
 					DbControl.updateTaskTailGID(gid, tail(0).asInstanceOf[String])
 				}
-			}
+			}*/
 			process.waitFor()
 		}
 	}
