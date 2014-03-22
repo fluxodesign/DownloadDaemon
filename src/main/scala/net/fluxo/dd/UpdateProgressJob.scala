@@ -19,8 +19,6 @@ class UpdateProgressJob extends Job {
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
 		try {
-			// DEBUG
-			System.out.println("Processes: " + OAria.ActiveProcesses.size())
 			if (OUtils.allPortsFree) OAria.restartDownloads()
 
 			val iterator = OAria.ActiveProcesses.iterator()
@@ -29,7 +27,6 @@ class UpdateProgressJob extends Job {
 					var flagCompleted: Boolean = false
 					// get an RPC client for a particular port...
 					val a = iterator.next()
-					//if (a.AriaTaskRestarting) break()
 					_currentPort = a.AriaPort
 					val client = OUtils.getXmlRpcClient(a.AriaPort)
 
@@ -41,9 +38,6 @@ class UpdateProgressJob extends Job {
 						if (!a.AriaHttpDownload) {
 							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
 							if (tg.length > 0 && tg(0) != null) {
-								// DEBUG
-								System.out.println("new TAIL GID required for " + tasks(0).TaskGID.getOrElse("empty") + ": " +
-									tg(0).asInstanceOf[String])
 								DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
 							}
 						}
