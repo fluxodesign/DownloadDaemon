@@ -19,6 +19,9 @@ class UpdateProgressJob extends Job {
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
 		try {
+			// DEBUG
+			System.out.println("Processes: " + OAria.ActiveProcesses.size())
+
 			val iterator = OAria.ActiveProcesses.iterator()
 			while (iterator.hasNext) {
 				breakable {
@@ -120,9 +123,7 @@ class UpdateProgressJob extends Job {
 				}
 			}
 
-			// DEBUG
-			System.out.println("Processes: " + OAria.ActiveProcesses.size())
-			if (OAria.ActiveProcesses.size() == 0) OAria.restartDownloads()
+			//if (OAria.ActiveProcesses.size() == 0) OAria.restartDownloads()
 		} catch {
 			case ie: InterruptedException =>
 				LogWriter.writeLog(ie.getMessage, Level.ERROR)
