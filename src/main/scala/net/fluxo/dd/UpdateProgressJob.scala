@@ -29,7 +29,7 @@ class UpdateProgressJob extends Job {
 					var flagCompleted: Boolean = false
 					// get an RPC client for a particular port...
 					val a = iterator.next()
-					if (a.AriaTaskRestarting) break()
+					//if (a.AriaTaskRestarting) break()
 					_currentPort = a.AriaPort
 					val client = OUtils.getXmlRpcClient(a.AriaPort)
 
@@ -118,8 +118,6 @@ class UpdateProgressJob extends Job {
 					}
 				}
 			}
-
-			//if (OAria.ActiveProcesses.size() == 0) OAria.restartDownloads()
 		} catch {
 			case ie: InterruptedException =>
 				LogWriter.writeLog(ie.getMessage, Level.ERROR)
