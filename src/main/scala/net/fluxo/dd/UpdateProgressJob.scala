@@ -37,8 +37,6 @@ class UpdateProgressJob extends Job {
 					// we need to acquire the TAIL GID if this is a new download, or a restart...
 					val tasks = DbControl.queryTask(a.AriaTaskGid.getOrElse(null))
 					if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
-						// DEBUG
-						System.out.println("Acquiring new TAIL GID for " + tasks(0).TaskGID.getOrElse("empty"))
 						val ts = OUtils.sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						if (!a.AriaHttpDownload) {
@@ -121,6 +119,8 @@ class UpdateProgressJob extends Job {
 					}
 				}
 			}
+
+			if (OAria.ActiveProcesses.size() == 0) OAria.restartDownloads()
 		} catch {
 			case ie: InterruptedException =>
 				LogWriter.writeLog(ie.getMessage, Level.ERROR)

@@ -79,7 +79,6 @@ class Utils {
 		val url = "http://127.0.0.1:" + port + "/rpc"
 		val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
 		xmlClientConfig.setServerURL(new URL(url))
-		LogWriter.writeLog("Starting XML-RPC client...", Level.INFO)
 		val client = new XmlRpcClient()
 		client.setConfig(xmlClientConfig)
 		client.setTypeFactory(new XmlRpcTypeFactory(client))
