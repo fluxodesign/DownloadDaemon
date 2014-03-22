@@ -120,6 +120,8 @@ class UpdateProgressJob extends Job {
 				}
 			}
 
+			// DEBUG
+			System.out.println("Processes: " + OAria.ActiveProcesses.size())
 			if (OAria.ActiveProcesses.size() == 0) OAria.restartDownloads()
 		} catch {
 			case ie: InterruptedException =>
