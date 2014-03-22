@@ -47,7 +47,12 @@ class AriaProcessor {
 			while (iterator.hasNext) {
 				val o = iterator.next()
 				if (o.AriaPort == port) {
-					o.AriaProcess.getOrElse(null).destroy()
+					// DEBUG
+					System.out.println("Aria port " + o.AriaPort)
+					val process = o.AriaProcess.getOrElse(null)
+					System.out.println("Process before: " + process.toString)
+					process.destroy()
+					System.out.println("Process after: " + process.toString)
 					break()
 				}
 			}
