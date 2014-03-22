@@ -50,6 +50,7 @@ class AriaProcessor {
 					// DEBUG
 					System.out.println("Aria port " + o.AriaPort)
 					val process = o.AriaProcess.getOrElse(null)
+					o.AriaTaskRestarting_=(value = true)
 					System.out.println("Process before: " + process.toString)
 					process.destroy()
 					System.out.println("Process after: " + process.toString)
