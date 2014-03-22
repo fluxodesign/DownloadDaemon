@@ -50,6 +50,7 @@ class AriaProcessor {
 					val process = o.AriaProcess.getOrElse(null)
 					o.AriaTaskRestarting_=(value = true)
 					process.destroy()
+					iterator.remove()
 					break()
 				}
 			}
