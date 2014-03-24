@@ -277,28 +277,29 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 	class XMPPMessageListener extends MessageListener {
 		def processMessage(chat: Chat, message: Message) {
 			if (message != null && message.getBody != null) {
-				val response: String = parseMessage(message.getBody, message.getFrom)
+				val response: String = parseMessage(message.getBody)
 				chat.sendMessage(response)
 			}
 		}
 
-		def parseMessage(msg: String, owner: String): String = {
+		def parseMessage(msg: String): String = {
 			LogWriter.writeLog("Received message: " + msg, Level.INFO)
 			val words: Array[String] = msg.split("\\s+")
 			if (words.length < 2) return "ERR LENGTH"
 			if (!words(0).equals("DD")) return "ERR NOTIFIER"
 			words(1) match {
 				case "ADD_TORRENT" =>
-					if (words.length < 3) "ERR LENGTH"
-					OAria.processRequest(words(2), owner, isHttp = false, "", "")
+					if (words.length < 4) "ERR LENGTH"
+					OAria.processRequest(words(3), words(2), isHttp = false, "", "")
 				case "ADD_URI" =>
-					if (words.length < 3) "ERR LENGTH"
-					OAria.processRequest(words(2), owner, isHttp = true, "", "")
+					if (words.length < 4) "ERR LENGTH"
+					OAria.processRequest(words(3), words(2), isHttp = true, "", "")
 				case "ADD_URI_C" =>
-					if (words.length < 5) "ERR LENGTH"
-					OAria.processRequest(words(2), owner, isHttp = true, words(3), words(4))
+					if (words.length < 6) "ERR LENGTH"
+					OAria.processRequest(words(3), words(2), isHttp = true, words(4), words(5))
 				case "STATUS" =>
-					val tasks: Array[Task] = DbControl.queryTasks(owner)
+					if (words.length < 3) "ERR LENGTH"
+					val tasks: Array[Task] = DbControl.queryTasks(words(2))
 					val sb: StringBuilder = new StringBuilder
 					for (t <- tasks) {
 						val progress: Int = {
@@ -351,6 +352,43 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 									else "ERR CMD"
 								}
 							case _  => "ERR CMD"
+						}
+					}
+				case "TPB" =>
+					// at the very least we need search term...
+					// page and categories can also be added
+					// syntax: DD TPB ST=[Search Term] PG=[page starting from 0] CAT=[comma-separated xxx code]
+					if (words.length < 3) "ERR LENGTH"
+					else {
+						if (words.length == 3 && !words(2).startsWith("ST=")) "SYNTAX ERROR"
+						else if (words.length == 4 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG="))) "SYNTAX ERROR"
+						else if (words.length >= 5 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG=") || !words(4).startsWith("CAT="))) "SYNTAX ERROR"
+						else {
+							val searchTerm: String = {
+								words(2).substring("ST=".length).replaceAllLiterally("\"", "")
+							}
+							val page: Int = {
+								if (words.length >= 4) {
+									try {
+										words(3).substring("PG=".length).toInt
+									} catch {
+										case nfe: NumberFormatException => 0
+									}
+								} else 0
+							}
+							val cat: Array[Int] = {
+								if (words.length >= 5) {
+									val cats = words(4).substring("CAT=".length).split(",")
+									val c = new Array[Int](cats.length)
+									var counter: Int = 0
+									for (x <- cats) {
+										c(counter) = x.toInt
+										counter += 1
+									}
+									c
+								} else Array[Int]()
+							}
+							TPBP query(searchTerm, page, cat)
 						}
 					}
 				case _ => "ERR CMD"

@@ -109,7 +109,6 @@ class Utils {
 		sb.toString()
 	}
 
-
 	def sendAriaTellStatus(gid: String, client: XmlRpcClient): Object = {
 		//val params = Array[Object](gid)
 		val params = new util.ArrayList[Object]()

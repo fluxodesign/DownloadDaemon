@@ -2,6 +2,7 @@ package net.fluxo.dd
 
 import java.net.Socket
 import java.io.IOException
+import org.jsoup.Jsoup
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -12,7 +13,7 @@ import java.io.IOException
 class TPBProcessor {
 
 	private val _url = "thepiratebay.se"
-	private val _searchUrl = "thepiratebay.se/search/[term]/0/99/[filter]"
+	private sealed val _searchUrl = "thepiratebay.se/search/[term]/[page]/99/[filter]"
 
 	object TPBCats extends Enumeration {
 		type Cat = Value
@@ -67,6 +68,7 @@ class TPBProcessor {
 		val OtherCovers = Value(604)
 		val OtherPhysibles = Value(605)
 		val OtherOther = Value(699)
+		def isValidCat(i: Int) = values.exists(_ == i)
 	}
 
 	def isSiteAlive: Boolean = {
@@ -85,4 +87,24 @@ class TPBProcessor {
 		}
 		reachable
 	}
+
+	def query(searchTerm: String, page: Int, cats: Array[Int]): String = {
+		val sb = new StringBuilder
+		var request = _searchUrl
+		request = request replaceAllLiterally ("[term]", searchTerm)
+		request = request replaceAllLiterally ("[page]", page.toString)
+		val categories = new StringBuilder
+		for (x <- cats) {
+			if (TPBCats.isValidCat(x)) categories append x append ","
+		}
+		if (categories endsWith ",") categories delete(categories.length - 1, categories.length)
+		request = request replaceAllLiterally ("[filter]", categories toString())
+		// make sure that tpb is active and hand it over to jsoup
+		if (isSiteAlive) {
+			val jsoup = Jsoup connect request userAgent "Fluxo-DD/1.0"
+		}
+		sb.toString()
+	}
 }
+
+object TPBP extends TPBProcessor
