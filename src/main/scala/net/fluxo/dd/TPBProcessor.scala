@@ -3,6 +3,8 @@ package net.fluxo.dd
 import java.net.Socket
 import java.io.IOException
 import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.select.Elements
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -13,7 +15,7 @@ import org.jsoup.Jsoup
 class TPBProcessor {
 
 	private val _url = "thepiratebay.se"
-	private sealed val _searchUrl = "thepiratebay.se/search/[term]/[page]/99/[filter]"
+	private final val _searchUrl = "http://thepiratebay.se/search/[term]/[page]/99/[filter]"
 
 	object TPBCats extends Enumeration {
 		type Cat = Value
@@ -101,9 +103,27 @@ class TPBProcessor {
 		request = request replaceAllLiterally ("[filter]", categories toString())
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
-			val jsoup = Jsoup connect request userAgent "Fluxo-DD/1.0"
+			val jsoup = Jsoup connect request userAgent "Fluxo-DD/1.0" get()
+			sb.append(queryTotalItemsFound(jsoup))
 		}
 		sb.toString()
+	}
+
+	def queryTotalItemsFound(doc: Document): String = {
+		var ret: Option[String] = None
+		val h2: Elements = doc getElementsByTag "h2"
+		while ((h2 iterator()).hasNext) {
+			val e = h2 iterator() next() children()
+			while ((e iterator()).hasNext) {
+				val elem = e iterator() next()
+				elem tagName() match {
+					case "span" =>
+					case _ =>
+						ret = Some(elem text())
+				}
+			}
+		}
+		ret getOrElse ""
 	}
 }
 

@@ -360,9 +360,9 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					// syntax: DD TPB ST=[Search Term] PG=[page starting from 0] CAT=[comma-separated xxx code]
 					if (words.length < 3) "ERR LENGTH"
 					else {
-						if (words.length == 3 && !words(2).startsWith("ST=")) "SYNTAX ERROR"
-						else if (words.length == 4 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG="))) "SYNTAX ERROR"
-						else if (words.length >= 5 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG=") || !words(4).startsWith("CAT="))) "SYNTAX ERROR"
+						if (words.length == 3 && !words(2).startsWith("ST=")) "SYNTAX ERROR 1"
+						else if (words.length == 4 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG="))) "SYNTAX ERROR 2 "
+						else if (words.length >= 5 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG=") || !words(4).startsWith("CAT="))) "SYNTAX ERROR 3"
 						else {
 							val searchTerm: String = {
 								words(2).substring("ST=".length).replaceAllLiterally("\"", "")
@@ -388,6 +388,11 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 									c
 								} else Array[Int]()
 							}
+
+							// DEBUG
+							System.out.println("search term: " + searchTerm)
+							System.out.println("page: " + page)
+							System.out.println("cat: " + cat)
 							TPBP query(searchTerm, page, cat)
 						}
 					}
