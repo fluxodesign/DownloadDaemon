@@ -1,10 +1,14 @@
 package net.fluxo.dd
 
 import java.net.Socket
-import java.io.IOException
+import java.io.{BufferedReader, InputStreamReader, IOException}
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.client.methods.HttpGet
+import net.fluxo.dd.dbo.TPBObject
+import scala.collection.mutable.ListBuffer
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -103,27 +107,64 @@ class TPBProcessor {
 		request = request replaceAllLiterally ("[filter]", categories toString())
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
-			val jsoup = Jsoup connect request userAgent "Fluxo-DD/1.0" get()
-			sb.append(queryTotalItemsFound(jsoup))
+			val response = contactSource(request)
+			val document = Jsoup parse response
+			val totalItems = queryTotalItemsFound(document)
+			val itemList = { if (totalItems > 0) parseItems(document) }
 		}
 		sb.toString()
 	}
 
-	def queryTotalItemsFound(doc: Document): String = {
-		var ret: Option[String] = None
+	def queryTotalItemsFound(doc: Document): Int = {
+		var ret: Int = 0
 		val h2: Elements = doc getElementsByTag "h2"
-		while ((h2 iterator()).hasNext) {
-			val e = h2 iterator() next() children()
-			while ((e iterator()).hasNext) {
-				val elem = e iterator() next()
-				elem tagName() match {
-					case "span" =>
-					case _ =>
-						ret = Some(elem text())
+		val iterator = h2 iterator()
+		if (iterator.hasNext) {
+			var strItemsFound = iterator next() text()
+			if ((strItemsFound indexOf "(approx") > -1) {
+				strItemsFound = strItemsFound substring(strItemsFound indexOf "(approx")
+				strItemsFound = (strItemsFound replaceAll("\\D", "")).trim
+				try {
+					ret = strItemsFound.toInt
+				} catch {
+					case nfe: NumberFormatException =>
 				}
 			}
 		}
-		ret getOrElse ""
+		ret
+	}
+
+	def parseItems(doc: Document): ListBuffer[TPBObject] = {
+		val list = new ListBuffer[TPBObject]
+		val th: Elements = doc getElementsByTag "tr"
+		val iterator = th iterator()
+		while (iterator.hasNext) {
+			// descending to <td>s now..
+			val th = iterator next()
+			val tdIterator = th children() iterator()
+			while (tdIterator.hasNext) {
+
+			}
+
+		}
+		list
+	}
+
+	def contactSource(url: String): String = {
+		val sb = new StringBuilder
+		val htGet = new HttpGet(url)
+		htGet.setHeader("User-Agent", "Fluxo-DD/1.0")
+		val htClient = HttpClients createDefault()
+		val htResponse = htClient execute htGet
+		try {
+			val reader = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
+			var line = reader readLine()
+			while (line != null) {
+				sb.append(line)
+				line = reader readLine()
+			}
+		} finally { htResponse close() }
+		sb.toString()
 	}
 }
 

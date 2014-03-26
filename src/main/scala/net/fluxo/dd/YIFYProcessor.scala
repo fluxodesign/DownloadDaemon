@@ -107,11 +107,11 @@ class YIFYProcessor {
 				val oldServer = new URL(newCoverImage).getAuthority
 				newCoverImage = newCoverImage.replace(oldServer, externalIP + ":" + port)
 				// and re-encode the forward slash to json forward slash
-				newCoverImage = newCoverImage.replaceAllLiterally("/", "\\/")
-				val oldcoverImage = coverImage.replaceAllLiterally("/", "\\/")
+				newCoverImage = newCoverImage replaceAllLiterally("/", "\\/")
+				val oldcoverImage = coverImage replaceAllLiterally("/", "\\/")
 				// reinject the remodelled url back into the text
 				//newContent = newContent replaceAllLiterally(coverImage, newCoverImage)
-				if (newContent.indexOf(oldcoverImage) > -1) newContent = newContent.replace(oldcoverImage, newCoverImage)
+				if (newContent.indexOf(oldcoverImage) > -1) newContent = newContent replace(oldcoverImage, newCoverImage)
 			}
 		}
 		newContent
@@ -119,8 +119,8 @@ class YIFYProcessor {
 
 	class WgetImage(url: String, location: String) extends Runnable {
 		override def run() {
-			val wgetProc = new ProcessBuilder("wget", "--directory-prefix=" + location, url).start()
-			wgetProc.waitFor()
+			val wgetProc = new ProcessBuilder("wget", "--directory-prefix=" + location, url) start()
+			wgetProc waitFor()
 		}
 	}
 

@@ -18,10 +18,11 @@ class TPBObject {
 	def Leechers: Int = _leechers
 	def Leechers_:(value: Int) { _leechers = value }
 
-	private var _type: Option[String] = None
+	// 403, 200, etc.
+	private var _type: Int = 0
 
-	def Type: Option[String] = _type
-	def Type_:(value: String) { _type = Some(value) }
+	def Type: Int = _type
+	def Type_:(value: Int) { _type = value }
 
 	private var _title: Option[String] = None
 
