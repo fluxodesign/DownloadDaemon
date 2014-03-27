@@ -121,8 +121,6 @@ class TPBProcessor {
 			val gson = new Gson()
 			sb.append(gson toJson tpbPage)
 		}
-		// DEBUG
-		System.out.println("RETURN: " + sb.toString())
 		sb.toString()
 	}
 
