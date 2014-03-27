@@ -8,7 +8,6 @@ import org.jsoup.select.Elements
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.client.methods.HttpGet
 import net.fluxo.dd.dbo.{TPBPage, TPBObject}
-import scala.collection.mutable.ListBuffer
 import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
