@@ -7,8 +7,11 @@ import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.client.methods.HttpGet
-import net.fluxo.dd.dbo.TPBObject
+import net.fluxo.dd.dbo.{TPBPage, TPBObject}
 import scala.collection.mutable.ListBuffer
+import scala.util.control.Breaks._
+import com.google.gson.Gson
+import java.util
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -19,6 +22,7 @@ import scala.collection.mutable.ListBuffer
 class TPBProcessor {
 
 	private val _url = "thepiratebay.se"
+	private final val _httpUrl = "http://thepiratebay.se"
 	private final val _searchUrl = "http://thepiratebay.se/search/[term]/[page]/99/[filter]"
 
 	object TPBCats extends Enumeration {
@@ -110,8 +114,15 @@ class TPBProcessor {
 			val response = contactSource(request)
 			val document = Jsoup parse response
 			val totalItems = queryTotalItemsFound(document)
-			val itemList = { if (totalItems > 0) parseItems(document) }
+			val itemList = parseItems(document)
+			val tpbPage = new TPBPage
+			tpbPage.TotalItems_:(totalItems)
+			tpbPage.TPBItems_:(itemList)
+			val gson = new Gson()
+			sb.append(gson toJson tpbPage)
 		}
+		// DEBUG
+		System.out.println("RETURN: " + sb.toString())
 		sb.toString()
 	}
 
@@ -134,18 +145,75 @@ class TPBProcessor {
 		ret
 	}
 
-	def parseItems(doc: Document): ListBuffer[TPBObject] = {
-		val list = new ListBuffer[TPBObject]
-		val th: Elements = doc getElementsByTag "tr"
-		val iterator = th iterator()
+	def parseItems(doc: Document): util.ArrayList[TPBObject] = {
+		val list = new util.ArrayList[TPBObject]
+		val tr: Elements = doc getElementsByTag "tr"
+		val iterator = tr iterator()
 		while (iterator.hasNext) {
-			// descending to <td>s now..
-			val th = iterator next()
-			val tdIterator = th children() iterator()
-			while (tdIterator.hasNext) {
-
+			breakable {
+				// descending to <td>s now..
+				val td = iterator next()
+				val tdIterator = td children() iterator()
+				if (tdIterator.hasNext) {
+					// first item deals with category...
+					val item = tdIterator next()
+					if (!(item tagName() equals "td")) break()
+					val t = new TPBObject
+					// first item, we need the category code...
+					val linksIterator = item getElementsByTag "a" iterator()
+					while (linksIterator.hasNext) {
+						val cat = {
+							try {
+								(linksIterator next() attr "href" replaceAll("\\D", "")).toInt
+							} catch {
+								case nfe: NumberFormatException => 0
+							}
+						}
+						if (cat > t.Type) t.Type_:(cat)
+					}
+					// second item deals with the URLs...
+					val tdURL = tdIterator next()
+					val urlIterator = tdURL getElementsByTag "a" iterator()
+					while (urlIterator.hasNext) {
+						val anchor = urlIterator next()
+						if ((anchor attr "href" indexOf "magnet:") > -1) t.MagnetURL_:(anchor attr "href")
+						else if ((anchor attr "href" indexOf ".torrent") > -1) t.TorrentURL_=("http:" + (anchor attr "href"))
+						else if (anchor attr "class" equals "detLink") {
+							t.DetailsURL_=(_httpUrl + (anchor attr "href"))
+							t.Title_:(anchor text() trim)
+						}
+						else if (anchor attr "class" equals "detDesc") t.Uploader_=(anchor text())
+					}
+					val uploaderText = tdURL getElementsByTag "font" iterator()
+					if (uploaderText.hasNext) {
+						val infoText = uploaderText next() text()
+						val arrText = infoText split ","
+						for (s <- arrText) {
+							val text = s.trim
+							if (text startsWith "Uploaded") t.Uploaded_=(text replaceAllLiterally("Uploaded", "") trim)
+							else if (text startsWith "Size") t.Size_=(text replaceAllLiterally("Size", "") trim)
+						}
+					}
+					// third item is the seeder count
+					val sc: Int = {
+						if (tdIterator.hasNext){
+							try { (tdIterator next() text()).toInt }
+							catch {	case nfe: NumberFormatException => 0 }
+						} else 0
+					}
+					t.Seeders_:(sc)
+					// last item is the leecher count
+					val lc: Int = {
+						if (tdIterator.hasNext) {
+							try { (tdIterator next() text()).toInt }
+							catch { case nfe: NumberFormatException => 0 }
+						} else 0
+					}
+					t.Leechers_:(lc)
+					// add the "t" to ListBuffer
+					list add t
+				}
 			}
-
 		}
 		list
 	}

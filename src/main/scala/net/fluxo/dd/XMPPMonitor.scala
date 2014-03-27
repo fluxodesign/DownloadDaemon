@@ -389,10 +389,6 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								} else Array[Int]()
 							}
 
-							// DEBUG
-							System.out.println("search term: " + searchTerm)
-							System.out.println("page: " + page)
-							System.out.println("cat: " + cat)
 							TPBP query(searchTerm, page, cat)
 						}
 					}

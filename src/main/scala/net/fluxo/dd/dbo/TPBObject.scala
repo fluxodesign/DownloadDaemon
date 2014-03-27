@@ -24,33 +24,38 @@ class TPBObject {
 	def Type: Int = _type
 	def Type_:(value: Int) { _type = value }
 
-	private var _title: Option[String] = None
+	private var _title: String = ""
 
-	def Title: Option[String] = _title
-	def Title_:(value: String) { _title = Some(value) }
+	def Title: String = _title
+	def Title_:(value: String) { _title = value }
 
-	private var _uploaded: Option[String] = None
+	private var _uploaded: String = ""
 
-	def Uploaded: Option[String] = _uploaded
-	def Uploaded_=(value: String) { _uploaded = Some(value) }
+	def Uploaded: String = _uploaded
+	def Uploaded_=(value: String) { _uploaded = value }
 
-	private var _size: Option[String] = None
+	private var _size: String = ""
 
-	def Size: Option[String] = _size
-	def Size_=(value: String) { _size = Some(value) }
+	def Size: String = _size
+	def Size_=(value: String) { _size = value }
 
-	private var _uploadedBy: Option[String] = None
+	private var _uploadedBy: String = ""
 
-	def Uploader: Option[String] = _uploadedBy
-	def Uploader_=(value: String) { _uploadedBy = Some(value) }
+	def Uploader: String = _uploadedBy
+	def Uploader_=(value: String) { _uploadedBy = value }
 
-	private var _magnetURL: Option[String] = None
+	private var _detailsURL: String = ""
 
-	def MagnetURL: Option[String] = _magnetURL
-	def MagnetURL_:(value: String) { _magnetURL = Some(value) }
+	def DetailsURL: String = _detailsURL
+	def DetailsURL_=(value: String) { _detailsURL = value }
 
-	private var _torrentURL: Option[String] = None
+	private var _magnetURL: String = ""
 
-	def TorrentURL: Option[String] = _torrentURL
-	def TorrentURL_=(value: String) { _torrentURL = Some(value) }
+	def MagnetURL: String = _magnetURL
+	def MagnetURL_:(value: String) { _magnetURL = value }
+
+	private var _torrentURL: String = ""
+
+	def TorrentURL: String = _torrentURL
+	def TorrentURL_=(value: String) { _torrentURL = value }
 }
