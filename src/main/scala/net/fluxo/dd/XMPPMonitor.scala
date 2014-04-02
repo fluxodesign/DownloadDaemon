@@ -348,7 +348,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 										val intObj: Option[Integer] = Some(intValidator validate words(3))
 										intObj.getOrElse(-1).asInstanceOf[Int]
 									}
-									if (id > 0) YIFYP procMovieDetails id
+									if (id > 0) YIFYP procMovieDetails(id, _externalIP.getOrElse("127.0.0.1"), OUtils.readConfig.HTTPDPort)
 									else "ERR CMD"
 								}
 							case _  => "ERR CMD"

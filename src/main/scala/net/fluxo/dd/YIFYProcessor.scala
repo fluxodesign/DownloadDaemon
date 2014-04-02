@@ -54,15 +54,17 @@ class YIFYProcessor {
 				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
-		processImages(response.toString(), externalIP, port)
+		val rsp = response toString()
+		if ((rsp indexOf "status") > -1 && (rsp indexOf "fail") > -1) return "ERR NO LIST"
+		processImages(rsp, externalIP, port)
 	}
 
-	def procMovieDetails(id: Int): String = {
+	def procMovieDetails(id: Int, externalIP:String, port: Int): String = {
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/movie.json?id=").append(id)
 		val response = new StringBuilder
 		try {
 			val htClient = HttpClientBuilder.create().build()
-			val htGet = new HttpGet(request.toString() + id)
+			val htGet = new HttpGet(request.toString())
 			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
 			val htResponse = htClient.execute(htGet)
 			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
@@ -81,7 +83,33 @@ class YIFYProcessor {
 				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
-		response toString()
+		val rsp = response toString()
+		if ((rsp indexOf "status") > -1 && (rsp indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
+		processScreenshotImages(rsp, externalIP, port)
+	}
+
+	private def processScreenshotImages(content: String, externalIP: String, port: Int): String = {
+		var newContent = content
+		val jsObj = JSONValue.parseWithException(content).asInstanceOf[org.json.simple.JSONObject]
+		val arrKeys = Array("LargeScreenshot1", "LargeScreenshot2", "LargeScreenshot3")
+
+		for (x <- arrKeys) {
+			val sc = jsObj.get(x).toString
+			var newSc = sc replaceAllLiterally("\\/", "/")
+			val path = new URL(newSc).getPath
+			val dirname = "." + FilenameUtils.getFullPath(path)
+			val dir = new File(dirname)
+			if (!(dir exists())) dir mkdirs()
+			new Thread(new WgetImage(newSc, dirname)) start()
+			if (!externalIP.equals("127.0.0.1")) {
+				val oldServer = new URL(newSc).getAuthority
+				newSc = newSc replace(oldServer, externalIP + ":" + port)
+				newSc = newSc replaceAllLiterally("/", "\\/")
+				val oldSc = sc replaceAllLiterally("/", "\\/")
+				if ((newContent indexOf oldSc) > -1) newContent = newContent replace(oldSc, newSc)
+			}
+		}
+		newContent
 	}
 
 	private def processImages(content: String, externalIP: String, port: Int): String = {
@@ -99,9 +127,9 @@ class YIFYProcessor {
 			val dir = new File(dirName)
 			if (!dir.exists()) {
 				dir.mkdirs()
-				// fetch the image and put it inside our new directory (wget -P ./location)
-				new Thread(new WgetImage(newCoverImage, dirName)).start()
 			}
+			// fetch the image and put it inside our new directory (wget -P ./location)
+			new Thread(new WgetImage(newCoverImage, dirName)).start()
 			// remodel our image url into http://<our-outside-ip>/.....
 			if (!externalIP.equals("127.0.0.1")) {
 				val oldServer = new URL(newCoverImage).getAuthority
