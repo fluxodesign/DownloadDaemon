@@ -83,11 +83,19 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		/// TODO
 		if (_tDlMonitor.isDefined) {
 			_tDlMonitor.getOrElse(null).stop()
-			_threadDlMonitor.interrupt()
+			_threadDlMonitor interrupt()
 		}
 		if (_tXMPPMonitor.isDefined) {
 			_tXMPPMonitor.getOrElse(null).stop()
-			_threadXMPPMonitor.interrupt()
+			_threadXMPPMonitor interrupt()
+		}
+		if (_tHttpd.isDefined) {
+			_tHttpd.getOrElse(null).stop()
+			_threadHttpD interrupt()
+		}
+		if (_tYIFYCacheMonitor.isDefined) {
+			_tYIFYCacheMonitor.getOrElse(null).stop()
+			_threadYIFYCacheMonitor interrupt()
 		}
 	}
 

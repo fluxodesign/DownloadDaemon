@@ -15,6 +15,7 @@ import org.eclipse.jetty.util.log.Logger
 class HttpDaemon(port: Int) extends Runnable {
 
 	private val _server: Server = new Server(port)
+	private var _isRunning: Boolean = true
 
 	override def run() {
 		setup()
@@ -40,5 +41,14 @@ class HttpDaemon(port: Int) extends Runnable {
 				LogWriter.writeLog(e.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(e), Level.ERROR)
 		}
+	}
+
+	def cleanup() {
+		LogWriter.writeLog("DownloadMonitor thread is shut down!", Level.INFO)
+	}
+
+	def stop() {
+		LogWriter.writeLog("Trying to stop DownloadMonitor thread before shutdown...", Level.INFO)
+		_isRunning = false
 	}
 }

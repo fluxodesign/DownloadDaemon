@@ -56,8 +56,8 @@ class YCache extends Callable[String] {
 				try {
 					val obj = (jsonParser parse response).asInstanceOf[JSONObject]
 					if (_totalPageNo == 0) {
-						val movieCount = (obj get "MovieCount").asInstanceOf[Int]
-						_totalPageNo = movieCount / 50
+						val movieCount = (obj get "MovieCount").asInstanceOf[Long]
+						_totalPageNo = (movieCount / 50).asInstanceOf[Int]
 						if (movieCount % 50 > 0) _totalPageNo += 1
 					}
 				} catch {
@@ -89,8 +89,8 @@ class YCache extends Callable[String] {
 		try {
 			val jsonParser = new JSONParser
 			val obj = (jsonParser parse response).asInstanceOf[JSONObject]
-			val movieCount = (obj get "MovieCount").asInstanceOf[Int]
-			_totalPageNo = movieCount / 50
+			val movieCount = (obj get "MovieCount").asInstanceOf[Long]
+			_totalPageNo = (movieCount / 50).asInstanceOf[Int]
 			if (movieCount % 50 > 0) _totalPageNo += 1
 		// and then start populating the DB backwards (from last set)
 			_pageNo = _totalPageNo
