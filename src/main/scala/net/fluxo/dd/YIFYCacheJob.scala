@@ -45,37 +45,100 @@ class YCache extends Callable[String] {
 
 	@throws(classOf[Exception])
 	override def call(): String = {
-		_pageNo += 1
-		var response = YIFYP procYIFYCache _pageNo
-		if (_totalPageNo == 0 || _pageNo < _totalPageNo) {
-			try {
-				val jsonParser = new JSONParser
-				val obj = (jsonParser parse response).asInstanceOf[JSONObject]
-				if (_totalPageNo == 0) {
-					val movieCount = (obj get "MovieCount").asInstanceOf[Int]
-					_totalPageNo = movieCount / 50
-					if (movieCount % 50 > 0) _totalPageNo += 1
+		var totalItemsReported = 0
+		val jsonParser = new JSONParser
+		val totalItemsInDb = DbControl ycQueryCount()
+		if (totalItemsInDb == 0) populateDb()
+		else {
+			_pageNo += 1
+			var response = YIFYP procYIFYCache _pageNo
+			if (_totalPageNo == 0 || _pageNo < _totalPageNo) {
+				try {
+					val obj = (jsonParser parse response).asInstanceOf[JSONObject]
+					if (_totalPageNo == 0) {
+						val movieCount = (obj get "MovieCount").asInstanceOf[Int]
+						_totalPageNo = movieCount / 50
+						if (movieCount % 50 > 0) _totalPageNo += 1
+					}
+				} catch {
+					case jse: Exception =>
+						LogWriter writeLog("Error parsing JSON from YIFY movie list", Level.ERROR)
+						LogWriter writeLog(jse.getMessage, Level.ERROR)
 				}
-			} catch {
-				case jse: Exception =>
-					LogWriter writeLog("Error parsing JSON from YIFY movie list", Level.ERROR)
-					LogWriter writeLog(jse.getMessage, Level.ERROR)
+			}
+			var statusTrueCount = 0
+			while (_pageNo < _totalPageNo && statusTrueCount < 3) {
+				LogWriter writeLog("UPDATE: Processing page " + _pageNo, Level.INFO)
+				val status = processEntry(response, jsonParser)
+				if (status) statusTrueCount += 1
+				_pageNo += 1
+				response = YIFYP procYIFYCache _pageNo
+				totalItemsReported = ((jsonParser parse response).asInstanceOf[JSONObject] get "MovieCount").asInstanceOf[Int]
 			}
 		}
-		var statusTrueCount = 0
-		while (_pageNo < _totalPageNo && statusTrueCount < 3) {
-			val status = processEntry(response)
-			if (status) statusTrueCount += 1
-			_pageNo += 1
-			response = YIFYP procYIFYCache _pageNo
-		}
+
+		// if totalItemsInDb does not match total items returned by server then crawl the result
+		if (totalItemsInDb != totalItemsReported) crawlAndMatch(totalItemsReported, jsonParser)
 		"OK"
 	}
 
-	private def processEntry(raw: String): Boolean = {
-		var status = true
+	private def populateDb() {
+		// calculate the total pages
+		_pageNo += 1
+		var response = YIFYP procYIFYCache _pageNo
 		try {
 			val jsonParser = new JSONParser
+			val obj = (jsonParser parse response).asInstanceOf[JSONObject]
+			val movieCount = (obj get "MovieCount").asInstanceOf[Int]
+			_totalPageNo = movieCount / 50
+			if (movieCount % 50 > 0) _totalPageNo += 1
+		// and then start populating the DB backwards (from last set)
+			_pageNo = _totalPageNo
+			while (_pageNo > 0) {
+				LogWriter writeLog("POPULATE: Processing page " + _pageNo, Level.INFO)
+				response = YIFYP procYIFYCache _pageNo
+				processEntry(response, jsonParser)
+				_pageNo -= 1
+			}
+		} catch {
+			case jse: Exception =>
+				LogWriter writeLog("Error populating YIFY cache db", Level.ERROR)
+				LogWriter writeLog(jse.getMessage, Level.ERROR)
+		}
+	}
+
+	private def crawlAndMatch(totalPageReported: Int, jsonParser: JSONParser) {
+		var isForward = true
+		var pageForward = 1
+		var pageBackward = -1
+		var totalPageNo = totalPageReported / 50
+		try {
+			if (totalPageReported % 50 > 0) totalPageNo += 1
+			pageBackward = totalPageNo
+			while (pageForward != pageBackward) {
+				if (isForward) _pageNo = pageForward
+				else _pageNo = pageBackward
+				LogWriter writeLog("SWEEPING: Proecessing page " + _pageNo, Level.INFO)
+				val response = YIFYP procYIFYCache _pageNo
+				processEntry(response, jsonParser)
+				if (isForward) {
+					pageForward += 1
+					isForward = false
+				} else {
+					pageBackward -= 1
+					isForward = true
+				}
+			}
+		} catch {
+			case jse: Exception =>
+				LogWriter writeLog("Error while trying to do crawl and match", Level.ERROR)
+				LogWriter writeLog(jse.getMessage, Level.ERROR)
+		}
+	}
+
+	private def processEntry(raw: String, jsonParser: JSONParser): Boolean = {
+		var status = true
+		try {
 			val obj = (jsonParser parse raw).asInstanceOf[JSONObject]
 			val iterator = (obj get "MovieList").asInstanceOf[JSONArray] iterator()
 			while (iterator.hasNext) {
