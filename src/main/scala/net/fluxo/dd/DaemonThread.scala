@@ -1,7 +1,7 @@
 package net.fluxo.dd
 
 import org.apache.log4j.Level
-import java.io._
+import java.io.{InputStreamReader, BufferedReader}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -16,6 +16,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	private var _threadDlMonitor: Thread = null
 	private var _tXMPPMonitor: Option[XMPPMonitor] = None
 	private var _threadXMPPMonitor: Thread = null
+	private var _tYIFYCacheMonitor: Option[YIFYCacheMonitor] = None
+	private var _threadYIFYCacheMonitor: Thread = null
 	private var _tHttpd: Option[HttpDaemon] = None
 	private var _threadHttpD: Thread = null
 
@@ -52,6 +54,10 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_tHttpd = Some(httpd)
 			_threadHttpD = new Thread(_tHttpd.getOrElse(null))
 			_threadHttpD.start()
+			val ycMonitor = new YIFYCacheMonitor
+			_tYIFYCacheMonitor = Some(ycMonitor)
+			_threadYIFYCacheMonitor = new Thread(_tYIFYCacheMonitor.getOrElse(null))
+			_threadYIFYCacheMonitor start()
 		}
 	}
 

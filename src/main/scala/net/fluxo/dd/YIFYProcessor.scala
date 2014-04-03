@@ -88,10 +88,40 @@ class YIFYProcessor {
 		processScreenshotImages(rsp, externalIP, port)
 	}
 
+	def procYIFYCache(page: Int): String = {
+		val response = new StringBuilder
+		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=50")
+		if (page > 1) request append "&set=" append page
+		try {
+			val htClient = HttpClientBuilder create() build()
+			val htGet = new HttpGet(request toString())
+			htGet addHeader("User-Agent", "FluxoAgent/0.1")
+			val htResponse = htClient execute htGet
+			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
+			var line = br readLine()
+			while (line != null) {
+				response append line
+				line = br readLine()
+			}
+			br close()
+			htClient close()
+		} catch {
+			case mue: MalformedURLException =>
+				LogWriter writeLog("URL " + (request toString()) + " is malformed", Level.ERROR)
+				LogWriter writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
+			case ioe: IOException =>
+				LogWriter writeLog("IO/E: " + (ioe getMessage), Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
+		}
+		val rsp = response toString()
+		if ((rsp indexOf "status") > -1 && (rsp indexOf "fail") > -1) return  "ERR NO LIST"
+		rsp
+	}
+
 	private def processScreenshotImages(content: String, externalIP: String, port: Int): String = {
 		var newContent = content
 		val jsObj = JSONValue.parseWithException(content).asInstanceOf[org.json.simple.JSONObject]
-		val arrKeys = Array("LargeScreenshot1", "LargeScreenshot2", "LargeScreenshot3")
+		val arrKeys = Array("MediumCover", "MediumScreenshot1", "MediumScreenshot2", "MediumScreenshot3")
 
 		for (x <- arrKeys) {
 			val sc = jsObj.get(x).toString
@@ -100,7 +130,8 @@ class YIFYProcessor {
 			val dirname = "." + FilenameUtils.getFullPath(path)
 			val dir = new File(dirname)
 			if (!(dir exists())) dir mkdirs()
-			new Thread(new WgetImage(newSc, dirname)) start()
+			val localFile = new File(dirname + FilenameUtils.getName(path))
+			if (!(localFile exists())) new Thread(new WgetImage(newSc, dirname)) start()
 			if (!externalIP.equals("127.0.0.1")) {
 				val oldServer = new URL(newSc).getAuthority
 				newSc = newSc replace(oldServer, externalIP + ":" + port)
@@ -129,7 +160,8 @@ class YIFYProcessor {
 				dir.mkdirs()
 			}
 			// fetch the image and put it inside our new directory (wget -P ./location)
-			new Thread(new WgetImage(newCoverImage, dirName)).start()
+			val localFile = new File(dirName + FilenameUtils.getName(path))
+			if (!(localFile exists())) new Thread(new WgetImage(newCoverImage, dirName)).start()
 			// remodel our image url into http://<our-outside-ip>/.....
 			if (!externalIP.equals("127.0.0.1")) {
 				val oldServer = new URL(newCoverImage).getAuthority
@@ -138,7 +170,6 @@ class YIFYProcessor {
 				newCoverImage = newCoverImage replaceAllLiterally("/", "\\/")
 				val oldcoverImage = coverImage replaceAllLiterally("/", "\\/")
 				// reinject the remodelled url back into the text
-				//newContent = newContent replaceAllLiterally(coverImage, newCoverImage)
 				if (newContent.indexOf(oldcoverImage) > -1) newContent = newContent replace(oldcoverImage, newCoverImage)
 			}
 		}

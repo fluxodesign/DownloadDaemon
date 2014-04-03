@@ -14,21 +14,21 @@ object FluxoDownloadDaemon {
 	private val _dt = new DaemonThread(_dbMan)
 
 	def main(args: Array[String]) {
-		System.out.println("DownloadDaemon version 0.4.1\n")
+		System.out.println("DownloadDaemon version 0.4.2\n")
 		attachShutdownHook()
-		_dt.start()
+		_dt start()
 	}
 
 	def attachShutdownHook() {
 		val t: Thread = new Thread {
 			override def run() {
-				LogWriter.writeLog("Shutdown attempted...", Level.INFO)
-				LogWriter.writeLog("Shutting down database...", Level.INFO)
-				_dbMan.cleanup()
-				_dt.tryStop()
+				LogWriter writeLog("Shutdown attempted...", Level.INFO)
+				LogWriter writeLog("Shutting down database...", Level.INFO)
+				_dbMan cleanup()
+				_dt tryStop()
 			}
 		}
-		t.setDaemon(true)
+		t setDaemon true
 		Runtime.getRuntime.addShutdownHook(t)
 	}
 }

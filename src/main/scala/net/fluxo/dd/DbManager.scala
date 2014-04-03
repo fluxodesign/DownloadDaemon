@@ -2,7 +2,7 @@ package net.fluxo.dd
 
 import java.sql.{Timestamp, DriverManager, Connection}
 import org.apache.log4j.Level
-import net.fluxo.dd.dbo.{CountPackage, Task}
+import net.fluxo.dd.dbo.{YIFYCache, CountPackage, Task}
 import org.joda.time.DateTime
 import scala.collection.mutable
 
@@ -349,6 +349,82 @@ class DbManager {
 				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 		}
+	}
+
+	def ycQueryMovieID(movieID: Int): Boolean = {
+		var status = false
+		val queryStatement = """SELECT COUNT(*) AS count FROM YIFY_CACHE WHERE movie_id = ?"""
+		try {
+			val ps = _conn prepareStatement queryStatement
+			ps setInt(1, movieID)
+			val result = ps executeQuery()
+			if (result next()) {
+				if ((result getInt "count") > 0) status = true
+			}
+			result close()
+			ps close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error querying YIFY cache for ID " + movieID, Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+		}
+		status
+	}
+
+	def ycInsertNewData(obj: YIFYCache): Boolean = {
+		val insertStatement = """INSERT INTO yify_cache(movie_id,title,year,quality,size,cover_image) VALUES(?,?,?,?,?,?)"""
+		var response: Boolean = true
+		try {
+			val ps = _conn.prepareStatement(insertStatement)
+			ps setInt (1, obj.MovieID)
+			ps setString(2, obj.MovieTitle.getOrElse(""))
+			ps setString(3, obj.MovieYear.getOrElse(""))
+			ps setString (4, obj.MovieQuality.getOrElse(""))
+			ps setString (5, obj.MovieSize.getOrElse(""))
+			ps setString(6, obj.MovieCoverImage.getOrElse(""))
+			val inserted = ps.executeUpdate()
+			if (inserted == 0) {
+				LogWriter.writeLog("Failed to insert new cache object for movie ID " + obj.MovieID, Level.ERROR)
+				response = false
+			}
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error inserting new cache object for movie ID " + obj.MovieID, Level.ERROR)
+				LogWriter writeLog(ex.getMessage , Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	def ycQueryMoviesByTitle(title: String): Array[YIFYCache] = {
+		val queryStatement = """SELECT * FROM yify_cache WHERE LOCATION(?,title) > 0"""
+		val mlist = new mutable.MutableList[YIFYCache]
+		try {
+			val ps = _conn.prepareStatement(queryStatement)
+			ps.setString(1, title)
+			val rs = ps.executeQuery()
+			while (rs.next()) {
+				mlist.+=(new YIFYCache {
+					MovieID_:(rs getInt "movie_id")
+					MovieTitle_:(rs getString "title")
+					MovieYear_:(rs getString "year")
+					MovieQuality_:(rs getString "quality")
+					MovieSize_:(rs getString "size")
+					MovieCoverImage_:(rs getString "cover_image")
+				})
+			}
+			rs.close()
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter.writeLog("Error querying all active task(s)", Level.ERROR)
+				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+		}
+		mlist.toArray
 	}
 
 	def cleanup() {
