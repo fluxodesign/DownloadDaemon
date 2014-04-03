@@ -351,6 +351,24 @@ class DbManager {
 		}
 	}
 
+	def ycQueryCount(): Int = {
+		var count = 0
+		val queryStatement = """SELECT COUNT(*) AS count FROM YIFY_CACHE"""
+		try {
+			val ps = _conn prepareStatement queryStatement
+			val rs = ps executeQuery()
+			if (rs next()) {
+				count = rs getInt "count"
+			}
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error querying YIFY cache count", Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+		}
+		count
+	}
+
 	def ycQueryMovieID(movieID: Int): Boolean = {
 		var status = false
 		val queryStatement = """SELECT COUNT(*) AS count FROM YIFY_CACHE WHERE movie_id = ?"""
