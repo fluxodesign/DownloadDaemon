@@ -144,7 +144,7 @@ class YCache extends Callable[String] {
 			while (iterator.hasNext) {
 				val o = (iterator next()).asInstanceOf[JSONObject]
 				val yifyCache = new YIFYCache
-				yifyCache.MovieID_:((o get "MovieID").asInstanceOf[Int])
+				yifyCache.MovieID_:((o get "MovieID").asInstanceOf[String].toInt)
 				yifyCache.MovieTitle_:((o get "MovieTitleClean").asInstanceOf[String])
 				yifyCache.MovieYear_:((o get "MovieYear").asInstanceOf[String])
 				yifyCache.MovieQuality_:((o get "Quality").asInstanceOf[String])

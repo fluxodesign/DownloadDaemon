@@ -50,5 +50,6 @@ class HttpDaemon(port: Int) extends Runnable {
 	def stop() {
 		LogWriter.writeLog("Trying to stop DownloadMonitor thread before shutdown...", Level.INFO)
 		_isRunning = false
+		_server stop()
 	}
 }
