@@ -423,7 +423,7 @@ class DbManager {
 	def ycQueryMoviesByTitle(title: String): Array[YIFYCache] = {
 		val queryStatement = """SELECT * FROM yify_cache WHERE LOCATION(?,title) > 0"""
 		val mlist = new mutable.MutableList[YIFYCache]
-		try
+		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, title)
 			val rs = ps.executeQuery()
@@ -439,7 +439,7 @@ class DbManager {
 			}
 			rs close()
 			ps close()
-		catch {
+		} catch {
 			case ex: Exception =>
 				LogWriter.writeLog("Error querying all active task(s)", Level.ERROR)
 				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
