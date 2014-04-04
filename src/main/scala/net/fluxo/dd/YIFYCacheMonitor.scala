@@ -24,7 +24,7 @@ class YIFYCacheMonitor extends Runnable {
 				.build()
 			val trigger = TriggerBuilder.newTrigger().withIdentity("YIFYTrigger", "YIFYGroup")
 				.startNow()
-				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(8).repeatForever())
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(6).repeatForever())
 				.build()
 			_scheduler scheduleJob(jobDetail, trigger)
 		} catch {
