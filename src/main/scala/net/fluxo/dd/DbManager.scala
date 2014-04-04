@@ -360,6 +360,8 @@ class DbManager {
 			if (rs next()) {
 				count = rs getInt "count"
 			}
+			rs close()
+			ps close()
 		} catch {
 			case ex: Exception =>
 				LogWriter writeLog("Error querying YIFY cache count", Level.ERROR)
@@ -405,8 +407,9 @@ class DbManager {
 			if (inserted == 0) {
 				LogWriter.writeLog("Failed to insert new cache object for movie ID " + obj.MovieID, Level.ERROR)
 				response = false
-			}
-			ps.close()
+			} else LogWriter writeLog("Inserted " + (obj MovieID) + "/" + obj.MovieTitle.getOrElse("")
+				+ " to DB", Level.INFO)
+			ps close()
 		} catch {
 			case ex: Exception =>
 				LogWriter writeLog("Error inserting new cache object for movie ID " + obj.MovieID, Level.ERROR)
@@ -420,9 +423,9 @@ class DbManager {
 	def ycQueryMoviesByTitle(title: String): Array[YIFYCache] = {
 		val queryStatement = """SELECT * FROM yify_cache WHERE LOCATION(?,title) > 0"""
 		val mlist = new mutable.MutableList[YIFYCache]
-		try {
-			val ps = _conn.prepareStatement(queryStatement)
-			ps.setString(1, title)
+		try
+			val ps = _conn prepareStatement queryStatement
+			ps setString(1, title)
 			val rs = ps.executeQuery()
 			while (rs.next()) {
 				mlist.+=(new YIFYCache {
@@ -434,9 +437,9 @@ class DbManager {
 					MovieCoverImage_:(rs getString "cover_image")
 				})
 			}
-			rs.close()
-			ps.close()
-		} catch {
+			rs close()
+			ps close()
+		catch {
 			case ex: Exception =>
 				LogWriter.writeLog("Error querying all active task(s)", Level.ERROR)
 				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
