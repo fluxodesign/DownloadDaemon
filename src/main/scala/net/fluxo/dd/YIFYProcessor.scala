@@ -7,6 +7,7 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
 import org.json.simple.{JSONValue, JSONArray}
 import org.apache.commons.io.FilenameUtils
+import net.fluxo.dd.dbo.YIFYSearchResult
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -23,7 +24,6 @@ class YIFYProcessor {
 	 */
 	def procListMovie(page: Int, quality:Int, rating: Int, externalIP: String, port: Int): String = {
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=15")
-		val response = new StringBuilder
 		if (quality <= 3 && quality >= 0) request.append("&quality=").append(quality  match {
 			case 0 => "ALL"
 			case 1 => "720p"
@@ -33,89 +33,36 @@ class YIFYProcessor {
 		if (page > 0) request.append("&set=" + page)
 		if (rating >= 0 && rating <= 9) request.append("&rating=" + rating)
 		// send the request...
-		try {
-			val htClient = HttpClientBuilder.create().build()
-			val htGet = new HttpGet(request.toString())
-			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
-			val htResponse = htClient.execute(htGet)
-			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
-			var line = br.readLine()
-			while (line != null) {
-				response.append(line)
-				line = br.readLine()
-			}
-			br.close()
-			htClient.close()
-		} catch {
-			case mue: MalformedURLException =>
-				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
-			case ioe: IOException =>
-				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
-		}
-		val rsp = response toString()
-		if ((rsp indexOf "status") > -1 && (rsp indexOf "fail") > -1) return "ERR NO LIST"
-		processImages(rsp, externalIP, port)
+		val response = OUtils crawlServer (request toString())
+		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR NO LIST"
+		processImages(response, externalIP, port)
 	}
 
 	def procMovieDetails(id: Int, externalIP:String, port: Int): String = {
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/movie.json?id=").append(id)
-		val response = new StringBuilder
-		try {
-			val htClient = HttpClientBuilder.create().build()
-			val htGet = new HttpGet(request.toString())
-			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
-			val htResponse = htClient.execute(htGet)
-			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
-			var line = br.readLine()
-			while (line != null) {
-				response.append(line)
-				line = br.readLine()
-			}
-			br.close()
-			htClient.close()
-		} catch {
-			case mue: MalformedURLException =>
-				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
-			case ioe: IOException =>
-				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
-		}
-		val rsp = response toString()
-		if ((rsp indexOf "status") > -1 && (rsp indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
-		processScreenshotImages(rsp, externalIP, port)
+		val response = OUtils crawlServer (request toString())
+		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
+		processScreenshotImages(response, externalIP, port)
 	}
 
 	def procYIFYCache(page: Int): String = {
-		val response = new StringBuilder
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=50")
 		if (page > 1) request append "&set=" append page
-		try {
-			val htClient = HttpClientBuilder create() build()
-			val htGet = new HttpGet(request toString())
-			htGet addHeader("User-Agent", "FluxoAgent/0.1")
-			val htResponse = htClient execute htGet
-			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
-			var line = br readLine()
-			while (line != null) {
-				response append line
-				line = br readLine()
+		val response = OUtils crawlServer (request toString())
+		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return  "ERR NO LIST"
+		response
+	}
+
+	def procYIFYSearch(term: String): String = {
+		val searchString = term replaceAllLiterally("%20", " ")
+		val searchResult = DbControl ycQueryMoviesByTitle searchString
+		val yifySearchResult = new YIFYSearchResult
+		if ((searchResult length) > 0) {
+			yifySearchResult.MovieCount_:(searchResult length)
+			for (x <- searchResult) {
+				val response = OUtils crawlServer ()
 			}
-			br close()
-			htClient close()
-		} catch {
-			case mue: MalformedURLException =>
-				LogWriter writeLog("URL " + (request toString()) + " is malformed", Level.ERROR)
-				LogWriter writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
-			case ioe: IOException =>
-				LogWriter writeLog("IO/E: " + (ioe getMessage), Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
-		val rsp = response toString()
-		if ((rsp indexOf "status") > -1 && (rsp indexOf "fail") > -1) return  "ERR NO LIST"
-		rsp
 	}
 
 	private def processScreenshotImages(content: String, externalIP: String, port: Int): String = {

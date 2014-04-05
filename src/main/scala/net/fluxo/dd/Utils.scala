@@ -2,9 +2,9 @@ package net.fluxo.dd
 
 import net.fluxo.dd.dbo.Config
 import java.util.{Random, Properties}
-import java.io.{IOException, FileInputStream}
+import java.io.{InputStreamReader, BufferedReader, IOException, FileInputStream}
 import org.apache.log4j.Level
-import java.net.{URL, ServerSocket}
+import java.net.{MalformedURLException, URL, ServerSocket}
 import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
 import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
 import org.xml.sax.{ContentHandler, SAXException}
@@ -12,6 +12,8 @@ import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcCont
 import java.util
 import org.apache.xmlrpc.XmlRpcException
 import scala.util.control.Breaks._
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.http.client.methods.HttpGet
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -77,6 +79,32 @@ class Utils {
 			}
 		}
 		status
+	}
+
+	def crawlServer(request: String): String = {
+		val response = new StringBuilder
+		try {
+			val htClient = HttpClientBuilder.create().build()
+			val htGet = new HttpGet(request.toString())
+			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
+			val htResponse = htClient.execute(htGet)
+			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
+			var line = br.readLine()
+			while (line != null) {
+				response append line
+				line = br readLine()
+			}
+			br.close()
+			htClient.close()
+		} catch {
+			case mue: MalformedURLException =>
+				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
+			case ioe: IOException =>
+				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
+		}
+		response toString()
 	}
 
 	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {

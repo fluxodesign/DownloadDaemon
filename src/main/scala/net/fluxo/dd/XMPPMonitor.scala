@@ -351,6 +351,15 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 									if (id > 0) YIFYP procMovieDetails(id, _externalIP.getOrElse("127.0.0.1"), OUtils.readConfig.HTTPDPort)
 									else "ERR CMD"
 								}
+							case "SEARCH" =>
+								if (words.length != 4) "ERR LENGTH: \"SEARCH\" requires 4 params, found " + words.length
+								else if (words.length >= 4 && (!words(3).startsWith("ST="))) "ERR SEARCH TERM"
+								else {
+									val searchTerm: String = {
+										words(3) substring("ST=" length) replaceAllLiterally("\"", "")
+									}
+									YIFYP procYIFYSearch searchTerm
+								}
 							case _  => "ERR CMD"
 						}
 					}
