@@ -1,10 +1,7 @@
 package net.fluxo.dd
 
-import java.net.{URL, MalformedURLException}
-import org.apache.log4j.Level
-import java.io.{File, InputStreamReader, BufferedReader, IOException}
-import org.apache.http.impl.client.HttpClientBuilder
-import org.apache.http.client.methods.HttpGet
+import java.net.URL
+import java.io.File
 import org.json.simple.{JSONValue, JSONArray}
 import org.apache.commons.io.FilenameUtils
 import net.fluxo.dd.dbo.YIFYSearchResult
@@ -59,8 +56,11 @@ class YIFYProcessor {
 		val yifySearchResult = new YIFYSearchResult
 		if ((searchResult length) > 0) {
 			yifySearchResult.MovieCount_:(searchResult length)
+			val request = new StringBuilder
 			for (x <- searchResult) {
-				val response = OUtils crawlServer ()
+				request setLength 0
+				request append "StringBuilderhttp://yts.re/api/movie.json?id=" append x.MovieID
+				val response = OUtils crawlServer (request toString())
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 package net.fluxo.dd
 
-import net.fluxo.dd.dbo.Config
+import net.fluxo.dd.dbo.{MovieObject, Config}
 import java.util.{Random, Properties}
 import java.io.{InputStreamReader, BufferedReader, IOException, FileInputStream}
 import org.apache.log4j.Level
@@ -85,7 +85,7 @@ class Utils {
 		val response = new StringBuilder
 		try {
 			val htClient = HttpClientBuilder.create().build()
-			val htGet = new HttpGet(request.toString())
+			val htGet = new HttpGet(request toString())
 			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
 			val htResponse = htClient.execute(htGet)
 			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
@@ -98,13 +98,17 @@ class Utils {
 			htClient.close()
 		} catch {
 			case mue: MalformedURLException =>
-				LogWriter.writeLog("URL " + request.toString() + " is malformed", Level.ERROR)
+				LogWriter.writeLog("URL " + (request toString()) + " is malformed", Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
 			case ioe: IOException =>
 				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
 		response toString()
+	}
+
+	def stringToMovieObject(raw: String):MovieObject = {
+
 	}
 
 	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
