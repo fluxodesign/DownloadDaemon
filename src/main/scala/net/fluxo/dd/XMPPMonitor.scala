@@ -290,30 +290,32 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 			words(1) match {
 				case "ADD_TORRENT" =>
 					if (words.length < 4) "ERR LENGTH"
-					OAria.processRequest(words(3), words(2), isHttp = false, "", "")
+					else OAria.processRequest(words(3), words(2), isHttp = false, "", "")
 				case "ADD_URI" =>
 					if (words.length < 4) "ERR LENGTH"
-					OAria.processRequest(words(3), words(2), isHttp = true, "", "")
+					else OAria.processRequest(words(3), words(2), isHttp = true, "", "")
 				case "ADD_URI_C" =>
 					if (words.length < 6) "ERR LENGTH"
-					OAria.processRequest(words(3), words(2), isHttp = true, words(4), words(5))
+					else OAria.processRequest(words(3), words(2), isHttp = true, words(4), words(5))
 				case "STATUS" =>
 					if (words.length < 3) "ERR LENGTH"
-					val tasks: Array[Task] = DbControl.queryTasks(words(2))
-					val sb: StringBuilder = new StringBuilder
-					for (t <- tasks) {
-						val progress: Int = {
-							if (t.TaskCompletedLength > 0 && t.TaskTotalLength > 0) ((t.TaskCompletedLength * 100)/ t.TaskTotalLength).toInt
-							else -1
+					else {
+						val tasks: Array[Task] = DbControl.queryTasks(words(2))
+						val sb: StringBuilder = new StringBuilder
+						for (t <- tasks) {
+							val progress: Int = {
+								if (t.TaskCompletedLength > 0 && t.TaskTotalLength > 0) ((t.TaskCompletedLength * 100) / t.TaskTotalLength).toInt
+								else -1
+							}
+							val dlName: String = {
+								if (t.TaskPackage.getOrElse(null).length > 1) t.TaskPackage.getOrElse(null)
+								else "Unknown Download"
+							}
+							sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
 						}
-						val dlName: String = {
-							if (t.TaskPackage.getOrElse(null).length > 1) t.TaskPackage.getOrElse(null)
-							else "Unknown Download"
-						}
-						sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
+						if (tasks.length == 0) sb.append("No active tasks are running!")
+						sb.toString()
 					}
-					if (tasks.length == 0) sb.append("No active tasks are running!")
-					sb.toString()
 				case "YIFY" =>
 					// the next command should be "LIST" or " DETAILS"
 					// "LIST" has 3 parameters (total 6)

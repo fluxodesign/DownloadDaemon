@@ -1,6 +1,6 @@
 package net.fluxo.dd
 
-import net.fluxo.dd.dbo.{MovieObject, Config}
+import net.fluxo.dd.dbo.{YIFYSearchResult, MovieObject, Config}
 import java.util.{Random, Properties}
 import java.io.{InputStreamReader, BufferedReader, IOException, FileInputStream}
 import org.apache.log4j.Level
@@ -14,6 +14,7 @@ import org.apache.xmlrpc.XmlRpcException
 import scala.util.control.Breaks._
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
+import org.json.simple.{JSONArray, JSONValue, JSONObject}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -108,7 +109,72 @@ class Utils {
 	}
 
 	def stringToMovieObject(raw: String):MovieObject = {
+		val movie = new MovieObject
+		try {
+			val json = JSONValue.parseWithException(raw).asInstanceOf[JSONObject]
+			movie.MovieID_=((json get "MovieID").asInstanceOf[String])
+			movie.MovieUrl_=((json get "MovieUrl").asInstanceOf[String])
+			movie.MovieTitleClean_=((json get "MovieTitleClean").asInstanceOf[String])
+			movie.MovieYear_=((json get "MovieYear").asInstanceOf[Int])
+			movie.DateUploaded_=((json get "DateUploaded").asInstanceOf[String])
+			movie.DateUploadedEpoch_=((json get "DateUploadedEpoch").asInstanceOf[Long])
+			movie.Quality_=((json get "Quality").asInstanceOf[String])
+			movie.CoverImage_=((json get "MediumCover").asInstanceOf[String])
+			movie.ImdbCode_=((json get "ImdbCode").asInstanceOf[String])
+			movie.ImdbLink_=((json get "ImdbLink").asInstanceOf[String])
+			movie.Size_=((json get "Size").asInstanceOf[String])
+			movie.SizeByte_=((json get "SizeByte").asInstanceOf[Long])
+			movie.MovieRating_=((json get "MovieRating").asInstanceOf[String])
+			var genre = json get "Genre1"
+			if ((json get "Genre2") != null && (json get "Genre2").asInstanceOf[String].length > 0) {
+				genre += "|" + (json get "Genre2")
+			}
+			movie.Genre_=(genre.asInstanceOf[String])
+			movie.Uploader_=((json get "Uploader").asInstanceOf[String])
+			movie.Downloaded_=((json get "Downloaded").asInstanceOf[Int])
+			movie.TorrentSeeds_=((json get "TorrentSeeds").asInstanceOf[Int])
+			movie.TorrentPeers_=((json get "TorrentPeers").asInstanceOf[Int])
+			movie.TorrentUrl_=((json get "TorrentUrl").asInstanceOf[String])
+			movie.TorrentHash_=((json get "TorrentHash").asInstanceOf[String])
+			movie.TorrentMagnetUrl_=((json get "TorrentMagnetUrl").asInstanceOf[String])
+		}
+		movie
+	}
 
+	def YIFYSearchResultToJSON(obj: YIFYSearchResult): String = {
+		val json = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+		json put("MovieCount", obj.MovieCount)
+		val jsArray = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, String]]]
+		val movieIterator = (obj MovieList) getOrElse null iterator()
+		while (movieIterator.hasNext) {
+			val x = movieIterator next()
+			val movieObject = (new JSONObject).asInstanceOf[util.HashMap[String, String]]
+			movieObject put("MovieID", (x MovieID) getOrElse "")
+			movieObject put("State", (x State) getOrElse "")
+			movieObject put("MovieUrl", (x MovieUrl) getOrElse "")
+			movieObject put("MovieTitleClean", (x MovieTitleClean) getOrElse "")
+			movieObject put("MovieYear", (x MovieYear).toString)
+			movieObject put("DateUploaded", (x DateUploaded) getOrElse "")
+			movieObject put("DateUploadedEpoch", (x DateUploadedEpoch).toString)
+			movieObject put("Quality", (x Quality) getOrElse "")
+			movieObject put("CoverImage", (x CoverImage) getOrElse "")
+			movieObject put("ImdbCode", (x ImdbCode) getOrElse "")
+			movieObject put("ImdbLink", (x ImdbLink) getOrElse "")
+			movieObject put("Size", (x Size) getOrElse "")
+			movieObject put("SizeByte", (x SizeByte).toString)
+			movieObject put("MovieRating", (x MovieRating) getOrElse "")
+			movieObject put("Genre", (x Genre) getOrElse "")
+			movieObject put("Uploader", (x Uploader) getOrElse "")
+			movieObject put("Downloaded", (x Downloaded).toString)
+			movieObject put("TorrentSeeds", (x TorrentSeeds).toString)
+			movieObject put("TorrentPeers", (x TorrentPeers).toString)
+			movieObject put("TorrentUrl", (x TorrentUrl) getOrElse "")
+			movieObject put("TorrentHash", (x TorrentHash) getOrElse "")
+			movieObject put("TorrentMagnetUrl", (x TorrentMagnetUrl) getOrElse "")
+			jsArray.add(movieObject)
+		}
+		json put("MovieList", jsArray)
+		json.toString
 	}
 
 	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {

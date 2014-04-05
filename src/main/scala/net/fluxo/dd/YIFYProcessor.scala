@@ -59,10 +59,12 @@ class YIFYProcessor {
 			val request = new StringBuilder
 			for (x <- searchResult) {
 				request setLength 0
-				request append "StringBuilderhttp://yts.re/api/movie.json?id=" append x.MovieID
+				request append "http://yts.re/api/movie.json?id=" append x.MovieID
 				val response = OUtils crawlServer (request toString())
+				yifySearchResult AddToMovieList (OUtils stringToMovieObject response)
 			}
 		}
+		OUtils YIFYSearchResultToJSON yifySearchResult
 	}
 
 	private def processScreenshotImages(content: String, externalIP: String, port: Int): String = {

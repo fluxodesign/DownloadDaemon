@@ -1,12 +1,10 @@
 package net.fluxo.dd
 
 import java.net.Socket
-import java.io.{BufferedReader, InputStreamReader, IOException}
+import java.io.IOException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
-import org.apache.http.impl.client.HttpClients
-import org.apache.http.client.methods.HttpGet
 import net.fluxo.dd.dbo.{TPBPage, TPBObject}
 import scala.util.control.Breaks._
 import com.google.gson.Gson
@@ -110,7 +108,7 @@ class TPBProcessor {
 		request = request replaceAllLiterally ("[filter]", categories toString())
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
-			val response = contactSource(request)
+			val response = OUtils crawlServer request
 			val document = Jsoup parse response
 			val totalItems = queryTotalItemsFound(document)
 			val itemList = parseItems(document)
@@ -213,23 +211,6 @@ class TPBProcessor {
 			}
 		}
 		list
-	}
-
-	def contactSource(url: String): String = {
-		val sb = new StringBuilder
-		val htGet = new HttpGet(url)
-		htGet.setHeader("User-Agent", "Fluxo-DD/1.0")
-		val htClient = HttpClients createDefault()
-		val htResponse = htClient execute htGet
-		try {
-			val reader = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
-			var line = reader readLine()
-			while (line != null) {
-				sb.append(line)
-				line = reader readLine()
-			}
-		} finally { htResponse close() }
-		sb.toString()
 	}
 }
 
