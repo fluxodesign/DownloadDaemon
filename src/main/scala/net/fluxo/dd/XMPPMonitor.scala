@@ -7,6 +7,7 @@ import org.jivesoftware.smack.packet.{Presence, Message}
 import net.fluxo.dd.dbo.Task
 import org.apache.commons.validator.routines.IntegerValidator
 import java.io.{InputStreamReader, BufferedReader}
+import org.apache.commons.codec.net.URLCodec
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -358,7 +359,8 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								else if (words.length >= 4 && (!words(3).startsWith("ST="))) "ERR SEARCH TERM"
 								else {
 									val searchTerm: String = {
-										words(3) substring("ST=" length) replaceAllLiterally("\"", "")
+										val ucodec = new URLCodec
+										ucodec decode words(3) substring("ST=" length) replaceAllLiterally("\"", "")
 									}
 									YIFYP procYIFYSearch searchTerm
 								}
@@ -376,7 +378,8 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						else if (words.length >= 5 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG=") || !words(4).startsWith("CAT="))) "SYNTAX ERROR 3"
 						else {
 							val searchTerm: String = {
-								words(2).substring("ST=".length).replaceAllLiterally("\"", "")
+								val ucodec = new URLCodec
+								ucodec decode words(2).substring("ST=".length) replaceAllLiterally("\"", "")
 							}
 							val page: Int = {
 								if (words.length >= 4) {
