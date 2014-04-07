@@ -143,6 +143,7 @@ class Utils {
 
 	def YIFYSearchResultToJSON(obj: YIFYSearchResult): String = {
 		val json = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+		json put("SearchResult", "YIFY")
 		json put("MovieCount", obj.MovieCount)
 		val jsArray = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, String]]]
 		val movieIterator = (obj MovieList) getOrElse null iterator()
