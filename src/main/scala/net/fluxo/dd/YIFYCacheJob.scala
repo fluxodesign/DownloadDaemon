@@ -71,7 +71,6 @@ class YCache extends Callable[String] {
 			while (statusTrueCount < 4 && mPageNo < _totalPageNo) {
 				LogWriter writeLog("UPDATE: Processing page " + mPageNo + "/" + _totalPageNo, Level.INFO)
 				response = YIFYP procYIFYCache mPageNo
-				totalItemsReported = parseTotalMovieCount(jsonParser, response)
 				val status = processEntry(response, jsonParser)
 				// DEBUG
 				LogWriter writeLog("UPDATE STATUS: " + status, Level.INFO)
@@ -85,12 +84,8 @@ class YCache extends Callable[String] {
 		}
 
 		// if totalItemsInDb does not match total items returned by server then crawl the result
-		//if (totalItemsInDb != totalItemsReported) crawlAndMatch(totalItemsReported, jsonParser)
+		if (totalItemsInDb != totalItemsReported) crawlAndMatch(totalItemsReported, jsonParser)
 		"OK"
-	}
-
-	private def parseTotalMovieCount(json: JSONParser, raw: String): Int = {
-		((json parse raw).asInstanceOf[JSONObject] get "MovieCount").asInstanceOf[Int]
 	}
 
 	private def populateDb() {
