@@ -67,7 +67,7 @@ class YCache extends Callable[String] {
 				}
 			}
 			var statusTrueCount = 0
-			while (_pageNo < _totalPageNo && statusTrueCount < 3) {
+			while (_pageNo < _totalPageNo && statusTrueCount < 4) {
 				LogWriter writeLog("UPDATE: Processing page " + _pageNo, Level.INFO)
 				val status = processEntry(response, jsonParser)
 				if (status) statusTrueCount += 1
