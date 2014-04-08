@@ -80,7 +80,7 @@ class YCache extends Callable[String] {
 				mPageNo += 1
 				// DEBUG
 				LogWriter writeLog("mPageNo = " + mPageNo, Level.INFO)
-				totalItemsReported = ((jsonParser parse response).asInstanceOf[JSONObject] get "MovieCount").asInstanceOf[Int]
+				//totalItemsReported = ((jsonParser parse response).asInstanceOf[JSONObject] get "MovieCount").asInstanceOf[Int]
 			}
 		}
 
