@@ -68,24 +68,19 @@ class YCache extends Callable[String] {
 			}
 			var statusTrueCount = 0
 			var mPageNo = 1
-			while (statusTrueCount < 4) {
-				/*if (mPageNo < _totalPageNo) {
-					LogWriter writeLog("UPDATE: Processing page " + mPageNo + "/" + _totalPageNo, Level.INFO)
-					response = YIFYP procYIFYCache mPageNo
-					val status = processEntry(response, jsonParser)
-					// DEBUG
-					LogWriter writeLog("UPDATE STATUS: " + status, Level.INFO)
-					if (status) statusTrueCount += 1
-					// DEBUG
-					LogWriter writeLog("STATUSTRUECOUNT = " + statusTrueCount, Level.INFO)
-					mPageNo += 1
-					// DEBUG
-					LogWriter writeLog("mPageNo = " + mPageNo, Level.INFO)
-					totalItemsReported = ((jsonParser parse response).asInstanceOf[JSONObject] get "MovieCount").asInstanceOf[Int]
-				//}*/
-				statusTrueCount += 1
+			while (statusTrueCount < 4 && mPageNo < _totalPageNo) {
+				LogWriter writeLog("UPDATE: Processing page " + mPageNo + "/" + _totalPageNo, Level.INFO)
+				response = YIFYP procYIFYCache mPageNo
+				val status = processEntry(response, jsonParser)
 				// DEBUG
-				LogWriter writeLog("Stc: " + statusTrueCount, Level.INFO)
+				LogWriter writeLog("UPDATE STATUS: " + status, Level.INFO)
+				if (status) statusTrueCount += 1
+				// DEBUG
+				LogWriter writeLog("STATUSTRUECOUNT = " + statusTrueCount, Level.INFO)
+				mPageNo += 1
+				// DEBUG
+				LogWriter writeLog("mPageNo = " + mPageNo, Level.INFO)
+				totalItemsReported = ((jsonParser parse response).asInstanceOf[JSONObject] get "MovieCount").asInstanceOf[Int]
 			}
 		}
 
