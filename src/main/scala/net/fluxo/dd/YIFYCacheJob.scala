@@ -69,7 +69,7 @@ class YCache extends Callable[String] {
 			var statusTrueCount = 0
 			var mPageNo = 1
 			while (statusTrueCount < 4) {
-				if (mPageNo < _totalPageNo) {
+				//if (mPageNo < _totalPageNo) {
 					LogWriter writeLog("UPDATE: Processing page " + mPageNo + "/" + _totalPageNo, Level.INFO)
 					response = YIFYP procYIFYCache mPageNo
 					val status = processEntry(response, jsonParser)
@@ -82,7 +82,7 @@ class YCache extends Callable[String] {
 					// DEBUG
 					LogWriter writeLog("mPageNo = " + mPageNo, Level.INFO)
 					totalItemsReported = ((jsonParser parse response).asInstanceOf[JSONObject] get "MovieCount").asInstanceOf[Int]
-				}
+				//}
 			}
 		}
 
