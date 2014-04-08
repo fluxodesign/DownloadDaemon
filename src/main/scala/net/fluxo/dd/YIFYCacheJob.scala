@@ -73,14 +73,8 @@ class YCache extends Callable[String] {
 				LogWriter writeLog("UPDATE: Processing page " + mPageNo + "/" + _totalPageNo, Level.INFO)
 				response = YIFYP procYIFYCache mPageNo
 				val status = processEntry(response, jsonParser)
-				// DEBUG
-				LogWriter writeLog("UPDATE STATUS: " + status, Level.INFO)
 				if (status) statusTrueCount += 1
-				// DEBUG
-				LogWriter writeLog("STATUSTRUECOUNT = " + statusTrueCount, Level.INFO)
 				mPageNo += 1
-				// DEBUG
-				LogWriter writeLog("mPageNo = " + mPageNo, Level.INFO)
 			}
 		}
 
