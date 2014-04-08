@@ -90,7 +90,7 @@ class YCache extends Callable[String] {
 		}
 
 		// if totalItemsInDb does not match total items returned by server then crawl the result
-		if (totalItemsInDb != totalItemsReported) crawlAndMatch(totalItemsReported, jsonParser)
+		//if (totalItemsInDb != totalItemsReported) crawlAndMatch(totalItemsReported, jsonParser)
 		"OK"
 	}
 
