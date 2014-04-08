@@ -45,7 +45,7 @@ class YCache extends Callable[String] {
 
 	@throws(classOf[Exception])
 	override def call(): String = {
-		var totalItemsReported = 0
+		var totalItemsReported = 0L
 		val jsonParser = new JSONParser
 		val totalItemsInDb = DbControl ycQueryCount()
 		if (totalItemsInDb == 0) populateDb()
@@ -57,6 +57,7 @@ class YCache extends Callable[String] {
 					val obj = (jsonParser parse response).asInstanceOf[JSONObject]
 					if (_totalPageNo == 0) {
 						val movieCount = (obj get "MovieCount").asInstanceOf[Long]
+						totalItemsReported = movieCount
 						_totalPageNo = (movieCount / 50).asInstanceOf[Int]
 						if (movieCount % 50 > 0) _totalPageNo += 1
 					}
@@ -113,11 +114,11 @@ class YCache extends Callable[String] {
 		}
 	}
 
-	private def crawlAndMatch(totalPageReported: Int, jsonParser: JSONParser) {
+	private def crawlAndMatch(totalPageReported: Long, jsonParser: JSONParser) {
 		var isForward = true
 		var pageForward = 1
 		var pageBackward = -1
-		var totalPageNo = totalPageReported / 50
+		var totalPageNo = (totalPageReported / 50).asInstanceOf[Int]
 		try {
 			if (totalPageReported % 50 > 0) totalPageNo += 1
 			pageBackward = totalPageNo
