@@ -115,7 +115,7 @@ class Utils {
 			movie.MovieID_=((json get "MovieID").asInstanceOf[String])
 			movie.MovieUrl_=((json get "MovieUrl").asInstanceOf[String])
 			movie.MovieTitleClean_=((json get "MovieTitleClean").asInstanceOf[String])
-			movie.MovieYear_=((json get "MovieYear").asInstanceOf[Int])
+			movie.MovieYear_=((json get "MovieYear").asInstanceOf[String].toInt)
 			movie.DateUploaded_=((json get "DateUploaded").asInstanceOf[String])
 			movie.DateUploadedEpoch_=((json get "DateUploadedEpoch").asInstanceOf[Long])
 			movie.Quality_=((json get "Quality").asInstanceOf[String])
