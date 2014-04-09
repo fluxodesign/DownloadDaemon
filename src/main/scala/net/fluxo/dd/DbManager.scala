@@ -441,8 +441,8 @@ class DbManager {
 			ps close()
 		} catch {
 			case ex: Exception =>
-				LogWriter.writeLog("Error querying all active task(s)", Level.ERROR)
-				LogWriter.writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter.writeLog("Error querying movies by title", Level.ERROR)
+				LogWriter.writeLog(ex.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 		}
 		mlist.toArray
