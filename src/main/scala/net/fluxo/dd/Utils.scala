@@ -127,7 +127,7 @@ class Utils {
 			movie.MovieRating_=((json get "MovieRating").asInstanceOf[String])
 			var genre = json get "Genre1"
 			if ((json get "Genre2") != null && (json get "Genre2").asInstanceOf[String].length > 0) {
-				genre += "|" + (json get "Genre2")
+				if (!(json get "Genre2").equals("null")) genre += "|" + (json get "Genre2")
 			}
 			movie.Genre_=(genre.asInstanceOf[String])
 			movie.Uploader_=((json get "Uploader").asInstanceOf[String])
