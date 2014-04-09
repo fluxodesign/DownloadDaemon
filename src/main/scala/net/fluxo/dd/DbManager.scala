@@ -421,11 +421,11 @@ class DbManager {
 	}
 
 	def ycQueryMoviesByTitle(title: String): Array[YIFYCache] = {
-		val queryStatement = """SELECT * FROM yify_cache WHERE LOCATION(?,title) > 0"""
+		val queryStatement = """SELECT * FROM yify_cache WHERE LOWER(title) LIKE ?"""
 		val mlist = new mutable.MutableList[YIFYCache]
 		try {
 			val ps = _conn prepareStatement queryStatement
-			ps setString(1, title)
+			ps setString(1, title.toLowerCase)
 			val rs = ps.executeQuery()
 			while (rs.next()) {
 				mlist.+=(new YIFYCache {
