@@ -123,7 +123,7 @@ class Utils {
 			movie.ImdbCode_=((json get "ImdbCode").asInstanceOf[String])
 			movie.ImdbLink_=((json get "ImdbLink").asInstanceOf[String])
 			movie.Size_=((json get "Size").asInstanceOf[String])
-			movie.SizeByte_=((json get "SizeByte").asInstanceOf[Long])
+			movie.SizeByte_=((json get "SizeByte").asInstanceOf[String].toLong)
 			movie.MovieRating_=((json get "MovieRating").asInstanceOf[String])
 			var genre = json get "Genre1"
 			if ((json get "Genre2") != null && (json get "Genre2").asInstanceOf[String].length > 0) {
@@ -132,8 +132,8 @@ class Utils {
 			movie.Genre_=(genre.asInstanceOf[String])
 			movie.Uploader_=((json get "Uploader").asInstanceOf[String])
 			movie.Downloaded_=((json get "Downloaded").asInstanceOf[Int])
-			movie.TorrentSeeds_=((json get "TorrentSeeds").asInstanceOf[Int])
-			movie.TorrentPeers_=((json get "TorrentPeers").asInstanceOf[Int])
+			movie.TorrentSeeds_=((json get "TorrentSeeds").asInstanceOf[String].toInt)
+			movie.TorrentPeers_=((json get "TorrentPeers").asInstanceOf[String].toInt)
 			movie.TorrentUrl_=((json get "TorrentUrl").asInstanceOf[String])
 			movie.TorrentHash_=((json get "TorrentHash").asInstanceOf[String])
 			movie.TorrentMagnetUrl_=((json get "TorrentMagnetUrl").asInstanceOf[String])
