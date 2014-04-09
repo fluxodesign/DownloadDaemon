@@ -131,7 +131,7 @@ class Utils {
 			}
 			movie.Genre_=(genre.asInstanceOf[String])
 			movie.Uploader_=((json get "Uploader").asInstanceOf[String])
-			movie.Downloaded_=((json get "Downloaded").asInstanceOf[Int])
+			movie.Downloaded_=((json get "Downloaded").asInstanceOf[String].toInt)
 			movie.TorrentSeeds_=((json get "TorrentSeeds").asInstanceOf[String].toInt)
 			movie.TorrentPeers_=((json get "TorrentPeers").asInstanceOf[String].toInt)
 			movie.TorrentUrl_=((json get "TorrentUrl").asInstanceOf[String])
