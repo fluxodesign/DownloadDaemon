@@ -427,6 +427,7 @@ class DbManager {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, title.toLowerCase)
 			val rs = ps.executeQuery()
+			var counter = 0
 			while (rs.next()) {
 				mlist.+=(new YIFYCache {
 					MovieID_:(rs getInt "movie_id")
@@ -436,14 +437,16 @@ class DbManager {
 					MovieSize_:(rs getString "size")
 					MovieCoverImage_:(rs getString "cover_image")
 				})
+				counter += 1
 			}
 			rs close()
 			ps close()
+			LogWriter writeLog("ycQueryMoviesByTitle: " + counter + " found", Level.INFO)
 		} catch {
 			case ex: Exception =>
-				LogWriter.writeLog("Error querying movies by title", Level.ERROR)
-				LogWriter.writeLog(ex.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+				LogWriter writeLog("Error querying movies by title", Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 		}
 		mlist.toArray
 	}
