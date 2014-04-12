@@ -6,7 +6,7 @@
 
     <groupId>net.fluxo.dd</groupId>
     <artifactId>DownloadDaemon</artifactId>
-    <version>0.4.3</version>
+    <version>0.4.4</version>
 	<packaging>jar</packaging>
 
 	<name>DownloadDaemon</name>
@@ -156,6 +156,16 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
             <version>9.0.6.v20130930</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxrs</artifactId>
+            <version>3.0.5.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jaxb-provider</artifactId>
+            <version>3.0.5.Final</version>
         </dependency>
 	</dependencies>
 

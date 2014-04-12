@@ -262,10 +262,11 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				sb.append(line)
 				line = br.readLine()
 			}
-			wgetProc.waitFor()
+			wgetProc waitFor()
 			_externalIP = Some(sb toString())
 			br.close()
-			LogWriter.writeLog("External IP: " + _externalIP.getOrElse("N/A"), Level.INFO)
+			OUtils.ExternalIP_:(_externalIP getOrElse "127.0.0.1")
+			LogWriter writeLog("External IP: " + _externalIP.getOrElse("N/A"), Level.INFO)
 		}
 	}
 

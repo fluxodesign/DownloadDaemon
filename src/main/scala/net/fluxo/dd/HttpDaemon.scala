@@ -6,6 +6,8 @@ import org.apache.log4j.Level
 import org.eclipse.jetty.webapp.WebAppContext
 import java.util.Properties
 import org.eclipse.jetty.util.log.Logger
+import org.eclipse.jetty.servlet.{ServletHolder, ServletContextHandler}
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -26,8 +28,17 @@ class HttpDaemon(port: Int) extends Runnable {
 		wap.setContextPath("/")
 		wap.setWar(".")
 
+		val webAppContext = new ServletContextHandler(ServletContextHandler SESSIONS)
+		webAppContext setContextPath "/comm"
+		webAppContext setInitParameter("resteasy.scan", "true")
+		webAppContext setInitParameter("resteasy.servlet.mapping.prefix", "/rs")
+		val webAppHolder = new ServletHolder(new HttpServletDispatcher)
+		webAppHolder setInitOrder 1
+		webAppHolder setInitParameter("javax.ws.rs.Application", "net.fluxo.dd.FluxoWS")
+		webAppContext addServlet(webAppHolder, "/rs/*")
+
 		val handlerCollection = new HandlerCollection()
-		handlerCollection.setHandlers(Array(wap))
+		handlerCollection.setHandlers(Array(webAppContext, wap))
 
 		_server.setHandler(handlerCollection)
 		_server.setStopAtShutdown(true)
