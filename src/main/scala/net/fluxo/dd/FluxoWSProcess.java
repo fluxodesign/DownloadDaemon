@@ -1,9 +1,11 @@
 package net.fluxo.dd;
 
 import net.fluxo.dd.dbo.Task;
+import org.apache.commons.codec.net.URLCodec;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import java.util.StringTokenizer;
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -24,46 +26,131 @@ public class FluxoWSProcess {
 	@Path("/ylist/page/{page}/quality/{quality}/rating/{rating}")
 	@Produces("application/json")
 	public Response getYIFYList(@PathParam("page") int page, @PathParam("quality") int quality, @PathParam("rating") int rating) {
-		String response = YIFYP.procListMovie(page, quality,rating, OUtils.ExternalIP(), OUtils.readConfig().HTTPDPort());
-		return Response.status(200).entity(response).build();
+		try {
+			String response = YIFYP.procListMovie(page, quality, rating, OUtils.ExternalIP(), OUtils.readConfig().HTTPDPort());
+			return Response.status(200).entity(response).build();
+		} catch (Exception e) {
+			return Response.status(403).entity(e.getMessage()).build();
+		}
 	}
 
 	@GET
 	@Path("/ydetails/{id}")
 	@Produces("application/json")
 	public Response getYIFYMovieDetails(@PathParam("id") int id) {
-		String response = YIFYP.procMovieDetails(id, OUtils.ExternalIP(), OUtils.readConfig().HTTPDPort());
-		return Response.status(200).entity(response).build();
+		try {
+			String response = YIFYP.procMovieDetails(id, OUtils.ExternalIP(), OUtils.readConfig().HTTPDPort());
+			return Response.status(200).entity(response).build();
+		} catch (Exception e) {
+			return Response.status(403).entity(e.getMessage()).build();
+		}
 	}
 
 	@GET
 	@Path("/ysearch/{st}")
 	@Produces("application/json")
 	public Response getYIFYSearchResult(@DefaultValue("") @QueryParam("st") String search) {
-		String response = YIFYP.procYIFYSearch(search);
-		return Response.status(200).entity(response).build();
+		try {
+			if (search.length() > 0) {
+				String decodedTerm = (new URLCodec()).decode(search);
+				String response = YIFYP.procYIFYSearch(decodedTerm);
+				return Response.status(200).entity(response).build();
+			}
+		} catch (Exception e) {
+			return Response.status(403).entity(e.getMessage()).build();
+		}
+		return Response.status(403).entity("NO-SEARCH-TERM").build();
 	}
 
 	@GET
 	@Path("/status/{id}")
 	@Produces("text/plain")
 	public Response getDownloadStatus(@PathParam("id") String userID) {
-		Task[] arrTasks = DbControl.queryTasks(userID);
-		StringBuilder sb = new StringBuilder();
-		for (Task t : arrTasks) {
-			int progress = -1;
-			if (t.TaskCompletedLength() > 0 && t.TaskTotalLength() > 0) {
-				progress = (int)((t.TaskCompletedLength() * 100) / t.TaskTotalLength());
+		try {
+			Task[] arrTasks = DbControl.queryTasks(userID);
+			StringBuilder sb = new StringBuilder();
+			for (Task t : arrTasks) {
+				int progress = -1;
+				if (t.TaskCompletedLength() > 0 && t.TaskTotalLength() > 0) {
+					progress = (int) ((t.TaskCompletedLength() * 100) / t.TaskTotalLength());
+				}
+				String dlName = "Unknown Download";
+				if (t.TaskPackage().nonEmpty()) {
+					dlName = t.TaskPackage().get();
+				}
+				sb.append(dlName).append(" --> ").append(progress).append("%").append(System.lineSeparator());
 			}
-			String dlName = "Unknown Download";
-			if (t.TaskPackage().nonEmpty()) {
-				dlName = t.TaskPackage().get();
+			if (arrTasks.length == 0) {
+				sb.append("No active tasks are running!");
 			}
-			sb.append(dlName).append(" --> ").append(progress).append("%").append(System.lineSeparator());
+			return Response.status(200).entity(sb.toString()).build();
+		} catch (Exception e) {
+			return Response.status(403).entity(e.getMessage()).build();
 		}
-		if (arrTasks.length == 0) {
-			sb.append("No active tasks are running!");
+	}
+
+	@GET
+	@Path("/addtorrent/{uri}/{owner}")
+	@Produces("text/plain")
+	public Response getTorrentUrl(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner) {
+		if (uri.length() > 0 && owner.length() > 0) {
+			String response = OAria.processRequest(uri, owner, false, "", "");
+			return Response.status(200).entity(response).build();
 		}
-		return Response.status(200).entity(sb.toString()).build();
+		return Response.status(403).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
+	}
+
+	@GET
+	@Path("/adduri/{uri}/{owner}")
+	@Produces("text/plain")
+	public Response getHttpUrl(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner) {
+		if (uri.length() > 0 && owner.length() > 0) {
+			String response = OAria.processRequest(uri, owner, true, "", "");
+			return Response.status(200).entity(response).build();
+		}
+		return Response.status(403).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
+	}
+
+	@GET
+	@Path("/adduric/{uri}/{owner}/{username}/{password}")
+	@Produces("text/plain")
+	public Response getHttpUrlC(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner,
+		@DefaultValue("") @QueryParam("username") String username, @DefaultValue("") @QueryParam("password") String password) {
+		if (uri.length() > 0 && owner.length() > 0 && username.length() > 0 && password.length() > 0) {
+			String response = OAria.processRequest(uri, owner, true, username, password);
+			return Response.status(200).entity(response).build();
+		}
+		return Response.status(403).entity("EITHER-URI-ERROR-OR-NO-OWNER-OR-USERNAME-PASSWORD-ERROR").build();
+	}
+
+	@GET
+	@Path("/tpb/{st}/{page}/{cat}")
+	@Produces("application/json")
+	public Response getTPBSearchResult(@DefaultValue("") @QueryParam("st") String searchTerm, @DefaultValue("0") @QueryParam("page") int page,
+		@DefaultValue("0") @QueryParam("cat") String cats) {
+		try {
+			if (searchTerm.length() > 0) {
+				URLCodec ucodec = new URLCodec();
+				String decodedTerm = ucodec.decode(searchTerm);
+				int[] arrCats;
+				if (cats.length() > 0 && cats.contains(",")) {
+					StringTokenizer tokenizer = new StringTokenizer(cats, ",");
+					arrCats = new int[tokenizer.countTokens()];
+					int arrIndex = 0;
+					while (tokenizer.hasMoreTokens()) {
+						String t = tokenizer.nextToken();
+						arrCats[arrIndex] = Integer.parseInt(t);
+						arrIndex++;
+					}
+				} else {
+					arrCats = new int[]{ Integer.parseInt(cats) };
+				}
+				String response = TPBP.query(decodedTerm, page, arrCats);
+				Response.status(200).entity(response).build();
+			}
+		} catch (Exception e) {
+			return Response.status(403).entity(e.getMessage()).build();
+		}
+		return Response.status(403).entity("Unable to process TPB request").build();
 	}
 }
