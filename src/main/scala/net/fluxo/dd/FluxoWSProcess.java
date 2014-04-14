@@ -1,6 +1,7 @@
 package net.fluxo.dd;
 
 import net.fluxo.dd.dbo.Task;
+import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
 
 import javax.ws.rs.*;
@@ -30,7 +31,7 @@ public class FluxoWSProcess {
 			String response = YIFYP.procListMovie(page, quality, rating, OUtils.ExternalIP(), OUtils.readConfig().HTTPDPort());
 			return Response.status(200).entity(response).build();
 		} catch (Exception e) {
-			return Response.status(403).entity(e.getMessage()).build();
+			return Response.status(400).entity(e.getMessage()).build();
 		}
 	}
 
@@ -42,7 +43,7 @@ public class FluxoWSProcess {
 			String response = YIFYP.procMovieDetails(id, OUtils.ExternalIP(), OUtils.readConfig().HTTPDPort());
 			return Response.status(200).entity(response).build();
 		} catch (Exception e) {
-			return Response.status(403).entity(e.getMessage()).build();
+			return Response.status(400).entity(e.getMessage()).build();
 		}
 	}
 
@@ -57,9 +58,9 @@ public class FluxoWSProcess {
 				return Response.status(200).entity(response).build();
 			}
 		} catch (Exception e) {
-			return Response.status(403).entity(e.getMessage()).build();
+			return Response.status(400).entity(e.getMessage()).build();
 		}
-		return Response.status(403).entity("NO-SEARCH-TERM").build();
+		return Response.status(400).entity("NO-SEARCH-TERM").build();
 	}
 
 	@GET
@@ -85,7 +86,7 @@ public class FluxoWSProcess {
 			}
 			return Response.status(200).entity(sb.toString()).build();
 		} catch (Exception e) {
-			return Response.status(403).entity(e.getMessage()).build();
+			return Response.status(400).entity(e.getMessage()).build();
 		}
 	}
 
@@ -93,22 +94,32 @@ public class FluxoWSProcess {
 	@Path("/addtorrent/{uri}/{owner}")
 	@Produces("text/plain")
 	public Response getTorrentUrl(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner) {
-		if (uri.length() > 0 && owner.length() > 0) {
-			String response = OAria.processRequest(uri, owner, false, "", "");
-			return Response.status(200).entity(response).build();
+		try {
+			if (uri.length() > 0 && owner.length() > 0) {
+				String decodedUri = (new URLCodec()).decode(uri);
+				String response = OAria.processRequest(decodedUri, owner, false, "", "");
+				return Response.status(200).entity(response).build();
+			}
+		} catch (DecoderException de) {
+			return Response.status(400).entity(de.getMessage()).build();
 		}
-		return Response.status(403).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
+		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
 	}
 
 	@GET
 	@Path("/adduri/{uri}/{owner}")
 	@Produces("text/plain")
 	public Response getHttpUrl(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner) {
-		if (uri.length() > 0 && owner.length() > 0) {
-			String response = OAria.processRequest(uri, owner, true, "", "");
-			return Response.status(200).entity(response).build();
+		try {
+			if (uri.length() > 0 && owner.length() > 0) {
+				String decodedUri = (new URLCodec()).decode(uri);
+				String response = OAria.processRequest(decodedUri, owner, true, "", "");
+				return Response.status(200).entity(response).build();
+			}
+		} catch(DecoderException de) {
+			return Response.status(400).entity(de.getMessage()).build();
 		}
-		return Response.status(403).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
+		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
 	}
 
 	@GET
@@ -116,11 +127,16 @@ public class FluxoWSProcess {
 	@Produces("text/plain")
 	public Response getHttpUrlC(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner,
 		@DefaultValue("") @QueryParam("username") String username, @DefaultValue("") @QueryParam("password") String password) {
-		if (uri.length() > 0 && owner.length() > 0 && username.length() > 0 && password.length() > 0) {
-			String response = OAria.processRequest(uri, owner, true, username, password);
-			return Response.status(200).entity(response).build();
+		try {
+			if (uri.length() > 0 && owner.length() > 0 && username.length() > 0 && password.length() > 0) {
+				String decodedUri = (new URLCodec()).decode(uri);
+				String response = OAria.processRequest(decodedUri, owner, true, username, password);
+				return Response.status(200).entity(response).build();
+			}
+		} catch(DecoderException de) {
+			return Response.status(400).entity(de.getMessage()).build();
 		}
-		return Response.status(403).entity("EITHER-URI-ERROR-OR-NO-OWNER-OR-USERNAME-PASSWORD-ERROR").build();
+		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER-OR-USERNAME-PASSWORD-ERROR").build();
 	}
 
 	@GET
