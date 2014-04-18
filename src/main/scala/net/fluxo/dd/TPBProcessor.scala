@@ -110,11 +110,13 @@ class TPBProcessor {
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
 			val response = OUtils crawlServer request
-			// DEBUG
-			LogWriter writeLog("RAW response from TPB: " + response, Level.DEBUG)
 			val document = Jsoup parse response
 			val totalItems = queryTotalItemsFound(document)
+			// DEBUG
+			LogWriter writeLog("Total ITEMS: " + totalItems, Level.DEBUG)
 			val itemList = parseItems(document)
+			// DEBUG
+			LogWriter writeLog("Items: " + itemList.size(), Level.DEBUG)
 			val tpbPage = new TPBPage
 			tpbPage.TotalItems_:(totalItems)
 			tpbPage.TPBItems_:(itemList)
