@@ -21,7 +21,7 @@ class TPBProcessor {
 
 	private val _url = "thepiratebay.se"
 	private final val _httpUrl = "http://thepiratebay.se"
-	private final val _searchUrl = "/search/[term]/[page]/99/[filter]"
+	private final val _searchUrl = "http://thepiratebay.se/search/[term]/[page]/99/[filter]"
 
 	object TPBCats extends Enumeration {
 		type Cat = Value
@@ -99,7 +99,8 @@ class TPBProcessor {
 	def query(searchTerm: String, page: Int, cats: Array[Int]): String = {
 		val sb = new StringBuilder
 		var request = _searchUrl
-		request = request replaceAllLiterally ("[term]", searchTerm)
+		val encodedSearchTerm = URLEncoder encode (searchTerm, "UTF-8")
+		request = request replaceAllLiterally ("[term]", encodedSearchTerm)
 		request = request replaceAllLiterally ("[page]", page.toString)
 		val categories = new StringBuilder
 		for (x <- cats) {
@@ -107,12 +108,11 @@ class TPBProcessor {
 		}
 		if (categories endsWith ",") categories delete(categories.length - 1, categories.length)
 		request = request replaceAllLiterally ("[filter]", categories toString())
-		val httpReq = _httpUrl + (URLEncoder encode(request, "UTF-8"))
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
 			// DEBUG
-			LogWriter writeLog("TPB REQUEST: " + httpReq, Level.DEBUG)
-			val response = OUtils crawlServer httpReq
+			LogWriter writeLog("TPB REQUEST: " + request, Level.DEBUG)
+			val response = OUtils crawlServer request
 			val document = Jsoup parse response
 			val totalItems = queryTotalItemsFound(document)
 			val itemList = parseItems(document)
