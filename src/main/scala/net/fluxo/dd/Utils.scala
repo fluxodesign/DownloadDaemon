@@ -94,6 +94,8 @@ class Utils {
 			val htClient = HttpClientBuilder.create().build()
 			val htGet = new HttpGet(request toString())
 			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
+			// DEBUG
+			LogWriter writeLog("crawlServer, before sending request...", Level.DEBUG)
 			val htResponse = htClient.execute(htGet)
 			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
 			var line = br.readLine()
