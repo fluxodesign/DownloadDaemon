@@ -142,8 +142,6 @@ public class FluxoWSProcess {
 	@GET
 	@Path("/tpb/{st}/{page}/{cat}")
 	@Produces("application/json")
-	/*public Response getTPBSearchResult(@DefaultValue("") @QueryParam("st") String searchTerm, @DefaultValue("0") @QueryParam("page") int page,
-		@DefaultValue("0") @QueryParam("cat") String cats) {*/
 	public Response getTPBSearchResult(@DefaultValue("") @PathParam("st") String searchTerm, @DefaultValue("0") @PathParam("page") int page,
 	    @DefaultValue("0") @PathParam("cat") String cats) {
 		try {

@@ -9,6 +9,7 @@ import net.fluxo.dd.dbo.{TPBPage, TPBObject}
 import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
+import org.apache.log4j.Level
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -109,6 +110,8 @@ class TPBProcessor {
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
 			val response = OUtils crawlServer request
+			// DEBUG
+			LogWriter writeLog("RAW response from TPB: " + response, Level.DEBUG)
 			val document = Jsoup parse response
 			val totalItems = queryTotalItemsFound(document)
 			val itemList = parseItems(document)
