@@ -140,10 +140,12 @@ public class FluxoWSProcess {
 	}
 
 	@GET
-	@Path("/tpb")
+	@Path("/tpb/{st}/{page}/{cat}")
 	@Produces("application/json")
-	public Response getTPBSearchResult(@DefaultValue("") @QueryParam("st") String searchTerm, @DefaultValue("0") @QueryParam("page") int page,
-		@DefaultValue("0") @QueryParam("cat") String cats) {
+	/*public Response getTPBSearchResult(@DefaultValue("") @QueryParam("st") String searchTerm, @DefaultValue("0") @QueryParam("page") int page,
+		@DefaultValue("0") @QueryParam("cat") String cats) {*/
+	public Response getTPBSearchResult(@DefaultValue("") @PathParam("st") String searchTerm, @DefaultValue("0") @PathParam("page") int page,
+	    @DefaultValue("0") @PathParam("cat") String cats) {
 		try {
 			if (searchTerm.length() > 0) {
 				URLCodec ucodec = new URLCodec();
@@ -165,8 +167,8 @@ public class FluxoWSProcess {
 				Response.status(200).entity(response).build();
 			}
 		} catch (Exception e) {
-			return Response.status(403).entity(e.getMessage()).build();
+			return Response.status(400).entity(e.getMessage()).build();
 		}
-		return Response.status(403).entity("Unable to process TPB request").build();
+		return Response.status(400).entity("Unable to process TPB request").build();
 	}
 }
