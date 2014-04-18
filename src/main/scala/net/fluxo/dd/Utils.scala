@@ -87,6 +87,8 @@ class Utils {
 	}
 
 	def crawlServer(request: String): String = {
+		// DEBUG
+		LogWriter writeLog("crawlServer starts...", Level.DEBUG)
 		val response = new StringBuilder
 		try {
 			val htClient = HttpClientBuilder.create().build()
@@ -96,6 +98,8 @@ class Utils {
 			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
 			var line = br.readLine()
 			while (line != null) {
+				// DEBUG
+				LogWriter writeLog ("crawlServer, line: " + line, Level.DEBUG)
 				response append line
 				line = br readLine()
 			}
@@ -103,12 +107,14 @@ class Utils {
 			htClient.close()
 		} catch {
 			case mue: MalformedURLException =>
-				LogWriter.writeLog("URL " + (request toString()) + " is malformed", Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
+				LogWriter writeLog("URL " + (request toString()) + " is malformed", Level.ERROR)
+				LogWriter writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
 			case ioe: IOException =>
 				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
+		// DEBUG
+		LogWriter writeLog ("crawlServer ends...", Level.DEBUG)
 		response toString()
 	}
 
