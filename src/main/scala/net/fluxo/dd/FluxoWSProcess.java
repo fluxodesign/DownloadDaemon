@@ -147,7 +147,7 @@ public class FluxoWSProcess {
 		try {
 			if (searchTerm.length() > 0) {
 				URLCodec ucodec = new URLCodec();
-				String decodedTerm = ucodec.decode(searchTerm);
+				//String decodedTerm = ucodec.decode(searchTerm);
 				int[] arrCats;
 				if (cats.length() > 0 && cats.contains(",")) {
 					StringTokenizer tokenizer = new StringTokenizer(cats, ",");
@@ -161,7 +161,7 @@ public class FluxoWSProcess {
 				} else {
 					arrCats = new int[]{ Integer.parseInt(cats) };
 				}
-				String response = TPBP.query(decodedTerm, page, arrCats);
+				String response = TPBP.query(searchTerm, page, arrCats);
 				Response.status(200).entity(response).build();
 			}
 		} catch (Exception e) {
