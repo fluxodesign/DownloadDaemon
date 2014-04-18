@@ -48,7 +48,7 @@ public class FluxoWSProcess {
 	}
 
 	@GET
-	@Path("/ysearch/{st}")
+	@Path("/ysearch")
 	@Produces("application/json")
 	public Response getYIFYSearchResult(@DefaultValue("") @QueryParam("st") String search) {
 		try {
@@ -91,7 +91,7 @@ public class FluxoWSProcess {
 	}
 
 	@GET
-	@Path("/addtorrent/{uri}/{owner}")
+	@Path("/addtorrent")
 	@Produces("text/plain")
 	public Response getTorrentUrl(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner) {
 		try {
@@ -107,7 +107,7 @@ public class FluxoWSProcess {
 	}
 
 	@GET
-	@Path("/adduri/{uri}/{owner}")
+	@Path("/adduri")
 	@Produces("text/plain")
 	public Response getHttpUrl(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner) {
 		try {
@@ -123,7 +123,7 @@ public class FluxoWSProcess {
 	}
 
 	@GET
-	@Path("/adduric/{uri}/{owner}/{username}/{password}")
+	@Path("/adduric")
 	@Produces("text/plain")
 	public Response getHttpUrlC(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner,
 		@DefaultValue("") @QueryParam("username") String username, @DefaultValue("") @QueryParam("password") String password) {
@@ -140,7 +140,7 @@ public class FluxoWSProcess {
 	}
 
 	@GET
-	@Path("/tpb/{st}/{page}/{cat}")
+	@Path("/tpb")
 	@Produces("application/json")
 	public Response getTPBSearchResult(@DefaultValue("") @QueryParam("st") String searchTerm, @DefaultValue("0") @QueryParam("page") int page,
 		@DefaultValue("0") @QueryParam("cat") String cats) {
