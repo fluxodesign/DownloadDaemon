@@ -1,6 +1,6 @@
 package net.fluxo.dd
 
-import java.net.Socket
+import java.net.{URLEncoder, Socket}
 import java.io.IOException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -21,7 +21,7 @@ class TPBProcessor {
 
 	private val _url = "thepiratebay.se"
 	private final val _httpUrl = "http://thepiratebay.se"
-	private final val _searchUrl = "http://thepiratebay.se/search/[term]/[page]/99/[filter]"
+	private final val _searchUrl = "/search/[term]/[page]/99/[filter]"
 
 	object TPBCats extends Enumeration {
 		type Cat = Value
@@ -107,11 +107,12 @@ class TPBProcessor {
 		}
 		if (categories endsWith ",") categories delete(categories.length - 1, categories.length)
 		request = request replaceAllLiterally ("[filter]", categories toString())
+		val httpReq = _httpUrl + (URLEncoder encode(request, "UTF-8"))
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
 			// DEBUG
 			LogWriter writeLog("TPB REQUEST: " + request, Level.DEBUG)
-			val response = OUtils crawlServer request
+			val response = OUtils crawlServer httpReq
 			val document = Jsoup parse response
 			val totalItems = queryTotalItemsFound(document)
 			val itemList = parseItems(document)
