@@ -109,21 +109,17 @@ class TPBProcessor {
 		request = request replaceAllLiterally ("[filter]", categories toString())
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
+			// DEBUG
+			LogWriter writeLog("TPB REQUEST: " + request, Level.DEBUG)
 			val response = OUtils crawlServer request
 			val document = Jsoup parse response
 			val totalItems = queryTotalItemsFound(document)
-			// DEBUG
-			LogWriter writeLog("Total ITEMS: " + totalItems, Level.DEBUG)
 			val itemList = parseItems(document)
-			// DEBUG
-			LogWriter writeLog("Items: " + itemList.size(), Level.DEBUG)
 			val tpbPage = new TPBPage
 			tpbPage.TotalItems_:(totalItems)
 			tpbPage.TPBItems_:(itemList)
 			val gson = new Gson()
 			sb.append(gson toJson tpbPage)
-			// DEBUG
-			LogWriter writeLog("JSON: " + sb.toString(), Level.DEBUG)
 		}
 		sb.toString()
 	}
