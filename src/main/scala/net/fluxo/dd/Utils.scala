@@ -92,7 +92,9 @@ class Utils {
 		val response = new StringBuilder
 		try {
 			val htClient = HttpClientBuilder.create().build()
-			val htGet = new HttpGet(request toString())
+			// DEBUG
+			LogWriter writeLog("crawlServer, before building HttpGet...", Level.DEBUG)
+			val htGet = new HttpGet(request)
 			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
 			// DEBUG
 			LogWriter writeLog("crawlServer, before sending request...", Level.DEBUG)
