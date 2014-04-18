@@ -162,7 +162,7 @@ public class FluxoWSProcess {
 					arrCats = new int[]{ Integer.parseInt(cats) };
 				}
 				String response = TPBP.query(searchTerm, page, arrCats);
-				Response.status(200).entity(response).build();
+				return Response.status(200).entity(response).build();
 			}
 		} catch (Exception e) {
 			return Response.status(400).entity(e.getMessage()).build();
