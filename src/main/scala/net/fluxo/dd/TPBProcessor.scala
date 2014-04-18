@@ -110,8 +110,6 @@ class TPBProcessor {
 		request = request replaceAllLiterally ("[filter]", categories toString())
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
-			// DEBUG
-			LogWriter writeLog("TPB REQUEST: " + request, Level.DEBUG)
 			val response = OUtils crawlServer request
 			val document = Jsoup parse response
 			val totalItems = queryTotalItemsFound(document)

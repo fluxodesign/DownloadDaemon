@@ -87,23 +87,15 @@ class Utils {
 	}
 
 	def crawlServer(request: String): String = {
-		// DEBUG
-		LogWriter writeLog("crawlServer starts...", Level.DEBUG)
 		val response = new StringBuilder
 		try {
 			val htClient = HttpClientBuilder.create().build()
-			// DEBUG
-			LogWriter writeLog("crawlServer, before building HttpGet...", Level.DEBUG)
 			val htGet = new HttpGet(request)
 			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
-			// DEBUG
-			LogWriter writeLog("crawlServer, before sending request...", Level.DEBUG)
 			val htResponse = htClient.execute(htGet)
 			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
 			var line = br.readLine()
 			while (line != null) {
-				// DEBUG
-				LogWriter writeLog ("crawlServer, line: " + line, Level.DEBUG)
 				response append line
 				line = br readLine()
 			}
@@ -117,8 +109,6 @@ class Utils {
 				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
-		// DEBUG
-		LogWriter writeLog ("crawlServer ends...", Level.DEBUG)
 		response toString()
 	}
 
