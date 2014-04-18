@@ -122,6 +122,8 @@ class TPBProcessor {
 			tpbPage.TPBItems_:(itemList)
 			val gson = new Gson()
 			sb.append(gson toJson tpbPage)
+			// DEBUG
+			LogWriter writeLog("JSON: " + sb.toString(), Level.DEBUG)
 		}
 		sb.toString()
 	}
