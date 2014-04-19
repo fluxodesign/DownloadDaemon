@@ -425,7 +425,7 @@ class DbManager {
 		val mlist = new mutable.MutableList[YIFYCache]
 		try {
 			val ps = _conn prepareStatement queryStatement
-			ps setString(1, title.toLowerCase)
+			ps setString(1, "%" + title.toLowerCase + "%")
 			val rs = ps.executeQuery()
 			var counter = 0
 			while (rs.next()) {
