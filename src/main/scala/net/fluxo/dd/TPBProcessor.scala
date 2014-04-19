@@ -9,7 +9,6 @@ import net.fluxo.dd.dbo.{TPBPage, TPBObject}
 import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
-import org.apache.log4j.Level
 
 /**
  * User: Ronald Kurniawan (viper)
