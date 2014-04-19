@@ -1,11 +1,12 @@
 package net.fluxo.dd;
 
 import net.fluxo.dd.dbo.Task;
-import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.net.URLCodec;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.StringTokenizer;
 
 /**
@@ -91,50 +92,59 @@ public class FluxoWSProcess {
 	}
 
 	@GET
-	@Path("/addtorrent")
+	@Path("/addtorrent/{owner}/{uri}")
 	@Produces("text/plain")
-	public Response getTorrentUrl(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner) {
+	public Response getTorrentUrl(@DefaultValue("") @PathParam("uri") String uri, @DefaultValue("") @PathParam("owner") String owner) {
 		try {
 			if (uri.length() > 0 && owner.length() > 0) {
-				String decodedUri = (new URLCodec()).decode(uri);
-				String response = OAria.processRequest(decodedUri, owner, false, "", "");
+				String decodedURL = URLDecoder.decode(uri, "UTF-8");
+				//String decodedUri = (new URLCodec()).decode(uri);
+				String response = OAria.processRequest(decodedURL, owner, false, "", "");
 				return Response.status(200).entity(response).build();
 			}
-		} catch (DecoderException de) {
+		} /*catch (DecoderException de) {
 			return Response.status(400).entity(de.getMessage()).build();
+		}*/ catch(UnsupportedEncodingException uee) {
+			return Response.status(500).entity(uee.getMessage()).build();
 		}
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
 	}
 
 	@GET
-	@Path("/adduri")
+	@Path("/adduri/{owner}/{uri}")
 	@Produces("text/plain")
-	public Response getHttpUrl(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner) {
+	public Response getHttpUrl(@DefaultValue("") @PathParam("uri") String uri, @DefaultValue("") @PathParam("owner") String owner) {
 		try {
 			if (uri.length() > 0 && owner.length() > 0) {
-				String decodedUri = (new URLCodec()).decode(uri);
-				String response = OAria.processRequest(decodedUri, owner, true, "", "");
+				String decodedURL = URLDecoder.decode(uri, "UTF-8");
+				//String decodedUri = (new URLCodec()).decode(uri);
+				String response = OAria.processRequest(decodedURL, owner, true, "", "");
 				return Response.status(200).entity(response).build();
 			}
-		} catch(DecoderException de) {
+		} /*catch(DecoderException de) {
 			return Response.status(400).entity(de.getMessage()).build();
+		}*/ catch(UnsupportedEncodingException uee) {
+			return Response.status(500).entity(uee.getMessage()).build();
 		}
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
 	}
 
 	@GET
-	@Path("/adduric")
+	@Path("/adduric/{owner}/{username}/{password}/{uri}")
 	@Produces("text/plain")
-	public Response getHttpUrlC(@DefaultValue("") @QueryParam("uri") String uri, @DefaultValue("") @QueryParam("owner") String owner,
-		@DefaultValue("") @QueryParam("username") String username, @DefaultValue("") @QueryParam("password") String password) {
+	public Response getHttpUrlC(@DefaultValue("") @PathParam("uri") String uri, @DefaultValue("") @PathParam("owner") String owner,
+		@DefaultValue("") @PathParam("username") String username, @DefaultValue("") @PathParam("password") String password) {
 		try {
 			if (uri.length() > 0 && owner.length() > 0 && username.length() > 0 && password.length() > 0) {
-				String decodedUri = (new URLCodec()).decode(uri);
-				String response = OAria.processRequest(decodedUri, owner, true, username, password);
+				String decodedURL = URLDecoder.decode(uri, "UTF-8");
+				//String decodedUri = (new URLCodec()).decode(uri);
+				String response = OAria.processRequest(decodedURL, owner, true, username, password);
 				return Response.status(200).entity(response).build();
 			}
-		} catch(DecoderException de) {
+		} /*catch(DecoderException de) {
 			return Response.status(400).entity(de.getMessage()).build();
+		}*/catch(UnsupportedEncodingException uee) {
+			return Response.status(500).entity(uee.getMessage()).build();
 		}
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER-OR-USERNAME-PASSWORD-ERROR").build();
 	}
@@ -146,7 +156,7 @@ public class FluxoWSProcess {
 	    @DefaultValue("0") @PathParam("cat") String cats) {
 		try {
 			if (searchTerm.length() > 0) {
-				URLCodec ucodec = new URLCodec();
+				//URLCodec ucodec = new URLCodec();
 				//String decodedTerm = ucodec.decode(searchTerm);
 				int[] arrCats;
 				if (cats.length() > 0 && cats.contains(",")) {
