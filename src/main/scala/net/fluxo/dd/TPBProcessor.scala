@@ -9,6 +9,7 @@ import net.fluxo.dd.dbo.{TPBPage, TPBObject}
 import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
+import org.apache.log4j.Level
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -107,9 +108,13 @@ class TPBProcessor {
 		}
 		if (categories endsWith ",") categories delete(categories.length - 1, categories.length)
 		request = request replaceAllLiterally ("[filter]", categories toString())
+		// DEBUG
+		LogWriter writeLog("TPB->Sending " + request, Level.DEBUG)
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
 			val response = OUtils crawlServer request
+			// DEBUG
+			LogWriter writeLog("TPB<-Received: " + response, Level.DEBUG)
 			val document = Jsoup parse response
 			val totalItems = queryTotalItemsFound(document)
 			val itemList = parseItems(document)
