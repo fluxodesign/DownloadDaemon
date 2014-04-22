@@ -330,7 +330,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								if (mainFile exists()) OUtils deleteFile mainFile
 								val ariaFile = new File(((t TaskPackage) getOrElse "") + ".aria2")
 								if (ariaFile exists()) OUtils deleteFile ariaFile
-								"OK " + ((t TaskGID) getOrElse "") + " KILLED"
+								return "OK " + ((t TaskGID) getOrElse "") + " KILLED"
 							}
 						}
 						"NOT FOUND"
