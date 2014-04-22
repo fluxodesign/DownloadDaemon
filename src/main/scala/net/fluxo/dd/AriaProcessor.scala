@@ -7,6 +7,7 @@ import org.joda.time.DateTime
 import org.apache.log4j.Level
 import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FilenameUtils
+import java.io.{BufferedReader, InputStreamReader}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -106,6 +107,13 @@ class AriaProcessor {
 						"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
 						"--gid=" + gid, "--seed-ratio=0.1", uri).start()
 				}
+			}
+
+			val br = new BufferedReader(new InputStreamReader(process.getInputStream))
+			var line = br readLine()
+			while (line != null) {
+				LogWriter writeLog("ARIA2: " + line, Level.INFO)
+				line = br readLine()
 			}
 
 			if (!restarting) {
