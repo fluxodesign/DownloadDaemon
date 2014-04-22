@@ -2,9 +2,11 @@ package net.fluxo.dd
 
 import java.net.URL
 import java.io.File
-import org.json.simple.{JSONValue, JSONArray}
+import org.json.simple.{JSONObject, JSONValue, JSONArray}
 import org.apache.commons.io.FilenameUtils
-import net.fluxo.dd.dbo.YIFYSearchResult
+import net.fluxo.dd.dbo.{YIFYCache, YIFYSearchResult}
+import org.apache.log4j.Level
+import org.json.simple.parser.JSONParser
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -31,6 +33,7 @@ class YIFYProcessor {
 		if (rating >= 0 && rating <= 9) request.append("&rating=" + rating)
 		// send the request...
 		val response = OUtils crawlServer (request toString())
+		checkEntryWithYIFYCache(response)
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR NO LIST"
 		processImages(response, externalIP, port)
 	}
@@ -123,6 +126,32 @@ class YIFYProcessor {
 			}
 		}
 		newContent
+	}
+
+	private def checkEntryWithYIFYCache(raw: String) {
+		val jsonParser = new JSONParser
+		try {
+			val obj = (jsonParser parse raw).asInstanceOf[JSONObject]
+			val iterator = (obj get "MovieList").asInstanceOf[JSONArray] iterator()
+			while (iterator.hasNext) {
+				val o = (iterator next()).asInstanceOf[JSONObject]
+				val yifyCache = new YIFYCache
+				yifyCache.MovieID_:((o get "MovieID").asInstanceOf[String].toInt)
+				yifyCache.MovieTitle_:((o get "MovieTitleClean").asInstanceOf[String])
+				yifyCache.MovieYear_:((o get "MovieYear").asInstanceOf[String])
+				yifyCache.MovieQuality_:((o get "Quality").asInstanceOf[String])
+				yifyCache.MovieSize_:((o get "Size").asInstanceOf[String])
+				yifyCache.MovieCoverImage_:((o get "CoverImage").asInstanceOf[String])
+
+				if (!(DbControl ycQueryMovieID(yifyCache MovieID))) {
+					DbControl ycInsertNewData yifyCache
+				}
+			}
+		} catch {
+			case jse: Exception =>
+				LogWriter writeLog("Error parsing JSON from YIFY movie list", Level.ERROR)
+				LogWriter writeLog(jse.getMessage, Level.ERROR)
+		}
 	}
 
 	class WgetImage(url: String, location: String) extends Runnable {

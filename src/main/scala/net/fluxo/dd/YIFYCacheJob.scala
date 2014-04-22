@@ -80,7 +80,7 @@ class YCache extends Callable[String] {
 
 		totalItemsInDb = DbControl ycQueryCount()
 		// if totalItemsInDb does not match total items returned by server then crawl the result
-		if (totalItemsInDb != totalItemsReported) crawlAndMatch(totalItemsReported, jsonParser)
+		//if (totalItemsInDb != totalItemsReported) crawlAndMatch(totalItemsReported, jsonParser)
 		"OK"
 	}
 
@@ -105,35 +105,6 @@ class YCache extends Callable[String] {
 		} catch {
 			case jse: Exception =>
 				LogWriter writeLog("Error populating YIFY cache db", Level.ERROR)
-				LogWriter writeLog(jse.getMessage, Level.ERROR)
-		}
-	}
-
-	private def crawlAndMatch(totalPageReported: Long, jsonParser: JSONParser) {
-		var isForward = true
-		var pageForward = 1
-		var pageBackward = -1
-		var totalPageNo = (totalPageReported / 50).asInstanceOf[Int]
-		try {
-			if (totalPageReported % 50 > 0) totalPageNo += 1
-			pageBackward = totalPageNo
-			while (pageForward != pageBackward) {
-				if (isForward) _pageNo = pageForward
-				else _pageNo = pageBackward
-				LogWriter writeLog("SWEEPING: Proecessing page " + _pageNo, Level.INFO)
-				val response = YIFYP procYIFYCache _pageNo
-				processEntry(response, jsonParser)
-				if (isForward) {
-					pageForward += 1
-					isForward = false
-				} else {
-					pageBackward -= 1
-					isForward = true
-				}
-			}
-		} catch {
-			case jse: Exception =>
-				LogWriter writeLog("Error while trying to do crawl and match", Level.ERROR)
 				LogWriter writeLog(jse.getMessage, Level.ERROR)
 		}
 	}
