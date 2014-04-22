@@ -47,7 +47,7 @@ class YCache extends Callable[String] {
 	override def call(): String = {
 		var totalItemsReported = 0L
 		val jsonParser = new JSONParser
-		var totalItemsInDb = DbControl ycQueryCount()
+		val totalItemsInDb = DbControl ycQueryCount()
 		if (totalItemsInDb == 0) populateDb()
 		else {
 			_pageNo += 1
@@ -78,9 +78,6 @@ class YCache extends Callable[String] {
 			}
 		}
 
-		totalItemsInDb = DbControl ycQueryCount()
-		// if totalItemsInDb does not match total items returned by server then crawl the result
-		//if (totalItemsInDb != totalItemsReported) crawlAndMatch(totalItemsReported, jsonParser)
 		"OK"
 	}
 

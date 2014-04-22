@@ -158,6 +158,8 @@ class AriaProcessor {
 							val path = OUtils.extractValueFromHashMap(files, "path").asInstanceOf[String]
 							task.TaskPackage_=(FilenameUtils.getName(path))
 						}
+						val progress = (task.TaskCompletedLength * 100)/task.TaskTotalLength
+						LogWriter writeLog ("UPDATE: " + ((task TaskPackage) getOrElse "") + " --> " + progress + "%", Level.INFO)
 						DbControl.updateTask(task)
 					}
 				}
