@@ -2,7 +2,7 @@ package net.fluxo.dd
 
 import net.fluxo.dd.dbo.{YIFYSearchResult, MovieObject, Config}
 import java.util.{Random, Properties}
-import java.io.{InputStreamReader, BufferedReader, IOException, FileInputStream}
+import java.io._
 import org.apache.log4j.Level
 import java.net.{MalformedURLException, URL, ServerSocket}
 import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
@@ -15,6 +15,7 @@ import scala.util.control.Breaks._
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
 import org.json.simple.{JSONArray, JSONValue, JSONObject}
+import scala.Some
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -67,6 +68,29 @@ class Utils {
 			}
 		}
 		ret
+	}
+
+	def deleteFile(file: File) {
+		try {
+			if (file.isDirectory) {
+				if ((file list() length) == 0) file delete()
+				else {
+					val fileList = file list()
+					for (fl <- fileList) {
+						val f = new File(file, fl)
+						deleteFile(f)
+					}
+					if ((file list() length) == 0) file delete()
+				}
+			} else {
+				file delete()
+			}
+		} catch {
+			case ioe: IOException =>
+				LogWriter writeLog("Error deleting file " + file.getName, Level.ERROR)
+				LogWriter writeLog(ioe.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ioe, Level.ERROR)
+		}
 	}
 
 	def portInUse(port: Int): Boolean = {

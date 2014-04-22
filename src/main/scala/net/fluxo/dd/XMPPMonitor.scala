@@ -6,7 +6,7 @@ import org.joda.time.DateTime
 import org.jivesoftware.smack.packet.{Presence, Message}
 import net.fluxo.dd.dbo.Task
 import org.apache.commons.validator.routines.IntegerValidator
-import java.io.{InputStreamReader, BufferedReader}
+import java.io.{File, InputStreamReader, BufferedReader}
 import org.apache.commons.codec.net.URLCodec
 
 /**
@@ -317,6 +317,23 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						}
 						if (tasks.length == 0) sb.append("No active tasks are running!")
 						sb.toString()
+					}
+				case "DELETE" =>
+					if (words.length < 3) "ERR LENGTH"
+					else {
+						val arrayUnfinishedTasks: Array[Task] = DbControl.queryUnfinishedTasks()
+						for (t <- arrayUnfinishedTasks) {
+							if ((t TaskGID) getOrElse "" equals words(2)) {
+								DbControl removeTask words(2)
+								// DELETE the files associated with this download
+								val mainFile = new File((t TaskPackage) getOrElse "")
+								if (mainFile exists()) OUtils deleteFile mainFile
+								val ariaFile = new File(((t TaskPackage) getOrElse "") + ".aria2")
+								if (ariaFile exists()) OUtils deleteFile ariaFile
+								"OK " + ((t TaskGID) getOrElse "") + " KILLED"
+							}
+						}
+						"NOT FOUND"
 					}
 				case "YIFY" =>
 					// the next command should be "LIST" or " DETAILS"

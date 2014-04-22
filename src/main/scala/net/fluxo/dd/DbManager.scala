@@ -295,6 +295,21 @@ class DbManager {
 		mlist.toArray
 	}
 
+	def removeTask(taskGID: String) {
+		val queryStatement = """DELETE FROM input WHERE GID = ?"""
+		try {
+			val ps = _conn.prepareStatement(queryStatement)
+			ps.setString(1, taskGID)
+			ps.executeUpdate()
+			ps.close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error deleting unfinished task " + taskGID, Level.ERROR)
+				LogWriter writeLog(ex getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString(ex), Level.ERROR)
+		}
+	}
+
 	def queryTaskTailGID(tailGid: String): Task = {
 		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ?"""
 		val t = new Task
