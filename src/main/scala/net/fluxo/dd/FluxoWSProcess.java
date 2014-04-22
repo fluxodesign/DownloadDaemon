@@ -98,13 +98,10 @@ public class FluxoWSProcess {
 		try {
 			if (uri.length() > 0 && owner.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
-				//String decodedUri = (new URLCodec()).decode(uri);
 				String response = OAria.processRequest(decodedURL, owner, false, "", "");
 				return Response.status(200).entity(response).build();
 			}
-		} /*catch (DecoderException de) {
-			return Response.status(400).entity(de.getMessage()).build();
-		}*/ catch(UnsupportedEncodingException uee) {
+		} catch(UnsupportedEncodingException uee) {
 			return Response.status(500).entity(uee.getMessage()).build();
 		}
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
@@ -137,13 +134,10 @@ public class FluxoWSProcess {
 		try {
 			if (uri.length() > 0 && owner.length() > 0 && username.length() > 0 && password.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
-				//String decodedUri = (new URLCodec()).decode(uri);
 				String response = OAria.processRequest(decodedURL, owner, true, username, password);
 				return Response.status(200).entity(response).build();
 			}
-		} /*catch(DecoderException de) {
-			return Response.status(400).entity(de.getMessage()).build();
-		}*/catch(UnsupportedEncodingException uee) {
+		} catch(UnsupportedEncodingException uee) {
 			return Response.status(500).entity(uee.getMessage()).build();
 		}
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER-OR-USERNAME-PASSWORD-ERROR").build();
@@ -156,8 +150,8 @@ public class FluxoWSProcess {
 	    @DefaultValue("0") @PathParam("cat") String cats) {
 		try {
 			if (searchTerm.length() > 0) {
-				//URLCodec ucodec = new URLCodec();
-				//String decodedTerm = ucodec.decode(searchTerm);
+				URLCodec ucodec = new URLCodec();
+				String decodedTerm = ucodec.decode(searchTerm);
 				int[] arrCats;
 				if (cats.length() > 0 && cats.contains(",")) {
 					StringTokenizer tokenizer = new StringTokenizer(cats, ",");
@@ -171,7 +165,7 @@ public class FluxoWSProcess {
 				} else {
 					arrCats = new int[]{ Integer.parseInt(cats) };
 				}
-				String response = TPBP.query(searchTerm, page, arrCats);
+				String response = TPBP.query(decodedTerm, page, arrCats);
 				return Response.status(200).entity(response).build();
 			}
 		} catch (Exception e) {
