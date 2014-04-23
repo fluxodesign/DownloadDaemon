@@ -290,9 +290,18 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					if ((response length) % CHAR_LIMIT > 0) chunks += 1
 					var marker = 0
 					while (marker < chunks - 1) {
-						val substring = response substring(marker*CHAR_LIMIT, (marker+1)*CHAR_LIMIT)
+						val start = marker * CHAR_LIMIT
+						val end = {
+							if ((marker + 1) * CHAR_LIMIT > (response length)) response.length
+							else (marker + 1) * CHAR_LIMIT
+						}
+						val substring = response substring(start, end)
 						chat sendMessage substring
 						marker += 1
+						try { Thread sleep 1000 }
+						catch {
+							case ie: InterruptedException =>
+						}
 					}
 
 					_isTPBSearch = false
