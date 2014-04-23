@@ -380,8 +380,6 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 										val ucodec = new URLCodec
 										ucodec decode words(3) substring("ST=" length) replaceAllLiterally("\"", "")
 									}
-									// DEBUG
-									LogWriter writeLog ("DEBUG->YIFY SEARCH: " + (YIFYP procYIFYSearch searchTerm), Level.DEBUG)
 									YIFYP procYIFYSearch searchTerm
 								}
 							case _  => "ERR CMD"

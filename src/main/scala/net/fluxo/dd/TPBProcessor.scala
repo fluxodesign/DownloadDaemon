@@ -108,8 +108,6 @@ class TPBProcessor {
 		}
 		if (categories endsWith ",") categories delete(categories.length - 1, categories.length)
 		request = request replaceAllLiterally ("[filter]", categories toString())
-		// DEBUG
-		LogWriter writeLog("TPB->Sending " + request, Level.DEBUG)
 		// make sure that tpb is active and hand it over to jsoup
 		if (isSiteAlive) {
 			val response = OUtils crawlServer request
@@ -119,12 +117,8 @@ class TPBProcessor {
 			val tpbPage = new TPBPage
 			tpbPage.TotalItems_:(totalItems)
 			tpbPage.TPBItems_:(itemList)
-			// DEBUG
-			LogWriter writeLog("TPB total items: " + tpbPage.TotalItems, Level.DEBUG)
 			val gson = new Gson()
 			sb.append(gson toJson tpbPage)
-			// DEBUG
-			LogWriter writeLog("TPB items: " + sb.toString(), Level.DEBUG)
 		}
 		sb.toString()
 	}
@@ -214,9 +208,7 @@ class TPBProcessor {
 					}
 					t.Leechers_:(lc)
 					// add the "t" to ListBuffer
-					// DEBUG
-					if ((list size()) <= 5){ list add t }
-					//list add t
+					list add t
 				}
 			}
 		}

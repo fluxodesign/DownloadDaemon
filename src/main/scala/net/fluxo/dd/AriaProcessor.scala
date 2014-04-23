@@ -109,12 +109,13 @@ class AriaProcessor {
 				}
 			}
 
-			val br = new BufferedReader(new InputStreamReader(process.getInputStream))
+			// For DEBUG purposes only, to read ARIA2 output...
+			/*val br = new BufferedReader(new InputStreamReader(process.getInputStream))
 			var line = br readLine()
 			while (line != null) {
 				LogWriter writeLog("ARIA2: " + line, Level.INFO)
 				line = br readLine()
-			}
+			}*/
 
 			if (!restarting) {
 				DbControl.addTask(new Task {
