@@ -10,6 +10,8 @@ import java.util
  */
 class TPBPage {
 
+	private val SearchResult = "TPB"
+
 	private var _totalItems: Int = 0
 
 	def TotalItems: Int = _totalItems

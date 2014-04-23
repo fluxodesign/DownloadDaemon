@@ -277,10 +277,26 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 	}
 
 	class XMPPMessageListener extends MessageListener {
+		private var _isTPBSearch: Boolean = false
+
 		def processMessage(chat: Chat, message: Message) {
 			if (message != null && message.getBody != null) {
 				val response: String = parseMessage(message.getBody)
-				chat.sendMessage(response)
+				if (!_isTPBSearch) chat.sendMessage(response)
+				else {
+					// split the response into 4,000 chars blocks and send...
+					val CHAR_LIMIT = 4000
+					var chunks = (response length) / CHAR_LIMIT
+					if ((response length) % CHAR_LIMIT > 0) chunks += 1
+					var marker = 0
+					while (marker < chunks - 1) {
+						val substring = response substring(marker*CHAR_LIMIT, (marker+1)*CHAR_LIMIT)
+						chat sendMessage substring
+						marker += 1
+					}
+
+					_isTPBSearch = false
+				}
 			}
 		}
 
@@ -421,6 +437,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								} else Array[Int]()
 							}
 
+							_isTPBSearch = true
 							TPBP query(searchTerm, page, cat)
 						}
 					}
