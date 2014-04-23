@@ -289,7 +289,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					var chunks = (response length) / CHAR_LIMIT
 					if ((response length) % CHAR_LIMIT > 0) chunks += 1
 					var marker = 0
-					while (marker < chunks - 1) {
+					while (marker < chunks) {
 						val start = marker * CHAR_LIMIT
 						val end = {
 							if ((marker + 1) * CHAR_LIMIT > (response length)) response.length
