@@ -215,7 +215,7 @@ class TPBProcessor {
 					t.Leechers_:(lc)
 					// add the "t" to ListBuffer
 					// DEBUG
-					if ((list size()) <= 15){ list add t }
+					if ((list size()) <= 5){ list add t }
 					//list add t
 				}
 			}
