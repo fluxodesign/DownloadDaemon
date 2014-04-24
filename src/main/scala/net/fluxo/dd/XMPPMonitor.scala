@@ -295,7 +295,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 							if ((marker + 1) * CHAR_LIMIT > (response length)) response.length
 							else (marker + 1) * CHAR_LIMIT
 						}
-						val substring = (marker+1) + "/" + chunks + ":::" + response substring(start, end)
+						val substring = (marker+1) + "/" + chunks + ":::" + (response substring(start, end))
 						chat sendMessage substring
 						marker += 1
 						try { Thread sleep 1000 }
