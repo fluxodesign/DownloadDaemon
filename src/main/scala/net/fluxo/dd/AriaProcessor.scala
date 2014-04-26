@@ -49,7 +49,11 @@ class AriaProcessor {
 				if (o.AriaPort == port) {
 					val process = o.AriaProcess.getOrElse(null)
 					o.AriaTaskRestarting_=(value = true)
-					process.destroy()
+					if (o.AriaTaskPID > 0) {
+						LogWriter writeLog("Killing ARIA process with PID " + o.AriaTaskPID, Level.INFO)
+						val killProcess = new ProcessBuilder("kill", "-9", o.AriaTaskPID.asInstanceOf[String]).start()
+						killProcess waitFor()
+					} else process.destroy()
 					iterator.remove()
 					break()
 				}
@@ -108,21 +112,21 @@ class AriaProcessor {
 				}
 			}
 
-			val taskPid = {
+			val taskPid: Int = {
+				var retVal = -1
 				if ((process getClass).getName.equals("java.lang.UNIXProcess")) {
-					try {
+					try
 						val field = (process getClass).getDeclaredField("pid")
 						field setAccessible true
-						field getInt process
-					} catch {
-						case e: Exception => -1
+						retVal = field getInt process
+						// DEBUG
+						LogWriter writeLog("ARIA PID: " + taskPid, Level.DEBUG)
+					catch {
+						case e: Exception =>
 					}
 				}
-				-1
+				retVal
 			}
-
-			// DEBUG
-			LogWriter writeLog("ARIA PID: " + taskPid, Level.DEBUG)
 
 			// For DEBUG purposes only, to read ARIA2 output...
 			/*val br = new BufferedReader(new InputStreamReader(process.getInputStream))
