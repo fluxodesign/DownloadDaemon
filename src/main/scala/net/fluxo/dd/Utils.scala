@@ -16,6 +16,7 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
 import org.json.simple.{JSONArray, JSONValue, JSONObject}
 import scala.Some
+import java.util.concurrent.TimeUnit
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -134,6 +135,19 @@ class Utils {
 				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
 		}
 		response toString()
+	}
+
+	def killZombie(pid: Int) {
+		val finished = false
+		val rt = Runtime.getRuntime
+		val arrCmdKill:Array[String] = Array("kill", "-9", pid.asInstanceOf[String])
+		val arrCmdCheck: Array[String] = Array("kill", "-s ")
+		while (!finished) {
+			val process = rt.exec(arrCmdKill)
+			val processExitVal = process waitFor(5, TimeUnit.SECONDS)
+			LogWriter writeLog("Killing ARIA2 task with PID " + pid + ": " + processExitVal, Level.INFO)
+			// now check if pid x still available...
+		}
 	}
 
 	def stringToMovieObject(raw: String):MovieObject = {
