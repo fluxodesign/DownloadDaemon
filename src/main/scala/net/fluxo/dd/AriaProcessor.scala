@@ -120,7 +120,7 @@ class AriaProcessor {
 						field setAccessible true
 						retVal = field getInt process
 						// DEBUG
-						LogWriter writeLog("ARIA PID: " + taskPid, Level.DEBUG)
+						LogWriter writeLog("ARIA PID: " + retVal, Level.DEBUG)
 					} catch {
 						case e: Exception =>
 					}
