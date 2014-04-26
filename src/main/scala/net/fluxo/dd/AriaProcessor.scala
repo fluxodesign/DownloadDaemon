@@ -7,7 +7,6 @@ import org.joda.time.DateTime
 import org.apache.log4j.Level
 import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FilenameUtils
-import java.io.{BufferedReader, InputStreamReader}
 
 /**
  * User: Ronald Kurniawan (viper)
