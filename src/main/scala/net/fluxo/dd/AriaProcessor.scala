@@ -55,6 +55,9 @@ class AriaProcessor {
 				}
 			}
 		}
+		// now kill the Aria processes...
+		val process = new ProcessBuilder("pkill", "aria2c").start();
+		process.waitFor();
 	}
 
 	def restartDownloads() {

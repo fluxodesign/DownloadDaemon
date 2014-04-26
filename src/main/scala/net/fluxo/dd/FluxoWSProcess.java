@@ -118,9 +118,7 @@ public class FluxoWSProcess {
 				String response = OAria.processRequest(decodedURL, owner, true, "", "");
 				return Response.status(200).entity(response).build();
 			}
-		} /*catch(DecoderException de) {
-			return Response.status(400).entity(de.getMessage()).build();
-		}*/ catch(UnsupportedEncodingException uee) {
+		} catch(UnsupportedEncodingException uee) {
 			return Response.status(500).entity(uee.getMessage()).build();
 		}
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
