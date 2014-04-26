@@ -43,6 +43,8 @@ class AriaProcessor {
 
 	def killProcess(port: Int) {
 		val iterator = ActiveProcesses.iterator()
+		// DEBUG
+		LogWriter writeLog ("ActiveProcesses has " + ActiveProcesses.size() + " item(s)", Level.DEBUG)
 		breakable {
 			while (iterator.hasNext) {
 				val o = iterator.next()
