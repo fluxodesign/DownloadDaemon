@@ -138,15 +138,18 @@ class Utils {
 	}
 
 	def killZombie(pid: Int) {
-		val finished = false
-		val rt = Runtime.getRuntime
-		val arrCmdKill:Array[String] = Array("kill", "-9", pid.asInstanceOf[String])
-		val arrCmdCheck: Array[String] = Array("kill", "-s ")
+		var finished = false
+		val cmdKill: String = "kill -9 " + pid.asInstanceOf[String]
+		val cmdCheckPID: String = "kill -s 0 " + pid.asInstanceOf[String]
+
 		while (!finished) {
-			val process = rt.exec(arrCmdKill)
-			val processExitVal = process waitFor(5, TimeUnit.SECONDS)
+			val process = new ProcessBuilder(cmdKill) start()
+			var processExitVal = process waitFor(5, TimeUnit.SECONDS)
 			LogWriter writeLog("Killing ARIA2 task with PID " + pid + ": " + processExitVal, Level.INFO)
 			// now check if pid x still available...
+			val checkProcess = new ProcessBuilder(cmdCheckPID) start()
+			processExitVal = checkProcess waitFor(5, TimeUnit.SECONDS)
+			if (processExitVal) finished = true
 		}
 	}
 

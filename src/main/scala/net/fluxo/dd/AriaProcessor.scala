@@ -53,9 +53,7 @@ class AriaProcessor {
 				if (o.AriaTaskPID > 0) {
 					process destroy()
 					LogWriter writeLog("Killing ARIA2 process with PID " + o.AriaTaskPID, Level.INFO)
-					val killProcess = new ProcessBuilder("kill", "-9", o.AriaTaskPID.asInstanceOf[String]).start()
-					val exitValue = killProcess waitFor()
-					LogWriter writeLog("Kill exit value: " + exitValue, Level.INFO)
+					OUtils killZombie o.AriaTaskPID
 				}
 				iterator remove()
 			}
