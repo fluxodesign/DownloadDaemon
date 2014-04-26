@@ -115,13 +115,13 @@ class AriaProcessor {
 			val taskPid: Int = {
 				var retVal = -1
 				if ((process getClass).getName.equals("java.lang.UNIXProcess")) {
-					try
+					try {
 						val field = (process getClass).getDeclaredField("pid")
 						field setAccessible true
 						retVal = field getInt process
 						// DEBUG
 						LogWriter writeLog("ARIA PID: " + taskPid, Level.DEBUG)
-					catch {
+					} catch {
 						case e: Exception =>
 					}
 				}
