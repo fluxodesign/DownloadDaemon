@@ -55,9 +55,6 @@ class AriaProcessor {
 				}
 			}
 		}
-		// now kill the Aria processes...
-		val process = new ProcessBuilder("pkill", "aria2c").start();
-		process.waitFor();
 	}
 
 	def restartDownloads() {
@@ -111,6 +108,22 @@ class AriaProcessor {
 				}
 			}
 
+			val taskPid = {
+				if ((process getClass).getName.equals("java.lang.UNIXProcess")) {
+					try {
+						val field = (process getClass).getDeclaredField("pid")
+						field setAccessible true
+						field getInt process
+					} catch {
+						case e: Exception => -1
+					}
+				}
+				-1
+			}
+
+			// DEBUG
+			LogWriter writeLog("ARIA PID: " + taskPid, Level.DEBUG)
+
 			// For DEBUG purposes only, to read ARIA2 output...
 			/*val br = new BufferedReader(new InputStreamReader(process.getInputStream))
 			var line = br readLine()
@@ -138,6 +151,7 @@ class AriaProcessor {
 				AriaTaskGid_=(gid)
 				AriaTaskRestarting_=(restarting)
 				AriaHttpDownload_=(isHttp)
+				AriaTaskPID_=(taskPid)
 			})
 			// set all necessary parameters if this is an HTTP download...
 			if (isHttp) {
