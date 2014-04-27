@@ -20,6 +20,10 @@ class AriaProcessor {
 	def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
 
 	def processRequest(uri: String, owner: String, isHttp: Boolean, httpUsername: String, httpPassword: String): String = {
+		// the uri should always starts with "magnet:" or ends with ".torrent"
+		if (!(uri startsWith "magnet:") && !(uri endsWith ".torrent")) {
+			return "ERR URI"
+		}
 		// find a free port between starting rpc port to (starting rpc port + limit)
 		var rpcPort = -1
 		breakable {
@@ -42,10 +46,11 @@ class AriaProcessor {
 	}
 
 	def killProcess(port: Int) {
-		val iterator = ActiveProcesses.iterator()
+		ActiveProcesses.clear()
+		//val iterator = ActiveProcesses.iterator()
 		// DEBUG
 		LogWriter writeLog ("ActiveProcesses has " + ActiveProcesses.size() + " item(s)", Level.DEBUG)
-		synchronized {
+		/*synchronized {
 			var index = 0
 			// DEBUG
 			LogWriter writeLog("Inside synchronized...", Level.DEBUG)
@@ -66,7 +71,7 @@ class AriaProcessor {
 				}
 				index += 1
 			}
-		}
+		}*/
 	}
 
 	def restartDownloads() {
