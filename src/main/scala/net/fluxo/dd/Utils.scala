@@ -144,7 +144,7 @@ class Utils {
 		LogWriter writeLog("About to KILL ZOMBIE!", Level.DEBUG)
 
 		//while (!finished) {
-			LogWriter writeLog("Killing ARIA2 task with PID " + pid, Level.INFO)
+			LogWriter writeLog("Killing ARIA2 task", Level.INFO)
 			val process = new ProcessBuilder("bash", "-c", cmdKill) start()
 			val reader = new BufferedReader(new InputStreamReader(process getInputStream))
 			var line = reader readLine()
