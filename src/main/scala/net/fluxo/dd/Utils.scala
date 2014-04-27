@@ -144,12 +144,12 @@ class Utils {
 
 		while (!finished) {
 			val process = new ProcessBuilder(cmdKill) start()
-			var processExitVal = process waitFor(5, TimeUnit.SECONDS)
+			var processExitVal = process waitFor()
 			LogWriter writeLog("Killing ARIA2 task with PID " + pid + ": " + processExitVal, Level.INFO)
 			// now check if pid x still available...
 			val checkProcess = new ProcessBuilder(cmdCheckPID) start()
-			processExitVal = checkProcess waitFor(5, TimeUnit.SECONDS)
-			if (processExitVal) finished = true
+			processExitVal = checkProcess waitFor()
+			if (processExitVal == 0) finished = true
 		}
 	}
 
