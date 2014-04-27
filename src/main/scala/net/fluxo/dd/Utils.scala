@@ -136,9 +136,10 @@ class Utils {
 		response toString()
 	}
 
-	def killZombie() {
+	def killZombie(pid: Int) {
 		//var finished = false
-		val cmdKill: String = "pkill -9 aria2"
+		//val cmdKill: String = "pkill -9 aria2"
+		val cmdKill = "kill -9 " + pid
 		//val cmdCheckPID: String = "kill -s 0 " + pid.asInstanceOf[String]
 		// DEBUG
 		LogWriter writeLog("About to KILL ZOMBIE!", Level.DEBUG)

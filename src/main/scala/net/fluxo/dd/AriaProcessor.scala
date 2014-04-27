@@ -45,20 +45,24 @@ class AriaProcessor {
 		"OK " + newGid
 	}
 
-	def killProcess() {
-		/*val iterator = ActiveProcesses iterator()
-		while (iterator.hasNext) {
-			val o = iterator.next()
-			if (o.AriaTaskPID > 0) {
-				OUtils killZombie o.AriaTaskPID
+	def killProcess(port: Int) {
+		val iterator = ActiveProcesses iterator()
+		breakable {
+			while (iterator.hasNext) {
+				val o = iterator.next()
+				if (o.AriaPort == port) {
+					o NullifyProcess()
+					OUtils killZombie(o.AriaTaskPID)
+					break
+				}
 			}
-		}*/
+		}
 		// DEBUG
-		LogWriter writeLog ("HIHI!", Level.DEBUG)
+		/*LogWriter writeLog ("HIHI!", Level.DEBUG)
 		OUtils killZombie()
 		// DEBUG
-		LogWriter writeLog ("HAHA!", Level.DEBUG)
-		ActiveProcesses.clear()
+		LogWriter writeLog ("HAHA!", Level.DEBUG)*/
+		//ActiveProcesses.clear()
 		//val iterator = ActiveProcesses.iterator()
 		// DEBUG
 		LogWriter writeLog ("ActiveProcesses has " + ActiveProcesses.size() + " item(s)", Level.DEBUG)
