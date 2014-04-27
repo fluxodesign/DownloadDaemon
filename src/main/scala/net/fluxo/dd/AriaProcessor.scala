@@ -47,8 +47,12 @@ class AriaProcessor {
 		LogWriter writeLog ("ActiveProcesses has " + ActiveProcesses.size() + " item(s)", Level.DEBUG)
 		synchronized {
 			var index = 0
+			// DEBUG
+			LogWriter writeLog("Inside synchronized...", Level.DEBUG)
 			while (iterator.hasNext) {
 				val o = iterator.next()
+				// DEBUG
+				LogWriter writeLog("--> " + o.AriaPort, Level.DEBUG)
 				if (o.AriaPort == port) {
 					val process = o.AriaProcess.getOrElse(null)
 					o.AriaTaskRestarting_=(value = true)
