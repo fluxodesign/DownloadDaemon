@@ -150,6 +150,7 @@ class Utils {
 			val checkProcess = new ProcessBuilder(cmdCheckPID) start()
 			processExitVal = checkProcess waitFor()
 			if (processExitVal == 0) finished = true
+			else LogWriter writeLog("Task with PID " + pid + " still exists!", Level.INFO)
 		}
 	}
 
