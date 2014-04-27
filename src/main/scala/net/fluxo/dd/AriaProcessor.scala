@@ -45,49 +45,13 @@ class AriaProcessor {
 		"OK " + newGid
 	}
 
-	def killProcess(port: Int) {
-		val iterator = ActiveProcesses iterator()
-		breakable {
-			while (iterator.hasNext) {
-				val o = iterator.next()
-				if (o.AriaPort == port) {
-					o NullifyProcess()
-					OUtils killZombie(o.AriaTaskPID)
-					break
-				}
-			}
-		}
+	def killProcess() {
 		// DEBUG
-		/*LogWriter writeLog ("HIHI!", Level.DEBUG)
+		LogWriter writeLog ("HIHI!", Level.DEBUG)
 		OUtils killZombie()
 		// DEBUG
-		LogWriter writeLog ("HAHA!", Level.DEBUG)*/
-		//ActiveProcesses.clear()
-		//val iterator = ActiveProcesses.iterator()
-		// DEBUG
-		LogWriter writeLog ("ActiveProcesses has " + ActiveProcesses.size() + " item(s)", Level.DEBUG)
-		/*synchronized {
-			var index = 0
-			// DEBUG
-			LogWriter writeLog("Inside synchronized...", Level.DEBUG)
-			while (iterator.hasNext) {
-				val o = iterator.next()
-				// DEBUG
-				LogWriter writeLog("--> " + o.AriaPort, Level.DEBUG)
-				if (o.AriaPort == port) {
-					val process = o.AriaProcess.getOrElse(null)
-					o.AriaTaskRestarting_=(value = true)
-					if (o.AriaTaskPID > 0) {
-						process destroy()
-						o NullifyProcess()
-						LogWriter writeLog("Killing ARIA2 process with PID " + o.AriaTaskPID, Level.INFO)
-						OUtils killZombie o.AriaTaskPID
-					}
-					iterator remove()
-				}
-				index += 1
-			}
-		}*/
+		LogWriter writeLog ("HAHA!", Level.DEBUG)
+		ActiveProcesses.clear()
 	}
 
 	def restartDownloads() {
