@@ -45,7 +45,7 @@ class AriaProcessor {
 		"OK " + newGid
 	}
 
-	def killProcess(port: Int) {
+	def killProcess() {
 		/*val iterator = ActiveProcesses iterator()
 		while (iterator.hasNext) {
 			val o = iterator.next()
@@ -55,7 +55,7 @@ class AriaProcessor {
 		}*/
 		// DEBUG
 		LogWriter writeLog ("HIHI!", Level.DEBUG)
-		OUtils killZombie port
+		OUtils killZombie()
 		// DEBUG
 		LogWriter writeLog ("HAHA!", Level.DEBUG)
 		ActiveProcesses.clear()
