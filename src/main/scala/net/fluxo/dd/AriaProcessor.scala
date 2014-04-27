@@ -45,17 +45,22 @@ class AriaProcessor {
 		val iterator = ActiveProcesses.iterator()
 		// DEBUG
 		LogWriter writeLog ("ActiveProcesses has " + ActiveProcesses.size() + " item(s)", Level.DEBUG)
-		while (iterator.hasNext) {
-			val o = iterator.next()
-			if (o.AriaPort == port) {
-				val process = o.AriaProcess.getOrElse(null)
-				o.AriaTaskRestarting_=(value = true)
-				if (o.AriaTaskPID > 0) {
-					process destroy()
-					LogWriter writeLog("Killing ARIA2 process with PID " + o.AriaTaskPID, Level.INFO)
-					OUtils killZombie o.AriaTaskPID
+		synchronized {
+			var index = 0
+			while (iterator.hasNext) {
+				val o = iterator.next()
+				if (o.AriaPort == port) {
+					val process = o.AriaProcess.getOrElse(null)
+					o.AriaTaskRestarting_=(value = true)
+					if (o.AriaTaskPID > 0) {
+						process destroy()
+						o NullifyProcess()
+						LogWriter writeLog("Killing ARIA2 process with PID " + o.AriaTaskPID, Level.INFO)
+						OUtils killZombie o.AriaTaskPID
+					}
+					iterator remove()
 				}
-				iterator remove()
+				index += 1
 			}
 		}
 	}

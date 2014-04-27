@@ -16,6 +16,7 @@ class AriaProcess {
 
 	def AriaProcess: Option[Process] = _process
 	def AriaProcess_=(value: Process) { _process = Some(value) }
+	def NullifyProcess() { _process = None }
 
 	private var _gid: Option[String] = None
 
