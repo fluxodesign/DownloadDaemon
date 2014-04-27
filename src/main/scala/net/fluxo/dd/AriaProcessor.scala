@@ -46,13 +46,14 @@ class AriaProcessor {
 	}
 
 	def killProcess(port: Int) {
-		val iterator = ActiveProcesses iterator()
+		/*val iterator = ActiveProcesses iterator()
 		while (iterator.hasNext) {
 			val o = iterator.next()
 			if (o.AriaTaskPID > 0) {
 				OUtils killZombie o.AriaTaskPID
 			}
-		}
+		}*/
+		OUtils killZombie 1000
 		ActiveProcesses.clear()
 		//val iterator = ActiveProcesses.iterator()
 		// DEBUG
