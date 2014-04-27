@@ -17,6 +17,8 @@ class AriaProcessor {
 
 	private val _activeProcesses: util.ArrayList[AriaProcess] = new util.ArrayList
 
+	private var _lastKillTime: Long = 0L
+
 	def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
 
 	def processRequest(uri: String, owner: String, isHttp: Boolean, httpUsername: String, httpPassword: String): String = {
@@ -52,9 +54,11 @@ class AriaProcessor {
 		// DEBUG
 		LogWriter writeLog ("HAHA!", Level.DEBUG)
 		ActiveProcesses.clear()
+		_lastKillTime = (DateTime now()).getMillis
 	}
 
 	def restartDownloads() {
+		if (DateTime.now.getMillis <= (_lastKillTime + 10000)) return
 		val activeTasks = DbControl.queryUnfinishedTasks()
 		if (activeTasks.length > 0) LogWriter.writeLog("Trying to restart " + activeTasks.length + " unfinished downloads...", Level.INFO)
 		var rpcPort = -1
