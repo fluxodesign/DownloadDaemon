@@ -138,7 +138,7 @@ class Utils {
 
 	def killZombie(pid: Int) {
 		var finished = false
-		val cmdKill: String = "kill -9 " + pid.asInstanceOf[String]
+		val cmdKill: String = "pkill -9 aria2"
 		val cmdCheckPID: String = "kill -s 0 " + pid.asInstanceOf[String]
 
 		while (!finished) {

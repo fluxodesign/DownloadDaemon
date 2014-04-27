@@ -54,6 +54,8 @@ class AriaProcessor {
 			}
 		}*/
 		OUtils killZombie 1000
+		// DEBUG
+		LogWriter writeLog ("HAHA!", Level.DEBUG)
 		ActiveProcesses.clear()
 		//val iterator = ActiveProcesses.iterator()
 		// DEBUG
