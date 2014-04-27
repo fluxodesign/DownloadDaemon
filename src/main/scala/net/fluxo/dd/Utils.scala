@@ -140,6 +140,8 @@ class Utils {
 		var finished = false
 		val cmdKill: String = "pkill -9 aria2"
 		val cmdCheckPID: String = "kill -s 0 " + pid.asInstanceOf[String]
+		// DEBUG
+		LogWriter writeLog("About to KILL ZOMBIE!", Level.DEBUG)
 
 		while (!finished) {
 			LogWriter writeLog("Killing ARIA2 task with PID " + pid, Level.INFO)
