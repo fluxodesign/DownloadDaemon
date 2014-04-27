@@ -57,8 +57,12 @@ class AriaProcessor {
 		_lastKillTime = (DateTime now()).getMillis
 	}
 
+	def safeTime(): Boolean = {
+		DateTime.now.getMillis > (_lastKillTime + 10000)
+	}
+
 	def restartDownloads() {
-		if (DateTime.now.getMillis <= (_lastKillTime + 10000)) return
+		if (!safeTime()) return
 		val activeTasks = DbControl.queryUnfinishedTasks()
 		if (activeTasks.length > 0) LogWriter.writeLog("Trying to restart " + activeTasks.length + " unfinished downloads...", Level.INFO)
 		var rpcPort = -1
