@@ -16,7 +16,6 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
 import org.json.simple.{JSONArray, JSONValue, JSONObject}
 import scala.Some
-import java.util.concurrent.TimeUnit
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -143,12 +142,24 @@ class Utils {
 		val cmdCheckPID: String = "kill -s 0 " + pid.asInstanceOf[String]
 
 		while (!finished) {
+			LogWriter writeLog("Killing ARIA2 task with PID " + pid, Level.INFO)
 			val process = new ProcessBuilder(cmdKill) start()
-			var processExitVal = process waitFor()
-			LogWriter writeLog("Killing ARIA2 task with PID " + pid + ": " + processExitVal, Level.INFO)
+			var reader = new BufferedReader(new InputStreamReader(process getInputStream))
+			var line = reader readLine()
+			while (line != null) {
+				LogWriter writeLog(line, Level.INFO)
+				line = reader readLine()
+			}
+			process waitFor()
 			// now check if pid x still available...
 			val checkProcess = new ProcessBuilder(cmdCheckPID) start()
-			processExitVal = checkProcess waitFor()
+			reader = new BufferedReader(new InputStreamReader(checkProcess getInputStream))
+			line = reader readLine()
+			while (line != null) {
+				LogWriter writeLog(line, Level.INFO)
+				line = reader readLine()
+			}
+			val processExitVal = checkProcess waitFor()
 			if (processExitVal == 0) finished = true
 			else LogWriter writeLog("Task with PID " + pid + " still exists!", Level.INFO)
 		}
