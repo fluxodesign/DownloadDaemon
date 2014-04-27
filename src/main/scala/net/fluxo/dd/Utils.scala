@@ -137,17 +137,17 @@ class Utils {
 	}
 
 	def killZombie(pid: Int) {
-		//var finished = false
+		var finished = false
 		//val cmdKill: String = "pkill -9 aria2"
 		val cmdKill = "kill -9 " + pid
-		//val cmdCheckPID: String = "kill -s 0 " + pid.asInstanceOf[String]
+		val cmdCheckPID: String = "kill -s 0 " + pid.asInstanceOf[String]
 		// DEBUG
 		LogWriter writeLog("About to KILL ZOMBIE!", Level.DEBUG)
 
-		//while (!finished) {
+		while (!finished) {
 			LogWriter writeLog("Killing ARIA2 task", Level.INFO)
 			val process = new ProcessBuilder("bash", "-c", cmdKill) start()
-			val reader = new BufferedReader(new InputStreamReader(process getInputStream))
+			var reader = new BufferedReader(new InputStreamReader(process getInputStream))
 			var line = reader readLine()
 			while (line != null) {
 				LogWriter writeLog(line, Level.INFO)
@@ -155,7 +155,7 @@ class Utils {
 			}
 			process waitFor()
 			// now check if pid x still available...
-			/*val checkProcess = new ProcessBuilder("bash", "-c", cmdCheckPID) start()
+			val checkProcess = new ProcessBuilder("bash", "-c", cmdCheckPID) start()
 			reader = new BufferedReader(new InputStreamReader(checkProcess getInputStream))
 			line = reader readLine()
 			while (line != null) {
@@ -164,8 +164,8 @@ class Utils {
 			}
 			val processExitVal = checkProcess waitFor()
 			if (processExitVal == 0) finished = true
-			else LogWriter writeLog("Task with PID " + pid + " still exists!", Level.INFO)*/
-		//}
+			else LogWriter writeLog("Task with PID " + pid + " still exists!", Level.INFO)
+		}
 	}
 
 	def stringToMovieObject(raw: String):MovieObject = {
