@@ -53,7 +53,9 @@ class AriaProcessor {
 				OUtils killZombie o.AriaTaskPID
 			}
 		}*/
-		OUtils killZombie 1000
+		// DEBUG
+		LogWriter writeLog ("HIHI!", Level.DEBUG)
+		OUtils killZombie port
 		// DEBUG
 		LogWriter writeLog ("HAHA!", Level.DEBUG)
 		ActiveProcesses.clear()
