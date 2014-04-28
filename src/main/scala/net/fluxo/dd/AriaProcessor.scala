@@ -51,7 +51,7 @@ class AriaProcessor {
 	def killProcess() {
 		// DEBUG
 		LogWriter writeLog ("HIHI!", Level.DEBUG)
-		while (OUtils isProcessExists()) {
+		while (OUtils isProcessExists) {
 			val p = new ProcessBuilder("bash", "-c", "pkill -9 aria2").start()
 			p waitFor()
 		}
