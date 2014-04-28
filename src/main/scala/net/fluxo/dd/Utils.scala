@@ -136,7 +136,7 @@ class Utils {
 		response toString()
 	}
 
-	def isProcessExists(): Boolean = {
+	def isProcessExists: Boolean = {
 		val p = new ProcessBuilder("bash", "-c", "pgrep aria2").start()
 		val br = new BufferedReader(new InputStreamReader(p getInputStream))
 		val sb = new StringBuilder
