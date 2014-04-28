@@ -136,34 +136,6 @@ class Utils {
 		response toString()
 	}
 
-	def isProcessExists: Boolean = {
-		val p = new ProcessBuilder("bash", "-c", "pgrep aria2").start()
-		val br = new BufferedReader(new InputStreamReader(p getInputStream))
-		val sb = new StringBuilder
-		var line = br readLine()
-		while (line != null) {
-			sb append line
-			line = br readLine()
-		}
-		p.waitFor()
-		((sb toString() trim) length) == 0
-	}
-
-	/*def killZombie() {
-		val cmdKill: String = "pkill -9 aria2"
-		// DEBUG
-		LogWriter writeLog("About to KILL ZOMBIE!", Level.DEBUG)
-
-		val process = new ProcessBuilder("bash", "-c", cmdKill) start()
-		val reader = new BufferedReader(new InputStreamReader(process getInputStream))
-		var line = reader readLine()
-		while (line != null) {
-			LogWriter writeLog(line, Level.INFO)
-			line = reader readLine()
-		}
-		process waitFor()
-	}*/
-
 	def stringToMovieObject(raw: String):MovieObject = {
 		val movie = new MovieObject
 		try {

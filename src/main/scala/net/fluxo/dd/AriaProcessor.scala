@@ -74,7 +74,7 @@ class AriaProcessor {
 		var line = br.readLine
 		while (line != null) {
 			sb append line
-			LogWriter writeLog ("Bash: " + line, Level.INFO)
+			LogWriter writeLog ("bash - pgrep aria2: " + line, Level.INFO)
 			line = br.readLine
 		}
 		((sb toString() trim) length) == 0
