@@ -49,12 +49,12 @@ class AriaProcessor {
 	}
 
 	def killProcess() {
+		safeToRestart()
 		// DEBUG
 		LogWriter writeLog ("HIHI!", Level.DEBUG)
-		while (OUtils isProcessExists) {
-			val p = new ProcessBuilder("bash", "-c", "pkill -9 aria2").start()
-			p waitFor()
-		}
+		val p = new ProcessBuilder("bash", "-c", "pkill -9 aria2").start()
+		p waitFor()
+		safeToRestart()
 		// DEBUG
 		LogWriter writeLog ("HAHA!", Level.DEBUG)
 		LogWriter writeLog("Before deleting, ActiveProcesses: " + ActiveProcesses.size(), Level.DEBUG)
@@ -74,6 +74,7 @@ class AriaProcessor {
 		var line = br.readLine
 		while (line != null) {
 			sb append line
+			LogWriter writeLog ("Bash: " + line, Level.INFO)
 			line = br.readLine
 		}
 		((sb toString() trim) length) == 0
