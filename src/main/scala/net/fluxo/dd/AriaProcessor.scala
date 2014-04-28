@@ -48,6 +48,11 @@ class AriaProcessor {
 	}
 
 	def killProcess() {
+		if (!safeTime()) {
+			// DEBUG
+			LogWriter writeLog("NOT SAFE TO HIHI!", Level.DEBUG)
+			return
+		}
 		// DEBUG
 		LogWriter writeLog ("HIHI!", Level.DEBUG)
 		OUtils killZombie()

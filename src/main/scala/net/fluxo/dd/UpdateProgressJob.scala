@@ -19,7 +19,6 @@ class UpdateProgressJob extends Job {
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
 		try {
-			if (!(OAria safeTime())) return
 			if (OUtils.allPortsFree) OAria.restartDownloads()
 
 			val iterator = OAria.ActiveProcesses.iterator()
