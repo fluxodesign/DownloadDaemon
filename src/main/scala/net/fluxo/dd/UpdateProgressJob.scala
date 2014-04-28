@@ -121,7 +121,7 @@ class UpdateProgressJob extends Job {
 						// if a download is hanging or call to XML-RPC server returns an error,
 						// we need to shut down the offending thread and restart the download...
 						LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
-						OAria killProcess(a.AriaTaskPID, a.AriaPort)
+						OAria killProcess()
 				}
 			}
 		}

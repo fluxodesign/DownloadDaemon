@@ -48,26 +48,17 @@ class AriaProcessor {
 		"OK " + newGid
 	}
 
-	def killProcess(pid: Int, port: Int) {
+	def killProcess() {
 		// DEBUG
 		LogWriter writeLog ("HIHI!", Level.DEBUG)
-		while (OUtils isProcessExists pid) {
-			val p = new ProcessBuilder("bash", "-c", "kill -9 " + pid).start()
+		while (OUtils isProcessExists()) {
+			val p = new ProcessBuilder("bash", "-c", "pkill -9 aria2").start()
 			p waitFor()
 		}
 		// DEBUG
 		LogWriter writeLog ("HAHA!", Level.DEBUG)
 		LogWriter writeLog("Before deleting, ActiveProcesses: " + ActiveProcesses.size(), Level.DEBUG)
-		val iterator = ActiveProcesses iterator()
-		breakable {
-			while (iterator.hasNext) {
-				val ap = iterator.next
-				if (ap.AriaPort == port && ap.AriaTaskPID == pid) {
-					iterator remove()
-					break()
-				}
-			}
-		}
+		ActiveProcesses clear()
 		// DEBUG
 		LogWriter writeLog("After deleting, ActiveProcesses: " + ActiveProcesses.size(), Level.DEBUG)
 		/*if (!safeToRestart()) return
