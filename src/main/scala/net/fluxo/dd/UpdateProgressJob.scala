@@ -38,7 +38,11 @@ class UpdateProgressJob extends Job {
 					// we need to acquire the TAIL GID if this is a new download, or a restart...
 					val tasks = DbControl.queryTask(a.AriaTaskGid.getOrElse(null))
 					if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
+						// DEBUG
+						LogWriter writeLog("Before sending aria tell status...", Level.DEBUG)
 						val ts = OUtils.sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
+						// DEBUG
+						LogWriter writeLog("After sending aria tell status...", Level.DEBUG)
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						if (!a.AriaHttpDownload) {
 							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
