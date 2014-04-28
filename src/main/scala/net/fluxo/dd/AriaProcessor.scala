@@ -63,7 +63,7 @@ class AriaProcessor {
 	}
 
 	def safeTime(): Boolean = {
-		DateTime.now.getMillis > (_lastKillTime + 30000)
+		false;//DateTime.now.getMillis > (_lastKillTime + 30000)
 	}
 
 	def restartDownloads() {
@@ -106,6 +106,8 @@ class AriaProcessor {
 		}
 
 		override def run() {
+			// DEBUG
+			LogWriter writeLog("AriaProcessor RUNNING!", Level.DEBUG)
 			val process = {
 				if (_httpUsername.getOrElse("").length > 0 && _httpPassword.getOrElse("").length > 0) {
 					new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
