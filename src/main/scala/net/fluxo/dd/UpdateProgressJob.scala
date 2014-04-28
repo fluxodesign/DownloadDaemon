@@ -46,8 +46,14 @@ class UpdateProgressJob extends Job {
 						LogWriter writeLog("After sending aria tell status...", Level.DEBUG)
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						if (!a.AriaHttpDownload) {
-							val tg = OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
-							if (tg.length > 0 && tg(0) != null) {
+							val tg = {
+								try {
+									OUtils.extractValueFromHashMap(jmap, "followedBy").asInstanceOf[Array[Object]]
+								} catch {
+									case e: Exception => null
+								}
+							}
+							if (tg != null && tg.length > 0 && tg(0) != null) {
 								DbControl.updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
 							}
 						}
