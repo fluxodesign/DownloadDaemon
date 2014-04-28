@@ -80,9 +80,23 @@ class UpdateProgressJob extends Job {
 						})
 						// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
 						if (!a.AriaHttpDownload) {
-							val btDetailsMap = OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
-							val infoMap = OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
-							task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
+							val btDetailsMap = {
+								try {
+									OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
+								} catch {
+									case e: Exception => null
+								}
+							}
+							val infoMap = {
+								if (btDetailsMap != null) {
+									try {
+										OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
+									}
+								} else null
+							}
+							if (infoMap != null) {
+								task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
+							}
 						}
 						if (task.TaskGID.getOrElse("").length > 0) DbControl.updateTask(task)
 					}
