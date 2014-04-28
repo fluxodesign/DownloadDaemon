@@ -86,6 +86,20 @@
     <orderEntry type="library" name="Maven: com.sun.istack:istack-commons-runtime:2.16" level="project" />
     <orderEntry type="library" name="Maven: com.sun.xml.fastinfoset:FastInfoset:1.2.12" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.bind:jsr173_api:1.0" level="project" />
+    <orderEntry type="library" name="Maven: net.sf.corn:corn-gate:1.1.8" level="project" />
+    <orderEntry type="library" name="Maven: net.sf.corn:corn-exception:1.0.6" level="project" />
+    <orderEntry type="library" name="Maven: net.sf.corn:corn-cps:1.1.7" level="project" />
+    <orderEntry type="module-library">
+      <library name="Maven: com.sun:tools:1.5">
+        <CLASSES>
+          <root url="jar:///usr/lib/jvm/jdk1.8.0_05/lib/tools.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="Maven: net.sf.corn:corn-converter:1.0.8" level="project" />
+    <orderEntry type="library" name="Maven: net.sf.corn:corn-httpclient:1.0.12" level="project" />
   </component>
 </module>
 

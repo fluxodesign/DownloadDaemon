@@ -264,6 +264,7 @@ class Utils {
 		sb.toString()
 	}
 
+	@throws(classOf[XmlRpcException])
 	def sendAriaTellStatus(gid: String, client: XmlRpcClient): Object = {
 		//val params = Array[Object](gid)
 		val params = new util.ArrayList[Object]()
