@@ -18,16 +18,16 @@ class UpdateProgressJob extends Job {
 
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
-		try {
-			if (OUtils.allPortsFree) OAria.restartDownloads()
+		if (OUtils.allPortsFree) OAria.restartDownloads()
 
-			val iterator = OAria.ActiveProcesses.iterator()
-			while (iterator.hasNext) {
-				breakable {
-					var flagCompleted: Boolean = false
-					// get an RPC client for a particular port...
-					val a = iterator.next()
-					_currentPort = a.AriaPort
+		val iterator = OAria.ActiveProcesses.iterator()
+		while (iterator.hasNext) {
+			breakable {
+				var flagCompleted: Boolean = false
+				// get an RPC client for a particular port...
+				val a = iterator.next()
+				_currentPort = a.AriaPort
+				try {
 					val client = OUtils.getXmlRpcClient(a.AriaPort)
 
 					// we need to acquire the TAIL GID if this is a new download, or a restart...
@@ -93,7 +93,7 @@ class UpdateProgressJob extends Job {
 									if (packageFile.isFile && packageFile.exists() && destDir.isDirectory && destDir.exists()) {
 										FileUtils.moveFileToDirectory(packageFile, destDir, false)
 									} else LogWriter.writeLog("Failed to move file " + qf.CPPackage.getOrElse("{empty file}") +
-										" to " + OUtils.readConfig.DownloadDir.getOrElse("{empty target dir}"), Level.INFO)
+											" to " + OUtils.readConfig.DownloadDir.getOrElse("{empty target dir}"), Level.INFO)
 								} else {
 									val packageDir = new File(qf.CPPackage.getOrElse(null))
 									val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
@@ -110,18 +110,18 @@ class UpdateProgressJob extends Job {
 						OUtils.sendAriaTellShutdown(client)
 						iterator.remove()
 					}
+				} catch {
+					case ie: InterruptedException =>
+						LogWriter.writeLog(ie.getMessage, Level.ERROR)
+						LogWriter.writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
+					case xe: XmlRpcException =>
+						LogWriter.writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.ERROR)
+						// if a download is hanging or call to XML-RPC server returns an error,
+						// we need to shut down the offending thread and restart the download...
+						LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
+						OAria killProcess(a.AriaTaskPID, a.AriaPort)
 				}
 			}
-		} catch {
-			case ie: InterruptedException =>
-				LogWriter.writeLog(ie.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
-			case xe: XmlRpcException =>
-				LogWriter.writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.ERROR)
-				// if a download is hanging or call to XML-RPC server returns an error,
-				// we need to shut down the offending thread and restart the download...
-				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
-				OAria killProcess()
 		}
 	}
 }

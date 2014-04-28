@@ -136,7 +136,20 @@ class Utils {
 		response toString()
 	}
 
-	def killZombie() {
+	def isProcessExists(pid: Int): Boolean = {
+		val p = new ProcessBuilder("bash", "-c", "kill -0 " + pid).start()
+		val br = new BufferedReader(new InputStreamReader(p getInputStream))
+		val sb = new StringBuilder
+		var line = br readLine()
+		while (line != null) {
+			sb append line
+			line = br readLine()
+		}
+		p.waitFor()
+		((sb toString() trim) length) == 0
+	}
+
+	/*def killZombie() {
 		val cmdKill: String = "pkill -9 aria2"
 		// DEBUG
 		LogWriter writeLog("About to KILL ZOMBIE!", Level.DEBUG)
@@ -149,7 +162,7 @@ class Utils {
 			line = reader readLine()
 		}
 		process waitFor()
-	}
+	}*/
 
 	def stringToMovieObject(raw: String):MovieObject = {
 		val movie = new MovieObject

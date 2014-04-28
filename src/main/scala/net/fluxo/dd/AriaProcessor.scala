@@ -7,6 +7,7 @@ import org.joda.time.DateTime
 import org.apache.log4j.Level
 import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FilenameUtils
+import java.io.{BufferedReader, InputStreamReader}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -17,7 +18,7 @@ class AriaProcessor {
 
 	private val _activeProcesses: util.ArrayList[AriaProcess] = new util.ArrayList
 
-	private var _lastKillTime: Long = 0L
+	//private var _lastKillTime: Long = 0L
 
 	def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
 
@@ -47,27 +48,48 @@ class AriaProcessor {
 		"OK " + newGid
 	}
 
-	def killProcess() {
-		/*if (!safeTime()) {
-			// DEBUG
-			LogWriter writeLog("NOT SAFE TO HIHI!", Level.DEBUG)
-			return
-		}*/
+	def killProcess(pid: Int, port: Int) {
 		// DEBUG
 		LogWriter writeLog ("HIHI!", Level.DEBUG)
-		OUtils killZombie()
+		while (OUtils isProcessExists pid) {
+			val p = new ProcessBuilder("bash", "-c", "kill -9 " + pid).start()
+			p waitFor()
+		}
 		// DEBUG
 		LogWriter writeLog ("HAHA!", Level.DEBUG)
+		LogWriter writeLog("Before deleting, ActiveProcesses: " + ActiveProcesses.size(), Level.DEBUG)
+		val iterator = ActiveProcesses iterator()
+		breakable {
+			while (iterator.hasNext) {
+				val ap = iterator.next
+				if (ap.AriaPort == port && ap.AriaTaskPID == pid) {
+					iterator remove()
+					break()
+				}
+			}
+		}
+		// DEBUG
+		LogWriter writeLog("After deleting, ActiveProcesses: " + ActiveProcesses.size(), Level.DEBUG)
+		/*if (!safeToRestart()) return
+		OUtils killZombie()
 		ActiveProcesses.clear()
-		_lastKillTime = (DateTime now()).getMillis
+		_lastKillTime = (DateTime now()).getMillis*/
 	}
 
-	def safeTime(): Boolean = {
-		false;//DateTime.now.getMillis > (_lastKillTime + 30000)
+	def safeToRestart(): Boolean = {
+		val p = new ProcessBuilder("bash", "-c", "pgrep aria2").start()
+		val sb = new StringBuilder
+		val br = new BufferedReader(new InputStreamReader(p getInputStream))
+		var line = br.readLine
+		while (line != null) {
+			sb append line
+			line = br.readLine
+		}
+		((sb toString() trim) length) == 0
 	}
 
 	def restartDownloads() {
-		if (!safeTime()) return
+		if (!safeToRestart()) return
 		val activeTasks = DbControl.queryUnfinishedTasks()
 		if (activeTasks.length > 0) LogWriter.writeLog("Trying to restart " + activeTasks.length + " unfinished downloads...", Level.INFO)
 		var rpcPort = -1
