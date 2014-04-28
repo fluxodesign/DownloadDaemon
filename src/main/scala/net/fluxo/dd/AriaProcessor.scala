@@ -63,7 +63,7 @@ class AriaProcessor {
 	}
 
 	def safeTime(): Boolean = {
-		DateTime.now.getMillis > (_lastKillTime + 10000)
+		DateTime.now.getMillis > (_lastKillTime + 30000)
 	}
 
 	def restartDownloads() {
