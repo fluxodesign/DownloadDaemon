@@ -18,18 +18,19 @@ class UpdateProgressJob extends Job {
 
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
-		if (OUtils.allPortsFree) OAria.restartDownloads()
+		try {
+			if (OUtils.allPortsFree) OAria.restartDownloads()
 
-		val iterator = OAria.ActiveProcesses.iterator()
-		while (iterator.hasNext) {
-			breakable {
-				var flagCompleted: Boolean = false
-				// get an RPC client for a particular port...
-				val a = iterator.next()
-				_currentPort = a.AriaPort
-				// DEBUG
-				LogWriter writeLog("Processing PID " + a.AriaTaskPID + " on port " + a.AriaPort, Level.DEBUG)
-				try {
+			val iterator = OAria.ActiveProcesses.iterator()
+			while (iterator.hasNext) {
+				breakable {
+					var flagCompleted: Boolean = false
+					val a = iterator.next()
+					_currentPort = a.AriaPort
+					// DEBUG
+					LogWriter writeLog("Processing PID " + a.AriaTaskPID + " on port " + a.AriaPort, Level.DEBUG)
+
+					// get an RPC client for a particular port...
 					val client = OUtils.getXmlRpcClient(a.AriaPort)
 
 					// DEBUG
@@ -128,20 +129,20 @@ class UpdateProgressJob extends Job {
 						OUtils.sendAriaTellShutdown(client)
 						iterator.remove()
 					}
-				} catch {
-					case ie: InterruptedException =>
-						LogWriter.writeLog(ie.getMessage, Level.ERROR)
-						LogWriter.writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
-					case xe: XmlRpcException =>
-						LogWriter.writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.ERROR)
-						// if a download is hanging or call to XML-RPC server returns an error,
-						// we need to shut down the offending thread and restart the download...
-						LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
-						OAria killProcess()
-					case e: Exception =>
-						LogWriter writeLog("Port " + _currentPort + ": " + e.getMessage, Level.ERROR)
 				}
 			}
+		} catch {
+			case ie: InterruptedException =>
+				LogWriter.writeLog(ie.getMessage, Level.ERROR)
+				LogWriter.writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
+			case xe: XmlRpcException =>
+				LogWriter.writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.ERROR)
+				// if a download is hanging or call to XML-RPC server returns an error,
+				// we need to shut down the offending thread and restart the download...
+				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
+				OAria killProcess()
+			case e: Exception =>
+				LogWriter writeLog("Port " + _currentPort + ": " + e.getMessage, Level.ERROR)
 		}
 	}
 }
