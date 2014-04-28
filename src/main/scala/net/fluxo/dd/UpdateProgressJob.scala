@@ -27,6 +27,8 @@ class UpdateProgressJob extends Job {
 				// get an RPC client for a particular port...
 				val a = iterator.next()
 				_currentPort = a.AriaPort
+				// DEBUG
+				LogWriter writeLog("Processing PID " + a.AriaTaskPID + " on port " + a.AriaPort, Level.DEBUG)
 				try {
 					val client = OUtils.getXmlRpcClient(a.AriaPort)
 
