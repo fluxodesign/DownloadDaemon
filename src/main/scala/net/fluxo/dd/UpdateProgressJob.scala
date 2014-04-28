@@ -32,6 +32,9 @@ class UpdateProgressJob extends Job {
 				try {
 					val client = OUtils.getXmlRpcClient(a.AriaPort)
 
+					// DEBUG
+					LogWriter writeLog("Before doing any loop....", Level.DEBUG)
+
 					// we need to acquire the TAIL GID if this is a new download, or a restart...
 					val tasks = DbControl.queryTask(a.AriaTaskGid.getOrElse(null))
 					if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
@@ -44,6 +47,9 @@ class UpdateProgressJob extends Job {
 							}
 						}
 					}
+
+					// DEBUG
+					LogWriter writeLog("Before processing active tasks...", Level.DEBUG)
 
 					val activeTasks = OUtils.sendAriaTellActive(client)
 					for (o <- activeTasks) {
@@ -69,6 +75,9 @@ class UpdateProgressJob extends Job {
 						}
 						if (task.TaskGID.getOrElse("").length > 0) DbControl.updateTask(task)
 					}
+
+					// DEBUG
+					LogWriter writeLog("Before processing finished tasks...", Level.DEBUG)
 
 					val finishedTasks = OUtils.sendAriaTellStopped(client)
 					for (o <- finishedTasks) {
@@ -107,6 +116,9 @@ class UpdateProgressJob extends Job {
 						}
 					}
 
+					// DEBUG
+					LogWriter writeLog("Before shutting down aria process...", Level.DEBUG)
+
 					// shutdown this aria2 process when it's update is finished...
 					if (activeTasks.length == 0 && flagCompleted) {
 						OUtils.sendAriaTellShutdown(client)
@@ -122,6 +134,8 @@ class UpdateProgressJob extends Job {
 						// we need to shut down the offending thread and restart the download...
 						LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
 						OAria killProcess()
+					case e: Exception =>
+						LogWriter writeLog("Port " + _currentPort + ": " + e.getMessage, Level.ERROR)
 				}
 			}
 		}
