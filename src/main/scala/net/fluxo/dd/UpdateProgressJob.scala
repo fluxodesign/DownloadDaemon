@@ -28,7 +28,7 @@ class UpdateProgressJob extends Job {
 					val a = iterator.next()
 					_currentPort = a.AriaPort
 					// DEBUG
-					LogWriter writeLog("Processing PID " + a.AriaTaskPID + " on port " + a.AriaPort, Level.DEBUG)
+					//LogWriter writeLog("Processing PID " + a.AriaTaskPID + " on port " + a.AriaPort, Level.DEBUG)
 
 					// get an RPC client for a particular port...
 					val client = OUtils.getXmlRpcClient(a.AriaPort)
@@ -182,9 +182,7 @@ class UpdateProgressJob extends Job {
 				// if a download is hanging or call to XML-RPC server returns an error,
 				// we need to shut down the offending thread and restart the download...
 				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
-				OAria killProcess()
-			/*case e: Exception =>
-				LogWriter writeLog("Port " + _currentPort + ": " + e.getMessage, Level.ERROR)*/
+				OAria killProcess(_currentPort)
 		}
 	}
 }

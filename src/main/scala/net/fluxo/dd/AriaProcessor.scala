@@ -8,6 +8,7 @@ import org.apache.log4j.Level
 import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FilenameUtils
 import java.io.{BufferedReader, InputStreamReader}
+import org.apache.commons.exec.{DefaultExecutor, ExecuteWatchdog, CommandLine}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -48,23 +49,29 @@ class AriaProcessor {
 		"OK " + newGid
 	}
 
-	def killProcess() {
-		safeToRestart()
+	def killProcess(port: Int) {
+		//safeToRestart()
 		// DEBUG
 		LogWriter writeLog ("HIHI!", Level.DEBUG)
-		val p = new ProcessBuilder("bash", "-c", "pkill -9 aria2").start()
-		p waitFor()
-		safeToRestart()
+		val iterator = _activeProcesses iterator()
+		breakable {
+			while (iterator.hasNext) {
+				val e = iterator.next
+				if ((e AriaPort) == port) {
+					e KillAriaProcess()
+					break()
+				}
+			}
+		}
+		//val p = new ProcessBuilder("bash", "-c", "pkill -9 aria2").start()
+		//p waitFor()
+		//safeToRestart()
 		// DEBUG
 		LogWriter writeLog ("HAHA!", Level.DEBUG)
 		LogWriter writeLog("Before deleting, ActiveProcesses: " + ActiveProcesses.size(), Level.DEBUG)
 		ActiveProcesses clear()
 		// DEBUG
 		LogWriter writeLog("After deleting, ActiveProcesses: " + ActiveProcesses.size(), Level.DEBUG)
-		/*if (!safeToRestart()) return
-		OUtils killZombie()
-		ActiveProcesses.clear()
-		_lastKillTime = (DateTime now()).getMillis*/
 	}
 
 	def safeToRestart(): Boolean = {
@@ -121,20 +128,35 @@ class AriaProcessor {
 
 		override def run() {
 			// DEBUG
-			LogWriter writeLog("AriaProcessor RUNNING!", Level.DEBUG)
-			val process = {
+			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
+			val cmdLine = new CommandLine("aria2c")
+			cmdLine addArgument "--enable-rpc"
+			cmdLine addArgument ("--rpc-listen-port=" + port)
+			cmdLine addArgument ("--gid=" + gid)
+			//val process = {
 				if (_httpUsername.getOrElse("").length > 0 && _httpPassword.getOrElse("").length > 0) {
-					new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
+					cmdLine addArgument("--http-user=" + _httpUsername.getOrElse(""))
+					cmdLine addArgument("--http-passwd=" + _httpPassword.getOrElse(""))
+					/*new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
 						"--gid=" + gid, "--http-user=" + _httpUsername.getOrElse(""),
-						"--http-passwd=" + _httpPassword.getOrElse(""), uri).start()
+						"--http-passwd=" + _httpPassword.getOrElse(""), uri).start()*/
 				} else {
-					new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
+					cmdLine addArgument "--seed-time=0"
+					cmdLine addArgument "--max-overall-upload-limit=1"
+					cmdLine addArgument "--follow-torrent=mem"
+					cmdLine addArgument "--seed-ratio=1"
+					/*new ProcessBuilder("aria2c", "--enable-rpc", "--rpc-listen-port=" + port,
 						"--seed-time=0", "--max-overall-upload-limit=1", "--follow-torrent=mem",
-						"--gid=" + gid, "--seed-ratio=0.1", uri).start()
+						"--gid=" + gid, "--seed-ratio=0.1", uri).start()*/
 				}
-			}
+			//}
+			cmdLine addArgument uri
+			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
+			val executor = new DefaultExecutor
+			executor setWatchdog watchdog
+			executor execute cmdLine
 
-			val taskPid: Int = {
+			/*val taskPid: Int = {
 				var retVal = -1
 				if ((process getClass).getName.equals("java.lang.UNIXProcess")) {
 					try {
@@ -148,7 +170,7 @@ class AriaProcessor {
 					}
 				}
 				retVal
-			}
+			}*/
 
 			// For DEBUG purposes only, to read ARIA2 output...
 			/*val br = new BufferedReader(new InputStreamReader(process.getInputStream))
@@ -173,11 +195,12 @@ class AriaProcessor {
 			}
 			ActiveProcesses.add(new AriaProcess {
 				AriaPort_=(port)
-				AriaProcess_=(process)
+				//AriaProcess_=(process)
+				AriaProcess_:(executor)
 				AriaTaskGid_=(gid)
 				AriaTaskRestarting_=(restarting)
 				AriaHttpDownload_=(isHttp)
-				AriaTaskPID_=(taskPid)
+				//AriaTaskPID_=(taskPid)
 			})
 			// set all necessary parameters if this is an HTTP download...
 			if (isHttp) {
@@ -215,7 +238,7 @@ class AriaProcessor {
 					}
 				}
 			}
-			process.waitFor()
+			//process.waitFor()
 		}
 	}
 }
