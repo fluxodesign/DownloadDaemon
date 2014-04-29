@@ -64,41 +64,49 @@ class UpdateProgressJob extends Job {
 
 					val activeTasks = OUtils.sendAriaTellActive(client)
 					for (o <- activeTasks) {
-						val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
-						val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
-						val task = {
-							if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else null
+						val jMap = {
+							try {
+								o.asInstanceOf[java.util.HashMap[String, Object]]
+							} catch {
+								case e: Exception => null
+							}
 						}
-						val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
-						task.TaskCompletedLength_=(cl)
-						val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
-						task.TaskTotalLength_=(tl)
-						task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
-						task.TaskInfoHash_=({
-							if (task.TaskIsHttp) "noinfohash"
-							else OUtils.extractValueFromHashMap(jMap, "infoHash").toString
-						})
-						// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
-						if (!a.AriaHttpDownload) {
-							val btDetailsMap = {
-								try {
-									OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
-								} catch {
-									case e: Exception => null
+						if (jMap != null) {
+							val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
+							val task = {
+								if (tailGID.length > 0) DbControl.queryTaskTailGID(tailGID) else null
+							}
+							val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
+							task.TaskCompletedLength_=(cl)
+							val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
+							task.TaskTotalLength_=(tl)
+							task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
+							task.TaskInfoHash_=({
+								if (task.TaskIsHttp) "noinfohash"
+								else OUtils.extractValueFromHashMap(jMap, "infoHash").toString
+							})
+							// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
+							if (!a.AriaHttpDownload) {
+								val btDetailsMap = {
+									try {
+										OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
+									} catch {
+										case e: Exception => null
+									}
+								}
+								val infoMap = {
+									if (btDetailsMap != null) {
+										try {
+											OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
+										}
+									} else null
+								}
+								if (infoMap != null) {
+									task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
 								}
 							}
-							val infoMap = {
-								if (btDetailsMap != null) {
-									try {
-										OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
-									}
-								} else null
-							}
-							if (infoMap != null) {
-								task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
-							}
+							if (task.TaskGID.getOrElse("").length > 0) DbControl.updateTask(task)
 						}
-						if (task.TaskGID.getOrElse("").length > 0) DbControl.updateTask(task)
 					}
 
 					// DEBUG
@@ -106,36 +114,44 @@ class UpdateProgressJob extends Job {
 
 					val finishedTasks = OUtils.sendAriaTellStopped(client)
 					for (o <- finishedTasks) {
-						val jMap = o.asInstanceOf[java.util.HashMap[String, Object]]
-						val status = OUtils.extractValueFromHashMap(jMap, "status").toString
-						val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
-						val infoHash = {
-							val tasks = DbControl.queryTask(gid)
-							if (tasks.length > 0 && tasks(0).TaskIsHttp) "noinfohash"
-							else OUtils.extractValueFromHashMap(jMap, "infoHash").toString
+						val jMap = {
+							try {
+								o.asInstanceOf[java.util.HashMap[String, Object]]
+							} catch {
+								case e: Exception => null
+							}
 						}
-						val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
-						val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
-						val qf = DbControl.queryFinishTask(gid, infoHash, tl)
-						if (qf.CPCount > 0) {
-							DbControl.finishTask(status, cl, gid, infoHash, tl)
-							flagCompleted = true
-							// move the package to a directory specified in config...
-							if (OUtils.readConfig.DownloadDir.getOrElse(null).length > 0) {
-								if (a.AriaHttpDownload) {
-									// HTTP downloads usually are just for 1 file...
-									val packageFile = new File(qf.CPPackage.getOrElse(null))
-									val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse(""))
-									if (packageFile.isFile && packageFile.exists() && destDir.isDirectory && destDir.exists()) {
-										FileUtils.moveFileToDirectory(packageFile, destDir, false)
-									} else LogWriter.writeLog("Failed to move file " + qf.CPPackage.getOrElse("{empty file}") +
-											" to " + OUtils.readConfig.DownloadDir.getOrElse("{empty target dir}"), Level.INFO)
-								} else {
-									val packageDir = new File(qf.CPPackage.getOrElse(null))
-									val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
-									if (packageDir.isDirectory && packageDir.exists() && !destDir.exists()) {
-										FileUtils.moveDirectory(packageDir, destDir)
-									} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " exist!", Level.INFO)
+						if (jMap != null) {
+							val status = OUtils.extractValueFromHashMap(jMap, "status").toString
+							val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
+							val infoHash = {
+								val tasks = DbControl.queryTask(gid)
+								if (tasks.length > 0 && tasks(0).TaskIsHttp) "noinfohash"
+								else OUtils.extractValueFromHashMap(jMap, "infoHash").toString
+							}
+							val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
+							val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
+							val qf = DbControl.queryFinishTask(gid, infoHash, tl)
+							if (qf.CPCount > 0) {
+								DbControl.finishTask(status, cl, gid, infoHash, tl)
+								flagCompleted = true
+								// move the package to a directory specified in config...
+								if (OUtils.readConfig.DownloadDir.getOrElse(null).length > 0) {
+									if (a.AriaHttpDownload) {
+										// HTTP downloads usually are just for 1 file...
+										val packageFile = new File(qf.CPPackage.getOrElse(null))
+										val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse(""))
+										if (packageFile.isFile && packageFile.exists() && destDir.isDirectory && destDir.exists()) {
+											FileUtils.moveFileToDirectory(packageFile, destDir, false)
+										} else LogWriter.writeLog("Failed to move file " + qf.CPPackage.getOrElse("{empty file}") +
+												" to " + OUtils.readConfig.DownloadDir.getOrElse("{empty target dir}"), Level.INFO)
+									} else {
+										val packageDir = new File(qf.CPPackage.getOrElse(null))
+										val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
+										if (packageDir.isDirectory && packageDir.exists() && !destDir.exists()) {
+											FileUtils.moveDirectory(packageDir, destDir)
+										} else LogWriter.writeLog("directory " + destDir.getAbsolutePath + " exist!", Level.INFO)
+									}
 								}
 							}
 						}
