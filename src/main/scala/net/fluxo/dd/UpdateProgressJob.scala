@@ -65,11 +65,14 @@ class UpdateProgressJob extends Job {
 					val activeTasks = OUtils.sendAriaTellActive(client)
 					for (o <- activeTasks) {
 						val jMap = {
+							var hm :java.util.HashMap[String, Object] = null
 							try {
-								o.asInstanceOf[java.util.HashMap[String, Object]]
+								hm = o.asInstanceOf[java.util.HashMap[String, Object]]
 							} catch {
-								case e: Exception => null
+								case e: Exception =>
+									LogWriter writeLog ("Port " + _currentPort + "/ActiveTask: " + e.getMessage, Level.INFO)
 							}
+							hm
 						}
 						if (jMap != null) {
 							val tailGID = OUtils.extractValueFromHashMap(jMap, "gid").toString
@@ -115,11 +118,14 @@ class UpdateProgressJob extends Job {
 					val finishedTasks = OUtils.sendAriaTellStopped(client)
 					for (o <- finishedTasks) {
 						val jMap = {
+							var hm: java.util.HashMap[String, Object] = null
 							try {
-								o.asInstanceOf[java.util.HashMap[String, Object]]
+								hm = o.asInstanceOf[java.util.HashMap[String, Object]]
 							} catch {
-								case e: Exception => null
+								case e: Exception =>
+									LogWriter writeLog("Port " + _currentPort + "/FinishedTask: " + e.getMessage, Level.INFO)
 							}
+							hm
 						}
 						if (jMap != null) {
 							val status = OUtils.extractValueFromHashMap(jMap, "status").toString
@@ -177,8 +183,8 @@ class UpdateProgressJob extends Job {
 				// we need to shut down the offending thread and restart the download...
 				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
 				OAria killProcess()
-			case e: Exception =>
-				LogWriter writeLog("Port " + _currentPort + ": " + e.getMessage, Level.ERROR)
+			/*case e: Exception =>
+				LogWriter writeLog("Port " + _currentPort + ": " + e.getMessage, Level.ERROR)*/
 		}
 	}
 }
