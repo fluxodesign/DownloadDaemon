@@ -305,8 +305,8 @@ class DbManager {
 		} catch {
 			case ex: Exception =>
 				LogWriter writeLog("Error deleting unfinished task " + taskGID, Level.ERROR)
-				LogWriter writeLog(ex getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString(ex), Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 		}
 	}
 

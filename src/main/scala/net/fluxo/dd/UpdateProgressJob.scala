@@ -27,23 +27,12 @@ class UpdateProgressJob extends Job {
 					var flagCompleted: Boolean = false
 					val a = iterator.next()
 					_currentPort = a.AriaPort
-					// DEBUG
-					//LogWriter writeLog("Processing PID " + a.AriaTaskPID + " on port " + a.AriaPort, Level.DEBUG)
-
 					// get an RPC client for a particular port...
 					val client = OUtils.getXmlRpcClient(a.AriaPort)
-
-					// DEBUG
-					LogWriter writeLog("Before doing any loop....", Level.DEBUG)
-
 					// we need to acquire the TAIL GID if this is a new download, or a restart...
 					val tasks = DbControl.queryTask(a.AriaTaskGid.getOrElse(null))
 					if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
-						// DEBUG
-						LogWriter writeLog("Before sending aria tell status...", Level.DEBUG)
 						val ts = OUtils.sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
-						// DEBUG
-						LogWriter writeLog("After sending aria tell status...", Level.DEBUG)
 						val jmap = ts.asInstanceOf[java.util.HashMap[String, Object]]
 						if (!a.AriaHttpDownload) {
 							val tg = {
@@ -58,9 +47,6 @@ class UpdateProgressJob extends Job {
 							}
 						}
 					}
-
-					// DEBUG
-					LogWriter writeLog("Before processing active tasks...", Level.DEBUG)
 
 					val activeTasks = OUtils.sendAriaTellActive(client)
 					for (o <- activeTasks) {
@@ -112,9 +98,6 @@ class UpdateProgressJob extends Job {
 						}
 					}
 
-					// DEBUG
-					LogWriter writeLog("Before processing finished tasks...", Level.DEBUG)
-
 					val finishedTasks = OUtils.sendAriaTellStopped(client)
 					for (o <- finishedTasks) {
 						val jMap = {
@@ -163,9 +146,6 @@ class UpdateProgressJob extends Job {
 						}
 					}
 
-					// DEBUG
-					LogWriter writeLog("Before shutting down aria process...", Level.DEBUG)
-
 					// shutdown this aria2 process when it's update is finished...
 					if (activeTasks.length == 0 && flagCompleted) {
 						OUtils.sendAriaTellShutdown(client)
@@ -182,7 +162,7 @@ class UpdateProgressJob extends Job {
 				// if a download is hanging or call to XML-RPC server returns an error,
 				// we need to shut down the offending thread and restart the download...
 				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
-				OAria killProcess(_currentPort)
+				OAria killProcess _currentPort
 		}
 	}
 }

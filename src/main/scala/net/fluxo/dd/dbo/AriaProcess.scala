@@ -14,12 +14,6 @@ class AriaProcess {
 	def AriaPort: Int = _port
 	def AriaPort_=(value: Int) { _port = value }
 
-	//private var _process: Option[Process] = None
-
-	/*def AriaProcess: Option[Process] = _process
-	def AriaProcess_=(value: Process) { _process = Some(value) }
-	def NullifyProcess() { _process = None }*/
-
 	private var _process: Option[Executor] = None
 
 	def AriaProcess: Option[Executor] = _process
@@ -43,9 +37,4 @@ class AriaProcess {
 
 	def AriaHttpDownload: Boolean = _httpDownload
 	def AriaHttpDownload_=(value: Boolean) { _httpDownload = value }
-
-	/*private var _taskPid: Int = 0
-
-	def AriaTaskPID: Int = _taskPid
-	def AriaTaskPID_=(value: Int) { _taskPid = value }*/
 }
