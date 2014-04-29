@@ -181,6 +181,8 @@ class AriaProcessor {
 			}*/
 
 			if (!restarting) {
+				// DEBUG
+				LogWriter writeLog ("Adding new task to DB", Level.DEBUG)
 				DbControl.addTask(new Task {
 					TaskGID_=(gid)
 					TaskInput_=(uri)
@@ -193,6 +195,8 @@ class AriaProcessor {
 					}
 				})
 			}
+			// DEBUG
+			LogWriter writeLog ("Adding new active task to list...", Level.DEBUG)
 			ActiveProcesses.add(new AriaProcess {
 				AriaPort_=(port)
 				//AriaProcess_=(process)
@@ -238,6 +242,8 @@ class AriaProcessor {
 					}
 				}
 			}
+			// DEBUG
+			LogWriter writeLog("End-Of-Method", Level.DEBUG)
 			//process.waitFor()
 		}
 	}
