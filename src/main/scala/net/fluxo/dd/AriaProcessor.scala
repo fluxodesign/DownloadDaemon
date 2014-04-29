@@ -46,7 +46,7 @@ class AriaProcessor {
 			ariaThread.setCredentials(httpUsername, httpPassword)
 		}
 		new Thread(ariaThread).start()
-		stat(rpcPort, restarting = false, newGid, owner, uri, isHttp = isHttp, httpUsername, httpPassword, ariaThread getExecutor())
+		stat(rpcPort, restarting = false, newGid, owner, uri, isHttp = isHttp, httpUsername, httpPassword, ariaThread getExecutor)
 		"OK " + newGid
 	}
 
