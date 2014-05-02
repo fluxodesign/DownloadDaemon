@@ -171,8 +171,6 @@ class TPBProcessor {
 				}
 			}
 		}
-		// DEBUG
-		LogWriter writeLog ("nfo = " + nfo, Level.DEBUG)
 		nfo
 	}
 

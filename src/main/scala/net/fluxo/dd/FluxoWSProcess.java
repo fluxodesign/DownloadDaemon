@@ -171,4 +171,23 @@ public class FluxoWSProcess {
 		}
 		return Response.status(400).entity("Unable to process TPB request").build();
 	}
+
+	@GET
+	@Path("/tpbdetails/{url}")
+	@Produces("application/json")
+	public Response getTPBDetails(@DefaultValue("") @PathParam("url") String url) {
+		try {
+			URLCodec urlCodec = new URLCodec();
+			if (url.length() > 0) {
+				String decodedURL = urlCodec.decode(url);
+				if (decodedURL.startsWith("http://thepiratebay.se/")) {
+					String response = TPBP.queryDetails(decodedURL);
+					return Response.status(200).entity(response).build();
+				}
+			}
+		} catch (Exception e) {
+			return Response.status(400).entity(e.getMessage()).build();
+		}
+		return Response.status(400).entity("Unable to process TPB Details request").build();
+	}
 }
