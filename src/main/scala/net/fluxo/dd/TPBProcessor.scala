@@ -157,14 +157,17 @@ class TPBProcessor {
 
 	def parseDetails(doc: Document): String = {
 		var nfo = ""
-		val div: Elements = doc getElementsByTag "div"
+		val div: Elements = doc getElementsByTag "div[class]"
 		val iterator = div iterator()
 		breakable {
 			while (iterator.hasNext) {
 				val d = iterator.next
-				val dc = d getElementsByAttribute "class"
-				if (dc.size() > 0 && dc.get(0).text().equals("nfo")) {
-					nfo = d text()
+				if ((d attr "class") equals "nfo") {
+					val pre = d getElementsByTag "pre"
+					if (pre.size() > 0) {
+						nfo = (pre get 0) text()
+						break()
+					}
 				}
 			}
 		}
