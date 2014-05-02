@@ -450,6 +450,16 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 							TPBP query(searchTerm, page, cat)
 						}
 					}
+				case "TPBDETAILS" =>
+					if (words.length != 3) "ERR TPBDETAILS SYNTAX"
+					else {
+						val ucodec = new URLCodec
+						val detailsURL = ucodec decode words(2)
+						if (!(detailsURL startsWith "http://thepiratebay.se/")) "ERR TPBDETAILS URL"
+						else {
+							TPBP queryDetails detailsURL
+						}
+					}
 				case _ => "ERR CMD"
 			}
 		}

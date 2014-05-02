@@ -5,7 +5,7 @@ import java.io.IOException
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
-import net.fluxo.dd.dbo.{TPBPage, TPBObject}
+import net.fluxo.dd.dbo.{TPBDetails, TPBPage, TPBObject}
 import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
@@ -123,6 +123,19 @@ class TPBProcessor {
 		sb.toString()
 	}
 
+	def queryDetails(url: String): String = {
+		val sb = new StringBuilder
+		val response = OUtils crawlServer url
+		val document = Jsoup parse response
+		val tpbd = new TPBDetails
+		tpbd.Request_:(url)
+		val info = parseDetails(document)
+		tpbd.Info_:(info)
+		val gson = new Gson()
+		sb.append(gson toJson tpbd)
+		sb toString()
+	}
+
 	def queryTotalItemsFound(doc: Document): Int = {
 		var ret: Int = 0
 		val h2: Elements = doc getElementsByTag "h2"
@@ -140,6 +153,24 @@ class TPBProcessor {
 			}
 		}
 		ret
+	}
+
+	def parseDetails(doc: Document): String = {
+		var nfo = ""
+		val div: Elements = doc getElementsByTag "div"
+		val iterator = div iterator()
+		breakable {
+			while (iterator.hasNext) {
+				val d = iterator.next
+				val dc = d getElementsByAttribute "class"
+				if (dc.size() > 0 && dc.get(0).text().equals("nfo")) {
+					nfo = d text()
+				}
+			}
+		}
+		// DEBUG
+		LogWriter writeLog ("nfo = " + nfo, Level.DEBUG)
+		nfo
 	}
 
 	def parseItems(doc: Document): util.ArrayList[TPBObject] = {
