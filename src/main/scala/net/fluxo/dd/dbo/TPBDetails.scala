@@ -7,6 +7,8 @@ package net.fluxo.dd.dbo
  */
 class TPBDetails {
 
+	private val _id = "TPB_DETAILS"
+
 	private var _info: String = ""
 
 	def Info: String = { _info  }

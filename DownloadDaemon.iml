@@ -15,14 +15,22 @@
     <output-test url="file://$MODULE_DIR$/target/test-classes" />
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/src/main/resources" type="java-resource" />
-      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/src/main/scala" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/test/java" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="smack-3.4.1-0cec571" level="project" />
     <orderEntry type="library" name="smackx-3.4.1-0cec571" level="project" />
+    <orderEntry type="library" name="Maven: org.jboss.resteasy:resteasy-jaxb-provider:3.0.5.Final" level="project" />
+    <orderEntry type="library" name="Maven: com.sun.xml.bind:jaxb-impl:2.2.7" level="project" />
+    <orderEntry type="library" name="Maven: com.sun.xml.bind:jaxb-core:2.2.7" level="project" />
+    <orderEntry type="library" name="Maven: javax.xml.bind:jaxb-api:2.2.7" level="project" />
+    <orderEntry type="library" name="Maven: com.sun.istack:istack-commons-runtime:2.16" level="project" />
+    <orderEntry type="library" name="Maven: com.sun.xml.fastinfoset:FastInfoset:1.2.12" level="project" />
+    <orderEntry type="library" name="Maven: javax.xml.bind:jsr173_api:1.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.commons:commons-exec:1.2" level="project" />
     <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-log4j12:1.7.5" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.5" level="project" />
@@ -86,7 +94,6 @@
     <orderEntry type="library" name="Maven: com.sun.istack:istack-commons-runtime:2.16" level="project" />
     <orderEntry type="library" name="Maven: com.sun.xml.fastinfoset:FastInfoset:1.2.12" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.bind:jsr173_api:1.0" level="project" />
-    <orderEntry type="library" name="Maven: org.apache.commons:commons-exec:1.2" level="project" />
   </component>
 </module>
 
