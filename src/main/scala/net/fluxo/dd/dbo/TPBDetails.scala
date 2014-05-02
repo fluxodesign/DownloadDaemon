@@ -7,13 +7,13 @@ package net.fluxo.dd.dbo
  */
 class TPBDetails {
 
-	private var _info: Option[String] = None
+	private var _info: String = ""
 
-	def Info: String = { _info getOrElse "" }
-	def Info_:(value: String) { _info = Some(value) }
+	def Info: String = { _info  }
+	def Info_:(value: String) { _info = value }
 
-	private var _request: Option[String] = None
+	private var _request: String = ""
 
-	def Request: String = { _request getOrElse "" }
-	def Request_:(value: String) { _request = Some(value) }
+	def Request: String = { _request  }
+	def Request_:(value: String) { _request = value }
 }
