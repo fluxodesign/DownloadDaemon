@@ -132,6 +132,8 @@ class TPBProcessor {
 		tpbd.Info_:(URLEncoder encode (info, "UTF-8"))
 		val gson = new Gson()
 		sb.append(gson toJson tpbd)
+		// DEBUG
+		LogWriter writeLog ("TPB DETAILS INFO: " + sb.toString(), org.apache.log4j.Level.DEBUG)
 		sb toString()
 	}
 
