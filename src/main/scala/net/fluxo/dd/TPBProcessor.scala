@@ -9,7 +9,7 @@ import net.fluxo.dd.dbo.{TPBDetails, TPBPage, TPBObject}
 import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
-import org.apache.log4j.Level
+import org.apache.commons.codec.net.URLCodec
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -127,10 +127,11 @@ class TPBProcessor {
 		val sb = new StringBuilder
 		val response = OUtils crawlServer url
 		val document = Jsoup parse response
+		val urlCode = new URLCodec
 		val tpbd = new TPBDetails
-		tpbd.Request_:(url)
+		tpbd.Request_:(urlCode encode url)
 		val info = parseDetails(document)
-		tpbd.Info_:(info)
+		tpbd.Info_:(urlCode encode info)
 		val gson = new Gson()
 		sb.append(gson toJson tpbd)
 		sb toString()
