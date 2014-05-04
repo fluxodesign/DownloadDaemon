@@ -58,4 +58,9 @@ class TPBObject {
 
 	def TorrentURL: String = _torrentURL
 	def TorrentURL_=(value: String) { _torrentURL = value }
+
+	private var _info: String = ""
+
+	def Info: String = _info
+	def Info_:(value: String) { _info = value }
 }
