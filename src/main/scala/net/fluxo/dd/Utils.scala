@@ -16,6 +16,9 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
 import org.json.simple.{JSONArray, JSONValue, JSONObject}
 import scala.Some
+import org.apache.commons.codec.binary.Base64
+import javax.crypto.spec.DESKeySpec
+import javax.crypto.{SecretKeyFactory, SecretKey, Cipher}
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -234,6 +237,24 @@ class Utils {
 			sb.insert(0, "0")
 		}
 		sb.toString()
+	}
+
+	def decrypt(data: String): String = {
+		try {
+			val bData = Base64 decodeBase64 data
+			val dks = new DESKeySpec("FL-FR33B00T3R-K3Y" getBytes "UTF-8")
+			val secretKeyFactory = SecretKeyFactory getInstance "DES"
+			val secretKey = secretKeyFactory generateSecret dks
+			val cipher = Cipher getInstance "DES"
+			cipher.init(Cipher.DECRYPT_MODE, secretKey)
+			val dataBytesDecrypted = cipher doFinal bData
+			return new String(dataBytesDecrypted)
+		} catch {
+			case e: Exception =>
+				LogWriter writeLog("Error decrypting string!", Level.ERROR)
+				LogWriter writeLog(e.getMessage, Level.ERROR)
+		}
+		data
 	}
 
 	@throws(classOf[XmlRpcException])

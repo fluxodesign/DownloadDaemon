@@ -177,9 +177,8 @@ public class FluxoWSProcess {
 	@Produces("application/json")
 	public Response getTPBDetails(@DefaultValue("") @PathParam("url") String url) {
 		try {
-			URLCodec urlCodec = new URLCodec();
 			if (url.length() > 0) {
-				String decodedURL = urlCodec.decode(url);
+				String decodedURL = OUtils.decrypt(url);
 				if (decodedURL.startsWith("http://thepiratebay.se/")) {
 					String response = TPBP.queryDetails(decodedURL);
 					return Response.status(200).entity(response).build();

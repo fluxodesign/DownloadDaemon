@@ -453,8 +453,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				case "TPBDETAILS" =>
 					if (words.length != 3) "ERR TPBDETAILS SYNTAX"
 					else {
-						val ucodec = new URLCodec
-						val detailsURL = ucodec decode words(2)
+						val detailsURL = OUtils decrypt words(2)
 						if (!(detailsURL startsWith "http://thepiratebay.se/")) "ERR TPBDETAILS URL"
 						else {
 							TPBP queryDetails detailsURL
