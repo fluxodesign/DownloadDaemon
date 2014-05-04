@@ -131,7 +131,8 @@ class TPBProcessor {
 	def queryDetails(url: String): String = {
 		//val sb = new StringBuilder
 		var details = ""
-		val response = OUtils crawlServer url
+		val encodedURL = URLEncoder encode(url, "UTF-8")
+		val response = OUtils crawlServer encodedURL
 		val document = Jsoup parse response
 		//val tpbd = new TPBDetails
 		//tpbd.Request_:(URLEncoder encode (url, "UTF-8"))
