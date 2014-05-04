@@ -4,7 +4,7 @@ import net.fluxo.dd.dbo.{YIFYSearchResult, MovieObject, Config}
 import java.util.{Random, Properties}
 import java.io._
 import org.apache.log4j.Level
-import java.net.{MalformedURLException, URL, ServerSocket}
+import java.net._
 import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
 import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
 import org.xml.sax.{ContentHandler, SAXException}
@@ -19,6 +19,7 @@ import scala.Some
 import org.apache.commons.codec.binary.Base64
 import javax.crypto.spec.DESKeySpec
 import javax.crypto.{SecretKeyFactory, SecretKey, Cipher}
+import scala.Some
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -241,7 +242,8 @@ class Utils {
 
 	def decrypt(data: String): String = {
 		try {
-			val bData = Base64 decodeBase64 data
+			val decodedData = URLDecoder decode(data, "UTF-8")
+			val bData = Base64 decodeBase64 decodedData
 			val dks = new DESKeySpec("FL-FR33B00T3R-K3Y" getBytes "UTF-8")
 			val secretKeyFactory = SecretKeyFactory getInstance "DES"
 			val secretKey = secretKeyFactory generateSecret dks
