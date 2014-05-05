@@ -135,8 +135,8 @@ class TPBProcessor {
 		var details = ""
 		val encodedURL = new URLCodec encode url
 		// DEBUG
-		LogWriter writeLog("ENCODED URL: " + encodedURL, Level.DEBUG)
-		val response = OUtils crawlServer encodedURL
+		//LogWriter writeLog("ENCODED URL: " + encodedURL, Level.DEBUG)
+		val response = OUtils crawlServer url
 		val document = Jsoup parse response
 		//val tpbd = new TPBDetails
 		//tpbd.Request_:(URLEncoder encode (url, "UTF-8"))
