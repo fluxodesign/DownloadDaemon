@@ -119,13 +119,14 @@ class Utils {
 		try {
 			val htClient = HttpClientBuilder.create().build()
 			val htGet = new HttpGet(request)
-			htGet.addHeader("User-Agent", "FluxoAgent/0.1")
-			val htResponse = htClient.execute(htGet)
+			htGet addHeader ("Content-Type", "text/html; charset=UTF-8")
+			htGet addHeader("User-Agent", "FluxoAgent/0.1")
+			val htResponse = htClient execute htGet
 			val br = new BufferedReader(new InputStreamReader(htResponse.getEntity.getContent))
-			var line = br.readLine()
+			var line = br.readLine
 			while (line != null) {
 				response append line
-				line = br readLine()
+				line = br.readLine
 			}
 			br.close()
 			htClient.close()
@@ -134,8 +135,11 @@ class Utils {
 				LogWriter writeLog("URL " + (request toString()) + " is malformed", Level.ERROR)
 				LogWriter writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
 			case ioe: IOException =>
-				LogWriter.writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
-				LogWriter.writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
+				LogWriter writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
+			case e: Exception =>
+				LogWriter writeLog("CrawlServer Exception: " + e.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString(e), Level.ERROR)
 		}
 		response toString()
 	}
