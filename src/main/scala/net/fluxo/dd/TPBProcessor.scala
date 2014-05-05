@@ -10,6 +10,8 @@ import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
 import org.json.simple.{JSONValue, JSONObject}
+import org.apache.commons.codec.net.URLCodec
+import org.apache.log4j.Level
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -131,7 +133,9 @@ class TPBProcessor {
 	def queryDetails(url: String): String = {
 		//val sb = new StringBuilder
 		var details = ""
-		val encodedURL = URLEncoder encode(url, "UTF-8")
+		val encodedURL = new URLCodec encode url
+		// DEBUG
+		LogWriter writeLog("ENCODED URL: " + encodedURL, Level.DEBUG)
 		val response = OUtils crawlServer encodedURL
 		val document = Jsoup parse response
 		//val tpbd = new TPBDetails
