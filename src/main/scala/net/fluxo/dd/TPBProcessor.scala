@@ -125,7 +125,7 @@ class TPBProcessor {
 				val obj = iterator.next
 				//obj.Info_:(queryDetails(obj.DetailsURL))
 				// DEBUG
-				LogWriter writeLog("DetailsURL: " + FilenameUtils.getName(obj.DetailsURL), Level.DEBUG)
+				LogWriter writeLog("DetailsURL: " + FilenameUtils.getName(obj.DetailsURL) + ";Path: " + FilenameUtils.getPath(obj.DetailsURL), Level.DEBUG)
 			}
 			val gson = new Gson()
 			sb.append(gson toJson tpbPage)
