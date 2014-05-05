@@ -120,10 +120,12 @@ class TPBProcessor {
 			tpbPage.TotalItems_:(totalItems)
 			tpbPage.TPBItems_:(itemList)
 			val iterator = tpbPage.TPBItems iterator()
-			/*while (iterator.hasNext) {
+			while (iterator.hasNext) {
 				val obj = iterator.next
-				obj.Info_:(queryDetails(obj.DetailsURL))
-			}*/
+				//obj.Info_:(queryDetails(obj.DetailsURL))
+				// DEBUG
+				LogWriter writeLog("DetailsURL: " + obj.DetailsURL, Level.DEBUG)
+			}
 			val gson = new Gson()
 			sb.append(gson toJson tpbPage)
 		}
