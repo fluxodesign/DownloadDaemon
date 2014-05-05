@@ -12,6 +12,7 @@ import java.util
 import org.json.simple.{JSONValue, JSONObject}
 import org.apache.commons.codec.net.URLCodec
 import org.apache.log4j.Level
+import org.apache.commons.io.FilenameUtils
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -124,7 +125,7 @@ class TPBProcessor {
 				val obj = iterator.next
 				//obj.Info_:(queryDetails(obj.DetailsURL))
 				// DEBUG
-				LogWriter writeLog("DetailsURL: " + obj.DetailsURL, Level.DEBUG)
+				LogWriter writeLog("DetailsURL: " + FilenameUtils.getName(obj.DetailsURL), Level.DEBUG)
 			}
 			val gson = new Gson()
 			sb.append(gson toJson tpbPage)
