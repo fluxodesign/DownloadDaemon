@@ -123,10 +123,9 @@ class TPBProcessor {
 			val iterator = tpbPage.TPBItems iterator()
 			while (iterator.hasNext) {
 				val obj = iterator.next
-				val encodedPart = URLEncoder encode (FilenameUtils.getName(obj.DetailsURL), "UTF-8")
 				// DEBUG
-				LogWriter writeLog ("URL: " + FilenameUtils.getPath(obj.DetailsURL) + encodedPart, Level.DEBUG)
-				//obj.Info_:(queryDetails(FilenameUtils.getPath(obj.DetailsURL) + encodedPart))
+				LogWriter writeLog ("URL: " + FilenameUtils.getPath(obj.DetailsURL), Level.DEBUG)
+				obj.Info_:(queryDetails(FilenameUtils.getPath(obj.DetailsURL)))
 			}
 			val gson = new Gson()
 			sb.append(gson toJson tpbPage)
