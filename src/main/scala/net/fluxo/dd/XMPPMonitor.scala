@@ -8,6 +8,8 @@ import net.fluxo.dd.dbo.Task
 import org.apache.commons.validator.routines.IntegerValidator
 import java.io.{File, InputStreamReader, BufferedReader}
 import org.apache.commons.codec.net.URLCodec
+import java.net.URLDecoder
+import org.apache.commons.io.FilenameUtils
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -453,10 +455,10 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				case "TPBDETAILS" =>
 					if (words.length != 3) "ERR TPBDETAILS SYNTAX"
 					else {
-						val detailsURL = OUtils decrypt words(2)
+						val detailsURL = URLDecoder decode (words(2), "UTF-8")
 						if (!(detailsURL startsWith "http://thepiratebay.se/")) "ERR TPBDETAILS URL"
 						else {
-							TPBP queryDetails detailsURL
+							TPBP queryDetails (FilenameUtils getPath detailsURL)
 						}
 					}
 				case _ => "ERR CMD"
