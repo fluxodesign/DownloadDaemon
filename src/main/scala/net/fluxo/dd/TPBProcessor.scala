@@ -126,18 +126,16 @@ class TPBProcessor {
 	}
 
 	def queryDetails(url: String): String = {
-		//val sb = new StringBuilder
-		//var details = ""
+		val sb = new StringBuilder
 		val response = OUtils crawlServer (FilenameUtils getPath url)
 		val document = Jsoup parse response
-		//val tpbd = new TPBDetails
-		//tpbd.Request_:(url)
+		val tpbd = new TPBDetails
+		tpbd.Request_:(url)
 		val info = parseDetails(document)
-		//tpbd.Info_:(info)
-		//val gson = new Gson()
-		//sb.append(gson toJson tpbd)
-		//sb toString()
-		info
+		tpbd.Info_:(info)
+		val gson = new Gson()
+		sb.append(gson toJson tpbd)
+		sb toString()
 	}
 
 	def queryTotalItemsFound(doc: Document): Int = {

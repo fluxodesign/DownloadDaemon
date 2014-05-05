@@ -133,13 +133,13 @@ class Utils {
 		} catch {
 			case mue: MalformedURLException =>
 				LogWriter writeLog("URL " + (request toString()) + " is malformed", Level.ERROR)
-				LogWriter writeLog(LogWriter.stackTraceToString(mue), Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString mue, Level.ERROR)
 			case ioe: IOException =>
 				LogWriter writeLog("IO/E: " + ioe.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ioe, Level.ERROR)
 			case e: Exception =>
 				LogWriter writeLog("CrawlServer Exception: " + e.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString(e), Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString e, Level.ERROR)
 		}
 		response toString()
 	}
@@ -242,25 +242,6 @@ class Utils {
 			sb.insert(0, "0")
 		}
 		sb.toString()
-	}
-
-	def decrypt(data: String): String = {
-		try {
-			val decodedData = URLDecoder decode(data, "UTF-8")
-			val bData = Base64 decodeBase64 decodedData
-			val dks = new DESKeySpec("FL-FR33B00T3R-K3Y" getBytes "UTF-8")
-			val secretKeyFactory = SecretKeyFactory getInstance "DES"
-			val secretKey = secretKeyFactory generateSecret dks
-			val cipher = Cipher getInstance "DES"
-			cipher.init(Cipher.DECRYPT_MODE, secretKey)
-			val dataBytesDecrypted = cipher doFinal bData
-			return new String(dataBytesDecrypted)
-		} catch {
-			case e: Exception =>
-				LogWriter writeLog("Error decrypting string!", Level.ERROR)
-				LogWriter writeLog(e.getMessage, Level.ERROR)
-		}
-		data
 	}
 
 	@throws(classOf[XmlRpcException])

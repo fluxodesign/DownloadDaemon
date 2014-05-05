@@ -2,6 +2,7 @@ package net.fluxo.dd;
 
 import net.fluxo.dd.dbo.Task;
 import org.apache.commons.codec.net.URLCodec;
+import org.apache.commons.io.FilenameUtils;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -178,9 +179,9 @@ public class FluxoWSProcess {
 	public Response getTPBDetails(@DefaultValue("") @PathParam("url") String url) {
 		try {
 			if (url.length() > 0) {
-				String decodedURL = OUtils.decrypt(url);
+				String decodedURL = URLDecoder.decode(url, "UTF-8");
 				if (decodedURL.startsWith("http://thepiratebay.se/")) {
-					String response = TPBP.queryDetails(decodedURL);
+					String response = TPBP.queryDetails(FilenameUtils.getPath(decodedURL));
 					return Response.status(200).entity(response).build();
 				}
 			}
