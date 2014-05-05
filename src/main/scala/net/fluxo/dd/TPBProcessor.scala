@@ -10,7 +10,6 @@ import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
 import org.json.simple.{JSONValue, JSONObject}
-import org.apache.commons.codec.net.URLCodec
 import org.apache.log4j.Level
 import org.apache.commons.io.FilenameUtils
 
@@ -120,18 +119,6 @@ class TPBProcessor {
 			val tpbPage = new TPBPage
 			tpbPage.TotalItems_:(totalItems)
 			tpbPage.TPBItems_:(itemList)
-			/*val iterator = tpbPage.TPBItems iterator()
-			while (iterator.hasNext) {
-				val obj = iterator.next
-				// DEBUG
-				LogWriter writeLog ("URL: " + FilenameUtils.getPath(obj.DetailsURL), Level.DEBUG)
-				try {
-					obj.Info_:(queryDetails(FilenameUtils.getPath(obj.DetailsURL)))
-				} catch {
-					case e: Exception =>
-						LogWriter writeLog("Error getting TPB Details: " + e.getMessage, Level.ERROR)
-				}
-			}*/
 			val gson = new Gson()
 			sb.append(gson toJson tpbPage)
 		}
@@ -139,23 +126,18 @@ class TPBProcessor {
 	}
 
 	def queryDetails(url: String): String = {
-		val sb = new StringBuilder
-		var details = ""
-		// DEBUG
-		//LogWriter writeLog("ENCODED URL: " + encodedURL, Level.DEBUG)
+		//val sb = new StringBuilder
+		//var details = ""
 		val response = OUtils crawlServer (FilenameUtils getPath url)
 		val document = Jsoup parse response
-		val tpbd = new TPBDetails
-		tpbd.Request_:(url)
+		//val tpbd = new TPBDetails
+		//tpbd.Request_:(url)
 		val info = parseDetails(document)
-		try {
-			val json = JSONValue.parseWithException(info).asInstanceOf[JSONObject]
-			details = (json get "_info").asInstanceOf[String]
-		} catch { case e: Exception => LogWriter writeLog("Error parsing TPB Details JSON!", Level.ERROR) }
-		tpbd.Info_:(details)
-		val gson = new Gson()
-		sb.append(gson toJson tpbd)
-		sb toString()
+		//tpbd.Info_:(info)
+		//val gson = new Gson()
+		//sb.append(gson toJson tpbd)
+		//sb toString()
+		info
 	}
 
 	def queryTotalItemsFound(doc: Document): Int = {
