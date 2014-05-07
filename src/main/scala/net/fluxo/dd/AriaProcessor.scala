@@ -178,23 +178,9 @@ class AriaProcessor {
 		}
 
 		override def run() {
+			OUtils createUriFile (gid, "uridir/" + gid + ".txt")
 			// DEBUG
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
-			/*val cmdLine = new CommandLine("aria2c")
-			cmdLine addArgument "--enable-rpc"
-			cmdLine addArgument ("--rpc-listen-port=" + port)
-			cmdLine addArgument ("--gid=" + gid)
-			if (_httpUsername.getOrElse("").length > 0 && _httpPassword.getOrElse("").length > 0) {
-				cmdLine addArgument("--http-user=" + _httpUsername.getOrElse(""))
-				cmdLine addArgument("--http-passwd=" + _httpPassword.getOrElse(""))
-			} else {
-				cmdLine addArgument "--seed-time=0"
-				cmdLine addArgument "--max-overall-upload-limit=1"
-				cmdLine addArgument "--follow-torrent=mem"
-				cmdLine addArgument "--seed-ratio=1"
-			}
-			cmdLine addArgument ("\'" + uri + "\'")*/
-
 			val sb = new StringBuilder
 			sb.append("aria2c").append(" --enable-rpc").append(" --rpc-listen-port=").append(port)
 				.append(" --gid=").append(gid)
@@ -205,7 +191,7 @@ class AriaProcessor {
 				sb.append(" --seed-time=0").append(" --max-overall-upload-limit=1").append(" --follow-torrent=mem")
 					.append(" --seed-ratio=1")
 			}
-			sb.append(" \"").append(uri).append("\"")
+			sb.append(" --input-file=").append("uridir/").append(gid).append("txt")
 			// DEBUG
 			LogWriter writeLog("command line: " + sb.toString(), Level.DEBUG)
 			val cmdLine = CommandLine parse sb.toString()

@@ -35,6 +35,7 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_isRunning = false
 			return
 		}
+		OUtils createUriDir()
 		if (_isRunning) {
 			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan, this)
 			_tDlMonitor = Some(dlMon)
@@ -80,7 +81,6 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	}
 
 	def tryStop() {
-		/// TODO
 		if (_tDlMonitor.isDefined) {
 			_tDlMonitor.getOrElse(null).stop()
 			_threadDlMonitor interrupt()

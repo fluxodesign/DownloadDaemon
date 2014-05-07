@@ -20,6 +20,7 @@ import org.apache.commons.codec.binary.Base64
 import javax.crypto.spec.DESKeySpec
 import javax.crypto.{SecretKeyFactory, SecretKey, Cipher}
 import scala.Some
+import org.apache.commons.io.FileUtils
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -95,6 +96,39 @@ class Utils {
 				LogWriter writeLog(ioe.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ioe, Level.ERROR)
 		}
+	}
+
+	def createUriDir() {
+		try {
+			val uriDir = new File("uridir")
+			if (!uriDir.exists()) FileUtils forceMkdir uriDir
+		} catch {
+			case e: Exception =>
+				LogWriter writeLog("Error creating uri directory", Level.ERROR)
+				LogWriter writeLog(e.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString e, Level.ERROR)
+		}
+	}
+
+	def createUriFile(gid: String, uri: String): Boolean = {
+		var status = true
+		try {
+			val file = new File("uridir/" + gid + ".txt")
+			if (!file.exists()) status = file.createNewFile()
+			if (status) {
+				val fWriter = new FileWriter(file getAbsoluteFile)
+				val bufferedWriter = new BufferedWriter(fWriter)
+				bufferedWriter write uri
+				bufferedWriter close()
+			}
+		} catch {
+			case e: Exception =>
+				LogWriter writeLog("Error creating uri-file for GID " + gid + "!", Level.ERROR)
+				LogWriter writeLog(e.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString e, Level.ERROR)
+				status = false
+		}
+		status
 	}
 
 	def portInUse(port: Int): Boolean = {
