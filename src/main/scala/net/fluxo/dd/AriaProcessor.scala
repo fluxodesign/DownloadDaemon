@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.exec._
 import scala.Some
+import java.net.URLEncoder
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -192,7 +193,7 @@ class AriaProcessor {
 				cmdLine addArgument "--follow-torrent=mem"
 				cmdLine addArgument "--seed-ratio=1"
 			}
-			cmdLine addArgument ("\'" + uri + "\'")
+			cmdLine addArgument ("\'" + URLEncoder.encode(uri, "UTF-8") + "\'")
 
 			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
