@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.exec._
 import scala.Some
-import java.net.URLEncoder
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -178,7 +177,7 @@ class AriaProcessor {
 		}
 
 		override def run() {
-			OUtils createUriFile (gid, "uridir/" + gid + ".txt")
+			OUtils createUriFile (gid, uri)
 			// DEBUG
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
 			val sb = new StringBuilder
@@ -191,7 +190,7 @@ class AriaProcessor {
 				sb.append(" --seed-time=0").append(" --max-overall-upload-limit=1").append(" --follow-torrent=mem")
 					.append(" --seed-ratio=1")
 			}
-			sb.append(" --input-file=").append("uridir/").append(gid).append("txt")
+			sb.append(" --input-file=").append("uridir/").append(gid).append(".txt")
 			// DEBUG
 			LogWriter writeLog("command line: " + sb.toString(), Level.DEBUG)
 			val cmdLine = CommandLine parse sb.toString()
