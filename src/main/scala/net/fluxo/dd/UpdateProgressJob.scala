@@ -151,17 +151,17 @@ class UpdateProgressJob extends Job {
 
 						// shutdown this aria2 process when it's update is finished...
 						if (activeTasks.length == 0 && flagCompleted) {
-							OUtils.sendAriaTellShutdown(client)
-							iterator.remove()
+							OUtils sendAriaTellShutdown client
+							iterator remove()
 						}
 
 					} catch {
 						case xe: XmlRpcException =>
-							LogWriter.writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.ERROR)
+							LogWriter writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.ERROR)
 							// if a download is hanging or call to XML-RPC server returns an error,
 							// we need to shut down the offending thread and restart the download...
-							//LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
-							//OAria killProcess _currentPort
+							LogWriter writeLog("Shutting down the offending thread...", Level.INFO)
+							OAria killProcess _currentPort
 					}
 
 
@@ -171,12 +171,6 @@ class UpdateProgressJob extends Job {
 			case ie: InterruptedException =>
 				LogWriter.writeLog(ie.getMessage, Level.ERROR)
 				LogWriter.writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
-			/*case xe: XmlRpcException =>
-				LogWriter.writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.ERROR)
-				// if a download is hanging or call to XML-RPC server returns an error,
-				// we need to shut down the offending thread and restart the download...
-				LogWriter.writeLog("Shutting down the offending thread...", Level.INFO)
-				OAria killProcess _currentPort*/
 		}
 	}
 }

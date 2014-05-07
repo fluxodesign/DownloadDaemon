@@ -7,7 +7,8 @@ import org.joda.time.DateTime
 import org.apache.log4j.Level
 import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FilenameUtils
-import org.apache.commons.exec.{DefaultExecutor, ExecuteWatchdog, CommandLine}
+import org.apache.commons.exec._
+import scala.Some
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -17,6 +18,8 @@ import org.apache.commons.exec.{DefaultExecutor, ExecuteWatchdog, CommandLine}
 class AriaProcessor {
 
 	private val _activeProcesses: util.ArrayList[AriaProcess] = new util.ArrayList
+
+	private val _startingProcesses: util.ArrayList[Int] = new util.ArrayList
 
 	def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
 
@@ -60,19 +63,6 @@ class AriaProcessor {
 		}
 	}
 
-	/*def safeToRestart(): Boolean = {
-		val p = new ProcessBuilder("bash", "-c", "pgrep aria2").start()
-		val sb = new StringBuilder
-		val br = new BufferedReader(new InputStreamReader(p getInputStream))
-		var line = br.readLine
-		while (line != null) {
-			sb append line
-			LogWriter writeLog ("bash - pgrep aria2: " + line, Level.INFO)
-			line = br.readLine
-		}
-		((sb toString() trim) length) == 0
-	}*/
-
 	def restartDownloads() {
 		val activeTasks = DbControl.queryUnfinishedTasks()
 		if (activeTasks.length > 0) LogWriter.writeLog("Trying to restart " + activeTasks.length + " unfinished downloads...", Level.INFO)
@@ -97,6 +87,7 @@ class AriaProcessor {
 					ariaThread.setCredentials(t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""))
 				}
 			}
+			_startingProcesses add rpcPort
 			new Thread(ariaThread).start()
 			stat(rpcPort, restarting = true, t.TaskGID.getOrElse(""), t.TaskOwner.getOrElse(""), t.TaskInput.getOrElse(""),
 				isHttp = t.TaskIsHttp, t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""), ariaThread getExecutor)
@@ -208,7 +199,15 @@ class AriaProcessor {
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
 			_executor = Some(executor)
+			val pumpsh = new PumpStreamHandler(new OStream)
+			executor setStreamHandler pumpsh
 			executor execute cmdLine
+		}
+	}
+
+	class OStream extends LogOutputStream {
+		override def processLine(line: String, level: Int) {
+			LogWriter writeLog("AriaProcessor: " + line, Level.INFO)
 		}
 	}
 }
