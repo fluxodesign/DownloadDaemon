@@ -192,7 +192,7 @@ class AriaProcessor {
 				cmdLine addArgument "--follow-torrent=mem"
 				cmdLine addArgument "--seed-ratio=1"
 			}
-			cmdLine addArgument ("\"" + uri + "\"")
+			cmdLine addArgument ("\'" + uri + "\'")
 
 			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
