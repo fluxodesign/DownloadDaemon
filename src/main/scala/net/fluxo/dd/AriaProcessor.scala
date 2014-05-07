@@ -179,8 +179,9 @@ class AriaProcessor {
 		override def run() {
 			// DEBUG
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
-			val cmdLine = new CommandLine("aria2c")
-			cmdLine addArgument "--enable-rpc"
+			val cmdLine = new CommandLine("bash")
+			cmdLine addArgument "-c"
+			/*cmdLine addArgument "--enable-rpc"
 			cmdLine addArgument ("--rpc-listen-port=" + port)
 			cmdLine addArgument ("--gid=" + gid)
 			//val process = {
@@ -194,7 +195,19 @@ class AriaProcessor {
 					cmdLine addArgument "--seed-ratio=1"
 				}
 			//}
-			cmdLine addArgument ("\"" + uri + "\"")
+			cmdLine addArgument ("\"" + uri + "\"")*/
+			val sbCmd = new StringBuilder
+			sbCmd.append("'aria2c").append(" --enable-rpc").append(" --rpc-listen-port=").append(port).append(" --gid=")
+				.append(gid)
+			if (_httpUsername.getOrElse("").length > 0 && _httpPassword.getOrElse("").length > 0) {
+				sbCmd.append(" --http-user=").append(_httpUsername.getOrElse("")).append(" --http-passwd=").append(_httpPassword.getOrElse(""))
+			} else {
+				sbCmd.append(" --seed-tim=0").append(" --max-overall-upload-limit=1").append(" --follow-torrent=mem")
+					.append(" --seed-ratio=1")
+			}
+			sbCmd.append(" \"").append(uri).append("\"").append("'")
+			cmdLine addArgument (sbCmd toString())
+
 			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
