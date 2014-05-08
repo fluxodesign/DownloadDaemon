@@ -248,6 +248,21 @@ class Utils {
 		json.toString
 	}
 
+	def DownloadProgressToJson(obj: util.HashMap[String,String]): String = {
+		val json = (new JSONObject).asInstanceOf[util.HashMap[String, Object]]
+		json put("Object", "DownloadProgress")
+		val iterator = obj entrySet() iterator()
+		val jsArray = (new JSONArray).asInstanceOf[util.List[util.HashMap[String,String]]]
+		while (iterator.hasNext) {
+			val o = iterator.next
+			val progressObj = (new JSONObject).asInstanceOf[util.HashMap[String,String]]
+			progressObj put (o.getKey, o.getValue)
+			jsArray add progressObj
+		}
+		json put ("Progress", jsArray)
+		json.toString
+	}
+
 	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
 		var ret: Object = new Object
 		val it = map.entrySet().iterator()

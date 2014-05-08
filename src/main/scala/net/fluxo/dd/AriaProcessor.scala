@@ -41,7 +41,7 @@ class AriaProcessor {
 		if (rpcPort < 0) return "All download slots taken, try again later"
 		var newGid = OUtils.generateGID()
 		while (DbControl.isTaskGIDUsed(newGid)) newGid = OUtils.generateGID()
-		val ariaThread = new AriaThread(rpcPort, uri, newGid, /*owner, false,*/ isHttp)
+		val ariaThread = new AriaThread(rpcPort, uri, newGid, isHttp)
 		if (httpUsername.length > 0 && httpPassword.length > 0) {
 			ariaThread.setCredentials(httpUsername, httpPassword)
 		}

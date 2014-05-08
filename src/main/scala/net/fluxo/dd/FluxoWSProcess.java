@@ -8,6 +8,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 /**
@@ -71,7 +72,8 @@ public class FluxoWSProcess {
 	public Response getDownloadStatus(@PathParam("id") String userID) {
 		try {
 			Task[] arrTasks = DbControl.queryTasks(userID);
-			StringBuilder sb = new StringBuilder();
+			//StringBuilder sb = new StringBuilder();
+			HashMap<String,String> progressMap = new HashMap<>();
 			for (Task t : arrTasks) {
 				int progress = -1;
 				if (t.TaskCompletedLength() > 0 && t.TaskTotalLength() > 0) {
@@ -81,12 +83,14 @@ public class FluxoWSProcess {
 				if (t.TaskPackage().nonEmpty()) {
 					dlName = t.TaskPackage().get();
 				}
-				sb.append(dlName).append(" --> ").append(progress).append("%").append(System.lineSeparator());
+				//sb.append(dlName).append(" --> ").append(progress).append("%").append(System.lineSeparator());
+				progressMap.put(dlName, String.valueOf(progress));
 			}
-			if (arrTasks.length == 0) {
+			/*if (arrTasks.length == 0) {
 				sb.append("No active tasks are running!");
-			}
-			return Response.status(200).entity(sb.toString()).build();
+			}*/
+			String response = OUtils.DownloadProgressToJson(progressMap);
+			return Response.status(200).entity(response).build();
 		} catch (Exception e) {
 			return Response.status(400).entity(e.getMessage()).build();
 		}

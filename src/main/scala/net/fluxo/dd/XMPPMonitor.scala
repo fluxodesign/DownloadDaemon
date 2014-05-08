@@ -10,6 +10,7 @@ import java.io.{File, InputStreamReader, BufferedReader}
 import org.apache.commons.codec.net.URLCodec
 import java.net.URLDecoder
 import org.apache.commons.io.FilenameUtils
+import java.util
 
 /**
  * User: Ronald Kurniawan (viper)
@@ -329,6 +330,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				case "STATUS" =>
 					if (words.length < 3) "ERR LENGTH"
 					else {
+						val hMap = new util.HashMap[String,String]
 						val tasks: Array[Task] = DbControl.queryTasks(words(2))
 						val sb: StringBuilder = new StringBuilder
 						for (t <- tasks) {
@@ -340,10 +342,12 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								if (t.TaskPackage.getOrElse(null).length > 1) t.TaskPackage.getOrElse(null)
 								else "Unknown Download"
 							}
-							sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
+							//sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
+							hMap put(dlName, String valueOf progress)
 						}
-						if (tasks.length == 0) sb.append("No active tasks are running!")
-						sb.toString()
+						//if (tasks.length == 0) sb.append("No active tasks are running!")
+						//sb.toString()
+						OUtils DownloadProgressToJson hMap
 					}
 				case "DELETE" =>
 					if (words.length < 3) "ERR LENGTH"
