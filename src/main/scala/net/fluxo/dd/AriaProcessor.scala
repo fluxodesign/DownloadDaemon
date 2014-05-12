@@ -29,6 +29,10 @@ class AriaProcessor {
 			if (!(uri startsWith "magnet:") && !(uri endsWith ".torrent")) {
 				return "ERR URI"
 			}
+		} else {
+			if (!(uri startsWith "http://")) {
+				return "ERR URI"
+			}
 		}
 		// find a free port between starting rpc port to (starting rpc port + limit)
 		var rpcPort = -1
