@@ -24,9 +24,11 @@ class AriaProcessor {
 	def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
 
 	def processRequest(uri: String, owner: String, isHttp: Boolean, httpUsername: String, httpPassword: String): String = {
-		// the uri should always starts with "magnet:" or ends with ".torrent"
-		if (!(uri startsWith "magnet:") && !(uri endsWith ".torrent")) {
-			return "ERR URI"
+		if (!isHttp) {
+			// the uri should always starts with "magnet:" or ends with ".torrent"
+			if (!(uri startsWith "magnet:") && !(uri endsWith ".torrent")) {
+				return "ERR URI"
+			}
 		}
 		// find a free port between starting rpc port to (starting rpc port + limit)
 		var rpcPort = -1
