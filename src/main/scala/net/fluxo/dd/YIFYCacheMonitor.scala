@@ -1,3 +1,23 @@
+/*
+ * YIFYCacheMonitor.scala
+ *
+ * Copyright (c) 2014 Ronald Kurniawan. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
+ */
 package net.fluxo.dd
 
 import org.quartz.impl.StdSchedulerFactory
@@ -6,9 +26,12 @@ import org.apache.log4j.Level
 import java.io.IOException
 
 /**
- * User: Ronald Kurniawan (viper)
- * Date: 3/04/14 10:29PM
- * Comment:
+ * This class starts and schedule a new Quartz job to check the site for new items every X hours (in this case, it is
+ * hard coded to 6 hours).
+ *
+ * @author Ronald Kurniawan (viper)
+ * @version 0.4.4, 3/04/14
+ * @see java.lang.Runnable
  */
 class YIFYCacheMonitor extends Runnable {
 
@@ -16,6 +39,10 @@ class YIFYCacheMonitor extends Runnable {
 	private var _isRunning: Boolean = true
 	private val _scheduler: Scheduler = StdSchedulerFactory.getDefaultScheduler
 
+	/**
+	 * Starts a <code>org.quartz.Scheduler</code> to run <code>YIFYCacheJob</code> and schedule it
+	 * to run every 6 hours.
+	 */
 	override def run() {
 		try {
 			_scheduler start()
@@ -37,12 +64,19 @@ class YIFYCacheMonitor extends Runnable {
 		}
 	}
 
+	/**
+	 * If anything in this class needs to be cleaned up, it needs to run from this method.
+	 */
 	def cleanup() {
-		LogWriter.writeLog("DownloadMonitor thread is shut down!", Level.INFO)
+		LogWriter writeLog("YIFYCacheMonitor thread is shut down!", Level.INFO)
 	}
 
+	/**
+	 * Attempt to stop the process and the thread.
+	 */
 	def stop() {
-		LogWriter.writeLog("Trying to stop DownloadMonitor thread before shutdown...", Level.INFO)
+		LogWriter writeLog("Trying to stop YIFYCacheMonitor thread before shutdown...", Level.INFO)
 		_isRunning = false
+		_scheduler shutdown()
 	}
 }

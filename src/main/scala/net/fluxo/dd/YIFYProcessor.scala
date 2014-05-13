@@ -1,3 +1,23 @@
+/*
+ * YIFYProcessor.scala
+ *
+ * Copyright (c) 2014 Ronald Kurniawan. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
+ */
 package net.fluxo.dd
 
 import java.net.URL
@@ -9,28 +29,36 @@ import org.apache.log4j.Level
 import org.json.simple.parser.JSONParser
 
 /**
- * User: Ronald Kurniawan (viper)
- * Date: 11/03/14
- * Time: 10:06 AM
+ * This class deals with YIFY's web service, particularly with listing, acquiring and caching movie details, including
+ * the screenshots of a movie, so user can access the details from our system.
  *
+ * @author Ronald Kurniawan (viper)
+ * @version 0.4.4, 11/03/14
  */
 class YIFYProcessor {
 
-	/*
-		quality: 0 = ALL, 1 = 720p, 2 = 1080p, 3 = 3D
-		page: page to request
-        rating: minimum rating to request, 0 - 9, default 0 (ALL)
+	/**
+	 * Return the list of movies available from YIFY site. The list can be filtered by page (15 items per page), movie quality
+	 * and IMDB rating.
+	 *
+	 * @param page the page number to display (starting from 1)
+	 * @param quality filter the quality of movies to display (0 = ALL, 1 = 720p movies only, 2 = 1080p movies only, 3 = 3D movies only)
+	 * @param rating IMDB rating; specifying 0 will display ALL movies, while specifying 5 for e.g., will display only movies
+	 *               with IMDB rating of 5.0 and above
+	 * @param externalIP the local system's external IP address
+	 * @param port port number to which the embedded Jetty server is bound to
+	 * @return the list of movies on a particular page from YIFY site, with all cover image URLs re-addressed to our site
 	 */
 	def procListMovie(page: Int, quality:Int, rating: Int, externalIP: String, port: Int): String = {
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=15")
-		if (quality <= 3 && quality >= 0) request.append("&quality=").append(quality  match {
+		if (quality <= 3 && quality >= 0) request append "&quality=" append(quality  match {
 			case 0 => "ALL"
 			case 1 => "720p"
 			case 2 => "1080p"
 			case 3 => "3D"
 		})
-		if (page > 0) request.append("&set=" + page)
-		if (rating >= 0 && rating <= 9) request.append("&rating=" + rating)
+		if (page > 0) request append("&set=" + page)
+		if (rating >= 0 && rating <= 9) request append("&rating=" + rating)
 		// send the request...
 		val response = OUtils crawlServer (request toString())
 		checkEntryWithYIFYCache(response)
@@ -38,13 +66,26 @@ class YIFYProcessor {
 		processImages(response, externalIP, port)
 	}
 
+	/**
+	 * Return details of a particular movie from YIFY site.
+	 *
+	 * @param id ID of the movie
+	 * @param externalIP the local system's external IP address
+	 * @param port port number to which the embedded Jetty server is bound to
+	 * @return details of a movie from YIFY site, with screenshot images re-addressed to our site
+	 */
 	def procMovieDetails(id: Int, externalIP:String, port: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/movie.json?id=").append(id)
+		val request: StringBuilder = new StringBuilder("http://yts.re/api/movie.json?id=") append id
 		val response = OUtils crawlServer (request toString())
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
 		processScreenshotImages(response, externalIP, port)
 	}
 
+	/**
+	 * Request a page from YIFY site, 50 items at a time
+	 * @param page page number to request
+	 * @return response from YIFY site
+	 */
 	def procYIFYCache(page: Int): String = {
 		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=50")
 		if (page > 1) request append "&set=" append page
@@ -53,6 +94,13 @@ class YIFYProcessor {
 		response
 	}
 
+	/**
+	 * Process the search request from user. As YIFY does not provide search capabilities on it's public web service,
+	 * we need to provide it from our cache database. Search is performed only on titles.
+	 *
+	 * @param term search term
+	 * @return returns a JSON object containing the results of the search
+	 */
 	def procYIFYSearch(term: String): String = {
 		val searchString = term replaceAllLiterally("%20", " ")
 		val searchResult = DbControl ycQueryMoviesByTitle searchString
@@ -70,19 +118,26 @@ class YIFYProcessor {
 		OUtils YIFYSearchResultToJSON yifySearchResult
 	}
 
+	/**
+	 * Process results returned from YIFY site by changing the URLs of screenshot images to point to our site.
+	 * @param content original string returned by YIFY site
+	 * @param externalIP the local system's external IP address
+	 * @param port port number where the embedded Jetty server is bound to
+	 * @return response from YIFY site, with all screenshot image URLs re-addressed to point to our site
+	 */
 	private def processScreenshotImages(content: String, externalIP: String, port: Int): String = {
 		var newContent = content
-		val jsObj = JSONValue.parseWithException(content).asInstanceOf[org.json.simple.JSONObject]
+		val jsObj = (JSONValue parseWithException content).asInstanceOf[org.json.simple.JSONObject]
 		val arrKeys = Array("MediumCover", "MediumScreenshot1", "MediumScreenshot2", "MediumScreenshot3")
 
 		for (x <- arrKeys) {
-			val sc = jsObj.get(x).toString
+			val sc = (jsObj get x).toString
 			var newSc = sc replaceAllLiterally("\\/", "/")
 			val path = new URL(newSc).getPath
-			val dirname = "." + FilenameUtils.getFullPath(path)
+			val dirname = "." + (FilenameUtils getFullPath path)
 			val dir = new File(dirname)
 			if (!(dir exists())) dir mkdirs()
-			val localFile = new File(dirname + FilenameUtils.getName(path))
+			val localFile = new File(dirname + (FilenameUtils getName path))
 			if (!(localFile exists())) new Thread(new WgetImage(newSc, dirname)) start()
 			if (!externalIP.equals("127.0.0.1")) {
 				val oldServer = new URL(newSc).getAuthority
@@ -95,6 +150,13 @@ class YIFYProcessor {
 		newContent
 	}
 
+	/**
+	 * Process results returned from YIFY site by changing the URLs of cover images to point to our site.
+	 * @param content original string returned by YIFY site
+	 * @param externalIP the local system's external IP address
+	 * @param port port number where embedded Jetty server is bound to
+	 * @return response from YIFY site, with all cover image URLs re-addressed to point to our site
+	 */
 	private def processImages(content: String, externalIP: String, port: Int): String = {
 		var newContent = content
 		val jsObj = JSONValue.parseWithException(content).asInstanceOf[org.json.simple.JSONObject]
@@ -128,6 +190,11 @@ class YIFYProcessor {
 		newContent
 	}
 
+	/**
+	 * Checks whether entries returned from YIFY site already exists in our database; insert to db if new.
+	 *
+	 * @param raw string response from YIFY site
+	 */
 	private def checkEntryWithYIFYCache(raw: String) {
 		val jsonParser = new JSONParser
 		try {
@@ -154,7 +221,19 @@ class YIFYProcessor {
 		}
 	}
 
+	/**
+	 * This class runs a "wget" process to obtain an image and store it on our cache dir.
+	 *
+	 * @param url the URL of the image
+	 * @param location local directory to store the image
+	 *
+	 * @author Ronald Kurniawan (viper)
+	 * @version 0.4.4, 11/03/14
+	 */
 	class WgetImage(url: String, location: String) extends Runnable {
+		/**
+		 * Run a "wget" Process and wait until the Process exits.
+		 */
 		override def run() {
 			val wgetProc = new ProcessBuilder("wget", "--directory-prefix=" + location, url) start()
 			wgetProc waitFor()
@@ -163,4 +242,10 @@ class YIFYProcessor {
 
 }
 
+/**
+ * Singleton object for YIFYProcessor
+ *
+ * @author Ronald Kurniawan (viper)
+ * @version 0.4.4, 11/03/14
+ */
 object YIFYP extends YIFYProcessor

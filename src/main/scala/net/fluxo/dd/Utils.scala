@@ -1,3 +1,23 @@
+/*
+ * Utils.scala
+ *
+ * Copyright (c) 2014 Ronald Kurniawan. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
+ */
 package net.fluxo.dd
 
 import net.fluxo.dd.dbo.{YIFYSearchResult, MovieObject, Config}
@@ -16,16 +36,13 @@ import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
 import org.json.simple.{JSONArray, JSONValue, JSONObject}
 import scala.Some
-import org.apache.commons.codec.binary.Base64
-import javax.crypto.spec.DESKeySpec
-import javax.crypto.{SecretKeyFactory, SecretKey, Cipher}
-import scala.Some
 import org.apache.commons.io.FileUtils
 
 /**
- * User: Ronald Kurniawan (viper)
- * Date: 15/03/14
- * Time: 20:58 PM
+ * This class contains methods that can be called from anywhere in the application.
+ *
+ * @author Ronald Kurniawan (viper)
+ * @version 0.4.4, 15/03/14
  */
 class Utils {
 
@@ -33,14 +50,35 @@ class Utils {
 	private val _randomizer: Random = new Random(System.currentTimeMillis())
 	private var _externalIP: Option[String] = Some("127.0.0.1")
 
+	/**
+	 * Return the externally-accessible IP address of the local system.
+	 *
+	 * @return IP address of local system, or loop address
+	 */
 	def ExternalIP: String = { _externalIP.getOrElse("127.0.0.1") }
+
+	/**
+	 * Setter method.
+	 *
+	 * @param value string value of externally-accesible IP address of the local system
+	 */
 	def ExternalIP_:(value: String) { _externalIP = Some(value) }
 
+	/**
+	 * Return the <code>Config</code> object.
+	 *
+	 * @return a <code>net.fluxo.dd.dbo.Config</code> object
+	 */
 	def readConfig: Config = {
 		if (_config.isEmpty) _config = Some(readConfiguration)
 		_config.getOrElse(null)
 	}
 
+	/**
+	 * Read the configuration file (dd.properties) into <code>net.fluxo.dd.dbo.Config</code> object.
+	 *
+	 * @return a <code>net.fluxo.dd.dbo.Config</code> object
+	 */
 	private def readConfiguration: Config = {
 		val prop: Properties = new Properties
 		var cfg: Config = new Config
@@ -62,6 +100,11 @@ class Utils {
 		cfg
 	}
 
+	/**
+	 * Check whether all ports slated for aria2 processes are free.
+	 *
+	 * @return true if all ports are unbound; false otherwise
+	 */
 	def allPortsFree: Boolean = {
 		var ret: Boolean = true
 		breakable {
@@ -75,6 +118,13 @@ class Utils {
 		ret
 	}
 
+	/**
+	 * Delete the specified file from filesystem. If file is a directory, this method recursively deletes
+	 * all the content before deleting the directory.
+	 *
+	 * @param file <code>File</code> object to delete
+	 * @see java.util.File
+	 */
 	def deleteFile(file: File) {
 		try {
 			if (file.isDirectory) {
@@ -98,10 +148,13 @@ class Utils {
 		}
 	}
 
+	/**
+	 * Create a new directory "uridir" to store input files for aria2 process.
+	 */
 	def createUriDir() {
 		try {
 			val uriDir = new File("uridir")
-			if (!uriDir.exists()) FileUtils forceMkdir uriDir
+			if (!(uriDir exists)) FileUtils forceMkdir uriDir
 		} catch {
 			case e: Exception =>
 				LogWriter writeLog("Error creating uri directory", Level.ERROR)
@@ -110,11 +163,18 @@ class Utils {
 		}
 	}
 
+	/**
+	 * Create a new input file for aria2 process.
+	 *
+	 * @param gid unique ID for the download
+	 * @param uri target URL to download
+	 * @return true if everything went smoothly; false otherwise
+	 */
 	def createUriFile(gid: String, uri: String): Boolean = {
 		var status = true
 		try {
 			val file = new File("uridir/" + gid + ".txt")
-			if (!file.exists()) status = file.createNewFile()
+			if (!file.exists()) status = file createNewFile()
 			if (status) {
 				val fWriter = new FileWriter(file getAbsoluteFile)
 				val bufferedWriter = new BufferedWriter(fWriter)
@@ -131,23 +191,35 @@ class Utils {
 		status
 	}
 
+	/**
+	 * Check if a specific port is bound.
+	 *
+	 * @param port port number to examine
+	 * @return true if port is bound to a process; false otherwise
+	 */
 	def portInUse(port: Int): Boolean = {
 		var status = false
 		var ss: ServerSocket = null
 		try {
 			ss = new ServerSocket(port)
-			ss.setReuseAddress(true)
+			ss setReuseAddress true
 		} catch {
 			case ioe: IOException =>
 				status = true
 		} finally {
 			if (ss != null) {
-				ss.close()
+				ss close()
 			}
 		}
 		status
 	}
 
+	/**
+	 * Contact a web server and request its resource.
+	 *
+	 * @param request a string containing the target URL
+	 * @return response from the server
+	 */
 	def crawlServer(request: String): String = {
 		val response = new StringBuilder
 		try {
@@ -162,8 +234,8 @@ class Utils {
 				response append line
 				line = br.readLine
 			}
-			br.close()
-			htClient.close()
+			br close()
+			htClient close()
 		} catch {
 			case mue: MalformedURLException =>
 				LogWriter writeLog("URL " + (request toString()) + " is malformed", Level.ERROR)
@@ -178,6 +250,12 @@ class Utils {
 		response toString()
 	}
 
+	/**
+	 * Convert a JSON response into <code>net.fluxo.dd.dbo.MovieObject</code>.
+	 *
+	 * @param raw JSON string response
+	 * @return a <code>net.fluxo.dd.dbo.MovieObject</code> object
+	 */
 	def stringToMovieObject(raw: String):MovieObject = {
 		val movie = new MovieObject
 		try {
@@ -211,6 +289,12 @@ class Utils {
 		movie
 	}
 
+	/**
+	 * Convert <code>YIFYSearchResult</code> object to JSON string.
+	 *
+	 * @param obj a <code>net.fluxo.dd.dbo.YIFYSearchResult</code> object
+	 * @return JSON string
+	 */
 	def YIFYSearchResultToJSON(obj: YIFYSearchResult): String = {
 		val json = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
 		json put("SearchResult", "YIFY")
@@ -248,6 +332,12 @@ class Utils {
 		json.toString
 	}
 
+	/**
+	 * Return the download progress as a JSON string.
+	 *
+	 * @param obj a <code>java.util.HashMap</code> object containing the download progress
+	 * @return a JSON string
+	 */
 	def DownloadProgressToJson(obj: util.HashMap[String,String]): String = {
 		val json = (new JSONObject).asInstanceOf[util.HashMap[String, Object]]
 		json put("Object", "DownloadProgress")
@@ -263,44 +353,77 @@ class Utils {
 		json.toString
 	}
 
+	/**
+	 * Returns a value <code>Object</code> out of a <code>HashMap</code>.
+	 *
+	 * @param map a <code>java.util.HashMap</code> object
+	 * @param key a <code>java.utils.String</code> key to the Map
+	 * @return an Object
+	 */
 	def extractValueFromHashMap(map: java.util.HashMap[String, Object], key:String): Object = {
 		var ret: Object = new Object
 		val it = map.entrySet().iterator()
 		while (it.hasNext) {
-			val entry = it.next()
+			val entry = it next()
 			if (entry.getKey.equals(key)) ret = entry.getValue
 		}
 		ret
 	}
 
+	/**
+	 * Create a new <code>XmlRpcClient</code> instance querying a specific port and returns it.
+	 *
+	 * @param port port number where an aria2 process is bound to
+	 * @return a <code>org.apache.xmlrpc.client.XmlRpcClient</code> object
+	 */
 	def getXmlRpcClient(port: Int): XmlRpcClient = {
 		val url = "http://127.0.0.1:" + port + "/rpc"
 		val xmlClientConfig: XmlRpcClientConfigImpl = new XmlRpcClientConfigImpl()
-		xmlClientConfig.setServerURL(new URL(url))
+		xmlClientConfig setServerURL new URL(url)
 		val client = new XmlRpcClient()
-		client.setConfig(xmlClientConfig)
-		client.setTypeFactory(new XmlRpcTypeFactory(client))
+		client setConfig xmlClientConfig
+		client setTypeFactory new XmlRpcTypeFactory(client)
 		client
 	}
 
+	/**
+	 * Return a unique 16-character unique ID.
+	 *
+	 * @return a 16-character String
+	 */
 	def generateGID(): String = {
 		//[0-9A-F]
 		val randomValue = _randomizer.nextLong()
 		val sb = new StringBuilder(java.lang.Long.toHexString(randomValue))
 		while (sb.length < 16) {
-			sb.insert(0, "0")
+			sb insert(0, "0")
 		}
-		sb.toString()
+		sb toString()
 	}
 
+	/**
+	 * Send a query status message to the specified <code>XmlRpcClient</code>.
+	 *
+	 * @param gid the unique download ID to query
+	 * @param client a <code>org.apache.xmlrpc.client.XmlRpcClient</code> object
+	 * @throws org.apache.xmlrpc.XmlRpcException XmlRpcException
+	 * @return an XML object representing the download status
+	 */
 	@throws(classOf[XmlRpcException])
 	def sendAriaTellStatus(gid: String, client: XmlRpcClient): Object = {
 		//val params = Array[Object](gid)
 		val params = new util.ArrayList[Object]()
-		params.add(gid)
-		client.execute("aria2.tellStatus", params)
+		params add gid
+		client execute("aria2.tellStatus", params)
 	}
 
+	/**
+	 * Send a query to ask for active processes to the specified <code>XmlRpcClient</code>.
+	 *
+	 * @param client a <code>org.apache.xmlrpc.client.XmlRpcClient</code> object
+	 * @throws org.apache.xmlrpc.XmlRpcException XmlRpcException
+	 * @return an array of Objects representing the active downloads
+	 */
 	@throws(classOf[XmlRpcException])
 	def sendAriaTellActive(client: XmlRpcClient): Array[Object] = {
 		val params = Array[Object]()
@@ -309,6 +432,13 @@ class Utils {
 		returned.asInstanceOf[Array[Object]]
 	}
 
+	/**
+	 * Send a query to ask for finished processes to the specified <code>XmlRpcClient</code>.
+	 *
+	 * @param client a <code>org.apache.xmlrpc.client.XmlRpcClient</code> object
+	 * @throws org.apache.xmlrpc.XmlRpcException XmlRpcException
+	 * @return an array of Objects representing the finished downloads
+	 */
 	@throws(classOf[XmlRpcException])
 	def sendAriaTellStopped(client: XmlRpcClient): Array[Object] = {
 		val params = new util.ArrayList[Int]()
@@ -318,10 +448,19 @@ class Utils {
 		returned.asInstanceOf[Array[Object]]
 	}
 
+	/**
+	 * Send the command to shutdown an aria2 process connected to the specified <code>XmlRpcClient</code>.
+	 *
+	 * @param client a <code>org.apache.xmlrpc.client.XmlRpcClient</code> object
+	 */
 	def sendAriaTellShutdown(client: XmlRpcClient) {
 		client.execute("aria2.shutdown", Array[Object]())
 	}
 
+	/**
+	 * This class defines the behaviour of the <code>StringSerializer</code> used in the
+	 * <code>XmlRpcTypeFactory</code>.
+	 */
 	class XmlRpcStringSerializer extends StringSerializer {
 		@throws(classOf[SAXException])
 		override def write(pHandler: ContentHandler, pObject: Object) {
@@ -329,7 +468,21 @@ class Utils {
 		}
 	}
 
+	/**
+	 * This class defines a <code>TypeFactoryImpl</code> for our <code>XmlRpcClient</code>.
+	 *
+	 * @param pController an instance of <code>XmlRpcController</code>
+	 */
 	class XmlRpcTypeFactory(pController: XmlRpcController) extends TypeFactoryImpl(pController) {
+		/**
+		 * Return a <code>TypeSerializer</code> object. For our purpose here, this method will return a <code>XmlRpcStringSerializer</code>
+		 * object when the pObject is a String.
+		 *
+		 * @param pConfig a <code>org.apache.xmlrpc.common.XmlRpcStreamConfig</code> object
+		 * @param pObject a Java Object
+		 * @throws org.xml.sax.SAXException SAXException
+		 * @return a <code>org.apache.xmlrpc.serializer.TypeSerializer</code> object
+		 */
 		@throws(classOf[SAXException])
 		override def getSerializer(pConfig: XmlRpcStreamConfig, pObject: Object): TypeSerializer = {
 			val response: TypeSerializer = pObject match {
@@ -341,4 +494,7 @@ class Utils {
 	}
 }
 
+/**
+ * A Singleton object for Utils.
+ */
 object OUtils extends Utils

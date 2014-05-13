@@ -1,3 +1,23 @@
+/*
+ * YIFYCacheJob.scala
+ *
+ * Copyright (c) 2014 Ronald Kurniawan. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
+ */
 package net.fluxo.dd
 
 import org.quartz.{JobExecutionException, JobExecutionContext, Job}
@@ -8,17 +28,26 @@ import org.json.simple.parser.JSONParser
 import net.fluxo.dd.dbo.YIFYCache
 
 /**
- * User: Ronald Kurniawan (viper)
- * Date: 3/04/14 3:04PM
- * Comment:
+ * This class represents a <code>Job</code> that processes and updates the YIFY cache. This class is being
+ * called from <code>YIFYCacheMonitor</code>.
+ *
+ * @author Ronald Kurniawan (viper)
+ * @version 0.4.4, 3/04/14
+ * @see org.quartz.Job
  */
 class YIFYCacheJob extends Job {
 
 	private val _yifyCacheService = Executors newFixedThreadPool 1
 
+	/**
+	 * Start the YCache process to update the YIFY cache and wait for the process to finish.
+	 *
+	 * @param context a <code>org.quartz.JobExecutionContext</code> object
+	 * @throws org.quartz.JobExecutionException JobExecutionException
+	 */
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
-		LogWriter.writeLog("Starting YIFY Cache Updater", Level.INFO)
+		LogWriter writeLog("Starting YIFY Cache Updater", Level.INFO)
 		val c: Callable[String] = new YCache
 		val future: Future[String] = _yifyCacheService submit c
 		while (!(future isDone)) {
@@ -39,10 +68,25 @@ class YIFYCacheJob extends Job {
 	}
 }
 
+/**
+ * YCache attempts to populate the cache database and monitor the YIFY site for new items.
+ *
+ * @author Ronald Kurniawan (viper)
+ * @version 0.4.4, 3/04/2014
+ * @see java.util.concurrent.Callable
+ */
 class YCache extends Callable[String] {
 	private var _pageNo = 0
 	private var _totalPageNo = 0
 
+	/**
+	 * If there are no items in our cache database, this method will then populate the database by calling for
+	 * every items from the YIFY server. Otherwise, it will attempt to process the first 4 pages to check if
+	 * there are new items out there.
+	 *
+	 * @throws java.lang.Exception Any exception
+	 * @return "OK"
+	 */
 	@throws(classOf[Exception])
 	override def call(): String = {
 		var totalItemsReported = 0L
@@ -77,10 +121,13 @@ class YCache extends Callable[String] {
 				mPageNo += 1
 			}
 		}
-
 		"OK"
 	}
 
+	/**
+	 * Obtains the total movie count from YIFY server, calculate the total number of pages then
+	 * start processing the entries to input into the database.
+	 */
 	private def populateDb() {
 		// calculate the total pages
 		_pageNo += 1
@@ -91,7 +138,7 @@ class YCache extends Callable[String] {
 			val movieCount = (obj get "MovieCount").asInstanceOf[Long]
 			_totalPageNo = (movieCount / 50).asInstanceOf[Int]
 			if (movieCount % 50 > 0) _totalPageNo += 1
-		// and then start populating the DB backwards (from last set)
+			// and then start populating the DB backwards (from last set)
 			_pageNo = _totalPageNo
 			while (_pageNo > 0) {
 				LogWriter writeLog("POPULATE: Processing page " + _pageNo, Level.INFO)
@@ -106,6 +153,13 @@ class YCache extends Callable[String] {
 		}
 	}
 
+	/**
+	 * Process a single page from YIFY, extract every items from the page, convert the item into a
+	 * <code>YIFYCache</code> object and then insert it into the database.
+	 * @param raw response string from YIFY server
+	 * @param jsonParser an instance of <code>org.json.simple.parser.JSONParser</code>
+	 * @return a Boolean value
+	 */
 	private def processEntry(raw: String, jsonParser: JSONParser): Boolean = {
 		var status = true
 		try {
@@ -122,8 +176,7 @@ class YCache extends Callable[String] {
 				yifyCache.MovieCoverImage_:((o get "CoverImage").asInstanceOf[String])
 
 				if (!(DbControl ycQueryMovieID(yifyCache MovieID))) {
-					status = false
-					DbControl ycInsertNewData yifyCache
+					status = DbControl ycInsertNewData yifyCache
 				}
 			}
 		} catch {

@@ -1,3 +1,23 @@
+/*
+ * TPBProcessor.scala
+ *
+ * Copyright (c) 2014 Ronald Kurniawan. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
+ */
 package net.fluxo.dd
 
 import java.net.{URLEncoder, Socket}
@@ -9,15 +29,14 @@ import net.fluxo.dd.dbo.{TPBDetails, TPBPage, TPBObject}
 import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
-import org.json.simple.{JSONValue, JSONObject}
-import org.apache.log4j.Level
 import org.apache.commons.io.FilenameUtils
 
 /**
- * User: Ronald Kurniawan (viper)
- * Date: 23/03/14
- * Time: 7:14 PM
- * Comment:
+ * This class deals with searching and interpretation of the results of said searches of a certain notorious
+ * bittorrent site.
+ *
+ * @author Ronald Kurniawan (viper)
+ * @version 0.4.4, 23/03/14
  */
 class TPBProcessor {
 
@@ -25,6 +44,9 @@ class TPBProcessor {
 	private final val _httpUrl = "http://thepiratebay.se"
 	private final val _searchUrl = "http://thepiratebay.se/search/[term]/[page]/99/[filter]"
 
+	/**
+	 * Enumeration object containing categories of said site.
+	 */
 	object TPBCats extends Enumeration {
 		type Cat = Value
 		val All = Value(0)
@@ -81,6 +103,11 @@ class TPBProcessor {
 		def isValidCat(i: Int) = values.exists(_ == i)
 	}
 
+	/**
+	 * Check whether our torrent site is alive.
+	 *
+	 * @return true if site is reachable; false otherwise
+	 */
 	def isSiteAlive: Boolean = {
 		var reachable: Boolean = false
 		var socket: Socket = null
@@ -89,7 +116,7 @@ class TPBProcessor {
 			reachable = true
 		} finally {
 			if (socket != null) {
-				try { socket.close() }
+				try { socket close() }
 				catch {
 					case ioe: IOException =>
 				}
@@ -98,6 +125,14 @@ class TPBProcessor {
 		reachable
 	}
 
+	/**
+	 * Send a query request to the site, filtered by page number and an array of categories.
+	 *
+	 * @param searchTerm search term
+	 * @param page page number to display (starting from 0)
+	 * @param cats array of categories to supply to the search
+	 * @return a JSON representation of <code>net.fluxo.dd.dbo.TPBPage</code>
+	 */
 	def query(searchTerm: String, page: Int, cats: Array[Int]): String = {
 		val sb = new StringBuilder
 		var request = _searchUrl
@@ -106,7 +141,7 @@ class TPBProcessor {
 		request = request replaceAllLiterally ("[page]", page.toString)
 		val categories = new StringBuilder
 		for (x <- cats) {
-			if (TPBCats.isValidCat(x)) categories append x append ","
+			if (TPBCats isValidCat x) categories append x append ","
 		}
 		if (categories endsWith ",") categories delete(categories.length - 1, categories.length)
 		request = request replaceAllLiterally ("[filter]", categories toString())
@@ -120,11 +155,17 @@ class TPBProcessor {
 			tpbPage.TotalItems_:(totalItems)
 			tpbPage.TPBItems_:(itemList)
 			val gson = new Gson()
-			sb.append(gson toJson tpbPage)
+			sb append(gson toJson tpbPage)
 		}
-		sb.toString()
+		sb toString()
 	}
 
+	/**
+	 * Send a query requesting the details of a bittorrent object based on a URL.
+	 *
+	 * @param url URL pointing to the details of the bittorrent
+	 * @return a JSON representation of <code>net.fluxo.dd.dbo.TPBDetails</code>
+	 */
 	def queryDetails(url: String): String = {
 		val sb = new StringBuilder
 		val response = OUtils crawlServer (FilenameUtils getPath url)
@@ -134,10 +175,16 @@ class TPBProcessor {
 		val info = parseDetails(document)
 		tpbd.Info_:(info)
 		val gson = new Gson()
-		sb.append(gson toJson tpbd)
+		sb append(gson toJson tpbd)
 		sb toString()
 	}
 
+	/**
+	 * Search for the total items string inside the jsoup's <code>Document</code> object.
+	 *
+	 * @param doc a <code>org.jsoup.nodes.Document</code> object
+	 * @return a number of total items found in this search
+	 */
 	def queryTotalItemsFound(doc: Document): Int = {
 		var ret: Int = 0
 		val h2: Elements = doc getElementsByTag "h2"
@@ -157,6 +204,12 @@ class TPBProcessor {
 		ret
 	}
 
+	/**
+	 * Return the details of the bittorent object, scraped from the <code>Document</code> object.
+	 *
+	 * @param doc a <code>org.jsoup.nodes.Document</code> object
+	 * @return the details of the bittorent object
+	 */
 	def parseDetails(doc: Document): String = {
 		var nfo = ""
 		val div: Elements = doc select "div[class]"
@@ -176,6 +229,12 @@ class TPBProcessor {
 		nfo
 	}
 
+	/**
+	 * Process a <code>Document</code> object to parse <code>TPBObject</code> items.
+	 *
+	 * @param doc a <code>org.jsoup.nodes.Document</code> object
+	 * @return a <code>java.util.ArrayList</code> containing TPBObjects
+	 */
 	def parseItems(doc: Document): util.ArrayList[TPBObject] = {
 		val list = new util.ArrayList[TPBObject]
 		val tr: Elements = doc getElementsByTag "tr"
@@ -250,4 +309,7 @@ class TPBProcessor {
 	}
 }
 
+/**
+ * A Singleton object of TPBProcessor.
+ */
 object TPBP extends TPBProcessor

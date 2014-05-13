@@ -1,3 +1,23 @@
+/*
+ * FluxoWSProcess.java
+ *
+ * Copyright (c) 2014 Ronald Kurniawan. All rights reserved.
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ * MA 02110-1301  USA
+ */
 package net.fluxo.dd;
 
 import net.fluxo.dd.dbo.Task;
@@ -12,13 +32,20 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 
 /**
- * User: Ronald Kurniawan (viper)
- * Date: 11/04/14 2:36PM
- * Comment:
+ * This class contains REST methods that are served via the embedded Jetty server.
+ * <p>Each of these methods has one counterpart that can be called via an XMPP message.</p>
+ *
+ * @author Ronald Kurniawan (viper)
+ * @version 0.4.4, 11/04/14
  */
 @Path("/ws")
 public class FluxoWSProcess {
 
+	/**
+	 * This method should return a HTTP/200 and a string ("FLUXO-REST-WS") when called.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/ping</p>
+	 * @return a {@link javax.ws.rs.core.Response} object signifying that the server is alive and responding.
+	 */
 	@GET
 	@Path("/ping")
 	@Produces("text/plain")
@@ -26,6 +53,14 @@ public class FluxoWSProcess {
 		return Response.status(200).entity("FLUXO-REST-WS").build();
 	}
 
+	/**
+	 * Return a JSON object containing the list of movies available on YIFY site, newest to oldest.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/ylist/page/[page]/quality/[quality]/rating/[rating]</p>
+	 * @param page page number to serve (starts from 1)
+	 * @param quality movie quality to display (0: all movies; 1: 720p movies only; 2: 1080p movies only; 3: 3D movies only)
+	 * @param rating IMDB rating to filter the list; starts from 0, which displays all movies all through to 9
+	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object of movie list
+	 */
 	@GET
 	@Path("/ylist/page/{page}/quality/{quality}/rating/{rating}")
 	@Produces("application/json")
@@ -38,6 +73,12 @@ public class FluxoWSProcess {
 		}
 	}
 
+	/**
+	 * Return a JSON object containing the details of a particular movie.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/ydetails/[movie-id]</p>
+	 * @param id the id of the movie
+	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object of the movie details
+	 */
 	@GET
 	@Path("/ydetails/{id}")
 	@Produces("application/json")
@@ -50,6 +91,12 @@ public class FluxoWSProcess {
 		}
 	}
 
+	/**
+	 * Return a JSON object containing the results of a search on YIFY site.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/ysearch?st=[search-term]</p>
+	 * @param search the search term, could be title or part of title of the movie(s)
+	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object of the search results
+	 */
 	@GET
 	@Path("/ysearch")
 	@Produces("application/json")
@@ -66,9 +113,16 @@ public class FluxoWSProcess {
 		return Response.status(400).entity("NO-SEARCH-TERM").build();
 	}
 
+	/**
+	 * Returns the status of the downloads for a particular user.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/status/[user-id]</p>
+	 * @param userID the user ID to query
+	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object with list of current downloads for
+	 * a particular user
+	 */
 	@GET
 	@Path("/status/{id}")
-	@Produces("text/plain")
+	@Produces("application/json")
 	public Response getDownloadStatus(@PathParam("id") String userID) {
 		try {
 			Task[] arrTasks = DbControl.queryTasks(userID);
@@ -96,6 +150,13 @@ public class FluxoWSProcess {
 		}
 	}
 
+	/**
+	 * Add a bittorrent URL to current list of downloads for the server to process.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/addtorrent/[user-id]/[torrent-url]</p>
+	 * @param uri bittorrent magnet url or http torrent url to download
+	 * @param owner user ID associated with this download
+	 * @return a string containing the status of the request; "OK" followed by download ID or an error message
+	 */
 	@GET
 	@Path("/addtorrent/{owner}/{uri}")
 	@Produces("text/plain")
@@ -112,6 +173,13 @@ public class FluxoWSProcess {
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
 	}
 
+	/**
+	 * Add a HTTP-based download to current list of downloads for the server to process.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/adduri/[user-id]/[http-url]</p>
+	 * @param uri HTTP download url
+	 * @param owner user ID associated with this download
+	 * @return a string containing the status of the request; "OK" followed by download ID or an error message
+	 */
 	@GET
 	@Path("/adduri/{owner}/{uri}")
 	@Produces("text/plain")
@@ -129,6 +197,16 @@ public class FluxoWSProcess {
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
 	}
 
+	/**
+	 * Add a HTTP-based download to current list of downloads for the server to process, with authentication (username
+	 * and password).
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/adduric/[user-id]/[username]/[password]/[http-url]</p>
+	 * @param uri HTTP download url
+	 * @param owner user ID associated with this download
+	 * @param username username for authentication
+	 * @param password password for authentication
+	 * @return a string containing the status of the request; "OK" followed by download ID or an error message
+	 */
 	@GET
 	@Path("/adduric/{owner}/{username}/{password}/{uri}")
 	@Produces("text/plain")
@@ -146,6 +224,15 @@ public class FluxoWSProcess {
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER-OR-USERNAME-PASSWORD-ERROR").build();
 	}
 
+	/**
+	 * Return a JSON object containing the list of search results from a certain notorius torrent site.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/tpb/[search-term]/[page]/[categories]</p>
+	 * @param searchTerm the search term
+	 * @param page page number to page number to serve (starts from 0)
+	 * @param cats list of category number, separated by commas
+	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object with search results from a notorious
+	 * torrents site
+	 */
 	@GET
 	@Path("/tpb/{st}/{page}/{cat}")
 	@Produces("application/json")
@@ -177,6 +264,13 @@ public class FluxoWSProcess {
 		return Response.status(400).entity("Unable to process TPB request").build();
 	}
 
+	/**
+	 * Return the description of a particular torrent object from a certain notorious torrent site.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/tpbdetails/[url-to-torrent]</p>
+	 * @param url the url a particular torrent
+	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object with details of a particular torrent
+	 * from a notorious torrent site
+	 */
 	@GET
 	@Path("/tpbdetails/{url}")
 	@Produces("application/json")
