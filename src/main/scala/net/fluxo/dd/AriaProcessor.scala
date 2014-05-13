@@ -106,7 +106,7 @@ class AriaProcessor {
 			while (iterator.hasNext) {
 				val e = iterator.next
 				if ((e AriaPort) == port) {
-					e KillAriaProcess()
+					e killAriaProcess()
 					break()
 				}
 			}
