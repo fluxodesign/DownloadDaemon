@@ -47,7 +47,7 @@ import org.apache.commons.io.FileUtils
 class Utils {
 
 	private var _config: Option[Config] = None
-	private val _randomizer: Random = new Random(System.currentTimeMillis())
+	private val _randomizer: Random = new Random(System currentTimeMillis())
 	private var _externalIP: Option[String] = Some("127.0.0.1")
 
 	/**
