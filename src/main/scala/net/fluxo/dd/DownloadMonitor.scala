@@ -30,7 +30,7 @@ import org.quartz._
  * seconds interval.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 6/03/14
+ * @version 0.4.5, 6/03/14
  * @see java.lang.Runnable
  */
 class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {

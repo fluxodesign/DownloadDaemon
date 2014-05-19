@@ -33,7 +33,7 @@ import scala.util.control.Breaks._
  * progress to the database so it can be queried by clients.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 15/03/14
+ * @version 0.4.5, 15/03/14
  * @see org.quartz.Job
  */
 class UpdateProgressJob extends Job {

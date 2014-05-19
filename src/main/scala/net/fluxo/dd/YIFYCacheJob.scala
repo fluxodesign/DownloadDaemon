@@ -32,7 +32,7 @@ import net.fluxo.dd.dbo.YIFYCache
  * called from <code>YIFYCacheMonitor</code>.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 3/04/14
+ * @version 0.4.5, 3/04/14
  * @see org.quartz.Job
  */
 class YIFYCacheJob extends Job {
@@ -72,7 +72,7 @@ class YIFYCacheJob extends Job {
  * YCache attempts to populate the cache database and monitor the YIFY site for new items.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 3/04/2014
+ * @version 0.4.5, 3/04/2014
  * @see java.util.concurrent.Callable
  */
 class YCache extends Callable[String] {

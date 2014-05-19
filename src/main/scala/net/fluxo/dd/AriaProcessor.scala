@@ -36,7 +36,7 @@ import scala.Some
  * downloads and moves the download results to local target directory.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 15/03/14
+ * @version 0.4.5, 15/03/14
  */
 class AriaProcessor {
 

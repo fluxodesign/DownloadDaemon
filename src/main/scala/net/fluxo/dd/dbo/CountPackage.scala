@@ -25,7 +25,7 @@ package net.fluxo.dd.dbo
  * that already finished downloading and need to be marked as such.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 10/03/14
+ * @version 0.4.5, 10/03/14
  */
 class CountPackage {
 

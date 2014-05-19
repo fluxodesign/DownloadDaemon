@@ -26,7 +26,7 @@ import javax.ws.rs.core.Application
  * <code>javax.ws.rs.core.Application</code> object to be used by embedded Jetty server.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 11/04/14 2:34PM
+ * @version 0.4.5, 11/04/14 2:34PM
  * @see javax.ws.rs.core.Application
  */
 class FluxoWS extends Application {

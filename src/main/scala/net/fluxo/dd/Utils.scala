@@ -42,7 +42,7 @@ import org.apache.commons.io.FileUtils
  * This class contains methods that can be called from anywhere in the application.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 15/03/14
+ * @version 0.4.5, 15/03/14
  */
 class Utils {
 

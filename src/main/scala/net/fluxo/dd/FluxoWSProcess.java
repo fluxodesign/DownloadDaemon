@@ -36,7 +36,7 @@ import java.util.StringTokenizer;
  * <p>Each of these methods has one counterpart that can be called via an XMPP message.</p>
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 11/04/14
+ * @version 0.4.5, 11/04/14
  */
 @Path("/ws")
 public class FluxoWSProcess {

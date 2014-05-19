@@ -26,7 +26,7 @@ import java.util
  * Data Object for containing one page of results from a certain notorious torrents site.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 27/03/14
+ * @version 0.4.5, 27/03/14
  */
 class TPBPage {
 

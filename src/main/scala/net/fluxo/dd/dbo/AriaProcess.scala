@@ -26,7 +26,7 @@ import org.apache.commons.exec.Executor
  * Data Object used by <code>AriaProcessor</code> to represent an active download process.
  * 
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 15/03/14
+ * @version 0.4.5, 15/03/14
  */
 class AriaProcess {
 

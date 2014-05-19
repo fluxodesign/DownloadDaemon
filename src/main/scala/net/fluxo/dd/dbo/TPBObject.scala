@@ -24,7 +24,7 @@ package net.fluxo.dd.dbo
  * Data Object representing a torrent object from a certain notorious torrent site.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 24/03/14
+ * @version 0.4.5, 24/03/14
  */
 class TPBObject {
 

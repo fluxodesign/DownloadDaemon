@@ -29,7 +29,7 @@ import java.io.{PrintWriter, StringWriter}
  * Utility object for writing to application log file.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 4/03/14
+ * @version 0.4.5, 4/03/14
  */
 object LogWriter {
 

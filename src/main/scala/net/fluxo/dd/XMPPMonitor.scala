@@ -45,7 +45,7 @@ import java.util
  * @param xmppPassword password for the server to log in into the XMPP provider
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 7/03/14
+ * @version 0.4.5, 7/03/14
  * @see java.lang.Runnable
  *
  */
@@ -348,7 +348,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 	 * This class tries to obtain local system's external IP by using a service from myexternalip.com
 	 *
 	 * @author Ronald Kurniawan (viper)
-	 * @version 0.4.4, 7/03/14
+	 * @version 0.4.5, 7/03/14
 	 * @see java.lang.Runnable
 	 */
 	class WgetExternalIP() extends Runnable {

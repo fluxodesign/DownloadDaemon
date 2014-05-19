@@ -33,7 +33,7 @@ import org.json.simple.parser.JSONParser
  * the screenshots of a movie, so user can access the details from our system.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 11/03/14
+ * @version 0.4.5, 11/03/14
  */
 class YIFYProcessor {
 
@@ -228,7 +228,7 @@ class YIFYProcessor {
 	 * @param location local directory to store the image
 	 *
 	 * @author Ronald Kurniawan (viper)
-	 * @version 0.4.4, 11/03/14
+	 * @version 0.4.5, 11/03/14
 	 */
 	class WgetImage(url: String, location: String) extends Runnable {
 		/**
@@ -246,6 +246,6 @@ class YIFYProcessor {
  * Singleton object for YIFYProcessor
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 11/03/14
+ * @version 0.4.5, 11/03/14
  */
 object YIFYP extends YIFYProcessor

@@ -26,7 +26,7 @@ import org.apache.log4j.Level
  * Singleton object which is the entry point to the application.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 3/03/14
+ * @version 0.4.5, 3/03/14
  */
 object FluxoDownloadDaemon {
 
@@ -40,7 +40,7 @@ object FluxoDownloadDaemon {
 	 * @param args string parameters
 	 */
 	def main(args: Array[String]) {
-		System.out.println("DownloadDaemon version 0.4.4\n")
+		System.out.println("DownloadDaemon version 0.4.5\n")
 		attachShutdownHook()
 		_dt start()
 	}

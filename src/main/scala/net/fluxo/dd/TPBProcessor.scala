@@ -36,7 +36,7 @@ import org.apache.commons.io.FilenameUtils
  * bittorrent site.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 23/03/14
+ * @version 0.4.5, 23/03/14
  */
 class TPBProcessor {
 

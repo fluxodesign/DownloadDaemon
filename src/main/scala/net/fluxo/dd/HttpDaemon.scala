@@ -28,13 +28,13 @@ import org.eclipse.jetty.servlet.{ServletHolder, ServletContextHandler}
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
 
 /**
- * HttpDaemon is one of the daemon processes managed by {@link net.fluxo.dd.DaemonThread DaemonThread} class.
+ * HttpDaemon is one of the daemon processes managed by `DaemonThread` class.
  * It starts an embedded Jetty server session on the specified port from configuration file.
  *
  * @param port the port number where embedded Jetty daemon should be bound to.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 12/03/14
+ * @version 0.4.5, 12/03/14
  * @see java.lang.Runnable
  */
 class HttpDaemon(port: Int) extends Runnable {
@@ -43,7 +43,7 @@ class HttpDaemon(port: Int) extends Runnable {
 	private var _isRunning: Boolean = true
 
 	/**
-	 * Calls the {@link setup()} method.
+	 * Calls the `setup()` method.
 	 * @see java.lang.Runnable#run()
 	 */
 	override def run() {
@@ -51,7 +51,7 @@ class HttpDaemon(port: Int) extends Runnable {
 	}
 
 	/**
-	 * Initiate a new Jetty's {@link org.eclipse.jetty.webapp.WebAppContext } to serve REST methods.
+	 * Initiate a new Jetty's `org.eclipse.jetty.webapp.WebAppContext` to serve REST methods.
 	 * <p>The REST methods should be accessible from http://[address-or-ip]:[port]/comm/rs/ws/[method]
 	 */
 	def setup() {

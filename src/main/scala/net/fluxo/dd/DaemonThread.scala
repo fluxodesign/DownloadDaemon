@@ -24,14 +24,14 @@ import org.apache.log4j.Level
 import java.io.{InputStreamReader, BufferedReader}
 
 /**
- * DaemonThread starts and manages instances of {@link DownloadMonitor}, {@link XMPPMonitor}, {@link YIFYCacheMonitor}
- * and {@link HttpDaemon}.
- * <p>Upon starting, DaemonThread also checks whether {@code aria2} is installed and aborts if DaemonThread cannot find it.
+ * DaemonThread starts and manages instances of `DownloadMonitor`, `XMPPMonitor`, `YIFYCacheMonitor`
+ * and `HttpDaemon`.
+ * <p>Upon starting, DaemonThread also checks whether `aria2` is installed and aborts if DaemonThread cannot find it.
  *
  * @param dbMan an instance of DbManager class.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 4/03/14
+ * @version 0.4.5, 4/03/14
  * @see java.lang.Thread
  */
 class DaemonThread(dbMan: DbManager) extends Thread {
@@ -64,6 +64,16 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			_isRunning = false
 			return
 		}
+		if (!hasYTDL) {
+			LogWriter writeLog("This system does not have youtube-dl installed. Please install youtube-dl before trying again", Level.ERROR)
+			_isRunning = false
+			return
+		}
+		if (!hasWget) {
+			LogWriter writeLog("This system does not have wget installed. Please install wget before trying agian", Level.ERROR)
+			_isRunning = false
+			return
+		}
 		OUtils createUriDir()
 		if (_isRunning) {
 			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan, this)
@@ -93,7 +103,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 
 	/**
 	 * Check whether aria2 is installed on the system.
-	 * @return true if the system has aria2 installed, false otherwise
+	 *
+	 * @return true if the system has aria2 installed; false otherwise
 	 */
 	def hasAria2: Boolean = {
 		var status = false
@@ -108,6 +119,52 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			case e: Exception =>
 				LogWriter writeLog("While trying to call aria2c, got exception: ", Level.ERROR)
 				LogWriter writeLog(e.getMessage + " caused by " + e.getCause.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString e, Level.ERROR)
+		}
+		status
+	}
+
+	/**
+	 * Check whether youtube-dl is installed on the system.
+	 *
+	 * @return true if the system has youtube-dl installed; false otherwise
+	 */
+	def hasYTDL: Boolean = {
+		var status = false
+		try {
+			val proc: Process = (Runtime getRuntime) exec "which youtube-dl"
+			proc.waitFor
+			val reader: BufferedReader = new BufferedReader(new InputStreamReader(proc getInputStream))
+			if ((reader readLine()) != null) {
+				status = true
+			}
+		} catch {
+			case e: Exception =>
+				LogWriter writeLog("While trying to call youtube-dl, got exception: ", Level.ERROR)
+				LogWriter writeLog(e.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString e, Level.ERROR)
+		}
+		status
+	}
+
+	/**
+	 * Check whether wget is installed on the system.
+	 *
+	 * @return true if the system has wget installed; false otherwise
+	 */
+	def hasWget: Boolean = {
+		var status = false
+		try {
+			val proc: Process = (Runtime getRuntime) exec "which wget"
+			proc.waitFor
+			val reader: BufferedReader = new BufferedReader(new InputStreamReader(proc getInputStream))
+			if ((reader readLine()) != null) {
+				status = true
+			}
+		} catch {
+			case e: Exception =>
+				LogWriter writeLog("While trying to call wget, got exception: ", Level.ERROR)
+				LogWriter writeLog(e.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString e, Level.ERROR)
 		}
 		status

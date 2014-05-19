@@ -24,7 +24,7 @@ package net.fluxo.dd.dbo
  * Data Object for representing a Task (active or finished) on the database.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 5/03/14
+ * @version 0.4.5, 5/03/14
  */
 class Task {
 

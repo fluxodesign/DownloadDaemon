@@ -30,7 +30,7 @@ import java.io.IOException
  * hard coded to 6 hours).
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 3/04/14
+ * @version 0.4.5, 3/04/14
  * @see java.lang.Runnable
  */
 class YIFYCacheMonitor extends Runnable {

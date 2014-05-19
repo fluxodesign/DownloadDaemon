@@ -1,5 +1,5 @@
 /*
- * YIFYSearchResult.scala
+ * YTDLProcessor.scala
  *
  * Copyright (c) 2014 Ronald Kurniawan. All rights reserved.
  *
@@ -18,27 +18,24 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package net.fluxo.dd.dbo
-
-import java.util
+package net.fluxo.dd
 
 /**
- * Data Object for containing YIFY search results.
+ * This class manages downloads using youtube-dl.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.5, 5/04/14
+ * @version 0.4.5, 14/05/14.
  */
-class YIFYSearchResult {
+class YTDLProcessor {
 
-	private var _movieCount: Int = 0
+	class YTDLThread extends Runnable {
+		override def run() {
 
-	def MovieCount: Int = _movieCount
-	def MovieCount_:(value: Int) { _movieCount = value }
-
-	private val _movieList: Option[util.List[MovieObject]] = Some(new util.ArrayList[MovieObject]())
-
-	def MovieList: Option[util.List[MovieObject]] = _movieList
-	def AddToMovieList(value: MovieObject) {
-		_movieList getOrElse null add value
+		}
 	}
 }
+
+/**
+ * Singleton Object for YTDLProcessor.
+ */
+object YTDLP extends YTDLProcessor

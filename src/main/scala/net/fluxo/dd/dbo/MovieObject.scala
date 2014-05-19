@@ -24,7 +24,7 @@ package net.fluxo.dd.dbo
  * Data Object used for representation of a YIFY movie object.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 11/03/14
+ * @version 0.4.5, 11/03/14
  */
 class MovieObject {
 

@@ -25,7 +25,7 @@ package net.fluxo.dd.dbo
  * torrents site.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 2/05/14
+ * @version 0.4.5, 2/05/14
  */
 class TPBDetails {
 

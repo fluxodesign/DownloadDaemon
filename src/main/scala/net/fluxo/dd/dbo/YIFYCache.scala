@@ -24,7 +24,7 @@ package net.fluxo.dd.dbo
  * Data Object for representing one entry in the YIFY cache table.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.4, 3/04/14
+ * @version 0.4.5, 3/04/14
  */
 class YIFYCache {
 
