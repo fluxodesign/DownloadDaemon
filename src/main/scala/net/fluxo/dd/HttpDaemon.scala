@@ -21,7 +21,7 @@
 package net.fluxo.dd
 
 import org.eclipse.jetty.server._
-import org.eclipse.jetty.server.handler.HandlerCollection
+import org.eclipse.jetty.server.handler.{DefaultHandler, HandlerCollection}
 import org.apache.log4j.Level
 import org.eclipse.jetty.webapp.WebAppContext
 import org.eclipse.jetty.servlet.{ServletHolder, ServletContextHandler}
@@ -60,6 +60,8 @@ class HttpDaemon(port: Int) extends Runnable {
 		wap setContextPath "/"
 		wap setWar "."
 
+		val defaultHandler = new DefaultHandler
+
 		val webAppContext = new ServletContextHandler(ServletContextHandler SESSIONS)
 		webAppContext setContextPath "/comm"
 		webAppContext setInitParameter("resteasy.scan", "true")
@@ -70,7 +72,7 @@ class HttpDaemon(port: Int) extends Runnable {
 		webAppContext addServlet(webAppHolder, "/rs/*")
 
 		val handlerCollection = new HandlerCollection()
-		handlerCollection setHandlers Array(webAppContext, wap)
+		handlerCollection setHandlers Array(webAppContext, wap, defaultHandler)
 
 		_server setHandler handlerCollection
 		_server setStopAtShutdown true
