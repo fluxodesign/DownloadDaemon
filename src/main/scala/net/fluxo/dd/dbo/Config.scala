@@ -87,4 +87,28 @@ class Config {
 	def DownloadDir_= (value: String) {
 		_downloadDir = Some(value)
 	}
+
+	private var _sslKeystore: Option[String] = None
+
+	def SSLKeystore: Option[String] = _sslKeystore
+
+	def SSLKeystore_=(value: String) {
+		_sslKeystore = Some(value)
+	}
+
+	private var _sslKeystorePassword: Option[String] = None
+
+	def SSLKeystorePassword: Option[String] = _sslKeystorePassword
+
+	def SSLKeystorePassword_=(value: String) {
+		_sslKeystorePassword = Some(value)
+	}
+
+	private var _sslKeymanagerPassword: Option[String] = None
+
+	def SSLKeymanagerPassword: Option[String] = _sslKeymanagerPassword
+
+	def SSLKeymanagerPassword_=(value: String) {
+		_sslKeymanagerPassword = Some(value)
+	}
 }

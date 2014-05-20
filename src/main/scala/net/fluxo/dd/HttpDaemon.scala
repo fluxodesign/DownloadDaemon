@@ -20,12 +20,13 @@
  */
 package net.fluxo.dd
 
-import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.server._
 import org.eclipse.jetty.server.handler.HandlerCollection
 import org.apache.log4j.Level
 import org.eclipse.jetty.webapp.WebAppContext
 import org.eclipse.jetty.servlet.{ServletHolder, ServletContextHandler}
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
+import org.eclipse.jetty.util.ssl.SslContextFactory
 
 /**
  * HttpDaemon is one of the daemon processes managed by `DaemonThread` class.
@@ -39,7 +40,7 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
  */
 class HttpDaemon(port: Int) extends Runnable {
 
-	private val _server: Server = new Server(port)
+	private val _server: Server = new Server()
 	private var _isRunning: Boolean = true
 
 	/**
@@ -73,6 +74,21 @@ class HttpDaemon(port: Int) extends Runnable {
 
 		_server setHandler handlerCollection
 		_server setStopAtShutdown true
+
+		val sslContextFactory = new SslContextFactory((OUtils readConfig).SSLKeystore.getOrElse(""))
+		sslContextFactory setKeyStorePassword (OUtils readConfig).SSLKeystorePassword.getOrElse("")
+		sslContextFactory setKeyManagerPassword (OUtils readConfig).SSLKeymanagerPassword.getOrElse("")
+		val httpsConfig = new HttpConfiguration()
+		httpsConfig setSecureScheme "https"
+		httpsConfig setSecurePort port
+		httpsConfig setOutputBufferSize 32768
+		httpsConfig addCustomizer new SecureRequestCustomizer()
+		val https = new ServerConnector(_server, new SslConnectionFactory(sslContextFactory, "http/1.1"),
+			new HttpConnectionFactory(httpsConfig))
+		https setPort port
+		https setIdleTimeout 60000
+
+		_server setConnectors Array(https)
 
 		try {
 			_server start()

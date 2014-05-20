@@ -84,13 +84,16 @@ class Utils {
 		var cfg: Config = new Config
 		try {
 			prop.load(new FileInputStream("./dd.properties"))
-			cfg.RPCPort_= (java.lang.Integer.parseInt(prop.getProperty("rpc_port")))
-			cfg.RPCLimit_=(java.lang.Integer.parseInt(prop.getProperty("rpc_limit")))
-			cfg.HTTPDPort_=(java.lang.Integer.parseInt(prop.getProperty("httpd_port")))
-			cfg.XMPPProvider_=(prop.getProperty("xmpp_provider"))
-			cfg.XMPPAccount_=(prop.getProperty("xmpp_account"))
-			cfg.XMPPPassword_=(prop.getProperty("xmpp_password"))
-			cfg.DownloadDir_=(prop.getProperty("download_dir"))
+			cfg.RPCPort_=(java.lang.Integer.parseInt(prop getProperty "rpc_port"))
+			cfg.RPCLimit_=(java.lang.Integer.parseInt(prop getProperty "rpc_limit"))
+			cfg.HTTPDPort_=(java.lang.Integer.parseInt(prop getProperty "httpd_port"))
+			cfg.XMPPProvider_=(prop getProperty "xmpp_provider")
+			cfg.XMPPAccount_=(prop getProperty "xmpp_account")
+			cfg.XMPPPassword_=(prop getProperty "xmpp_password")
+			cfg.DownloadDir_=(prop getProperty "download_dir")
+			cfg.SSLKeystore_=(prop getProperty "ssl_keystore")
+			cfg.SSLKeystorePassword_=(prop getProperty "ssl_keystore_password")
+			cfg.SSLKeymanagerPassword_=(prop getProperty "ssl_keymanager_password")
 		} catch {
 			case e: Exception =>
 				LogWriter.writeLog("Error reading properties file dd.properties", Level.ERROR)
