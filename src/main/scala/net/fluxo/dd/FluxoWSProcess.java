@@ -24,7 +24,9 @@ import net.fluxo.dd.dbo.Task;
 import org.apache.commons.codec.net.URLCodec;
 import org.apache.commons.io.FilenameUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -123,10 +125,14 @@ public class FluxoWSProcess {
 	@GET
 	@Path("/status/{id}")
 	@Produces("application/json")
-	public Response getDownloadStatus(@PathParam("id") String userID) {
+	public Response getDownloadStatus(@Context HttpServletRequest htRequest, @PathParam("id") String userID) {
+		String username = htRequest.getHeader("DDUSER");
+		String password = htRequest.getHeader("DDPWD");
+		if (!credAuth(username, password)) {
+
+		}
 		try {
 			Task[] arrTasks = DbControl.queryTasks(userID);
-			//StringBuilder sb = new StringBuilder();
 			HashMap<String,String> progressMap = new HashMap<>();
 			for (Task t : arrTasks) {
 				int progress = -1;
@@ -137,12 +143,8 @@ public class FluxoWSProcess {
 				if (t.TaskPackage().nonEmpty()) {
 					dlName = t.TaskPackage().get();
 				}
-				//sb.append(dlName).append(" --> ").append(progress).append("%").append(System.lineSeparator());
 				progressMap.put(dlName, String.valueOf(progress));
 			}
-			/*if (arrTasks.length == 0) {
-				sb.append("No active tasks are running!");
-			}*/
 			String response = OUtils.DownloadProgressToJson(progressMap);
 			return Response.status(200).entity(response).build();
 		} catch (Exception e) {
@@ -287,5 +289,15 @@ public class FluxoWSProcess {
 			return Response.status(400).entity(e.getMessage()).build();
 		}
 		return Response.status(400).entity("Unable to process TPB Details request").build();
+	}
+
+	/**
+	 * Check whether the supplied credentials are valid. The password is a Hashed function.
+	 * @param username username for authentication
+	 * @param password password for authentication
+	 * @return true if credentials authenticated; false otherwise
+	 */
+	private boolean credAuth(String username, String password) {
+		return false;
 	}
 }
