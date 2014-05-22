@@ -519,7 +519,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 										intObj.getOrElse(0).asInstanceOf[Int]
 									}
 									YIFYP procListMovie(page, quality, rating, _externalIP.getOrElse("127.0.0.1"),
-										OUtils.readConfig.HTTPDPort)
+										OUtils.readConfig.HTTPPort)
 								}
 							case "DETAILS" =>
 								if (words.length != 4) "ERR LENGTH: \"DETAILS\" requires 4 params, found " + words.length
@@ -529,7 +529,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 										val intObj: Option[Integer] = Some(intValidator validate words(3))
 										intObj.getOrElse(-1).asInstanceOf[Int]
 									}
-									if (id > 0) YIFYP procMovieDetails(id, _externalIP.getOrElse("127.0.0.1"), OUtils.readConfig.HTTPDPort)
+									if (id > 0) YIFYP procMovieDetails(id, _externalIP.getOrElse("127.0.0.1"), OUtils.readConfig.HTTPPort)
 									else "ERR CMD"
 								}
 							case "SEARCH" =>

@@ -50,11 +50,18 @@ class Config {
 		_rpcLimit = value
 	}
 
-	private var _httpdPort: Int = 8080
+	private var _httpsPort: Int = 8888
 
-	def HTTPDPort: Int = _httpdPort
-	def HTTPDPort_= (value: Int) {
-		_httpdPort = value
+	def HTTPSPort: Int = _httpsPort
+	def HTTPSPort_= (value: Int) {
+		_httpsPort = value
+	}
+
+	private var _httpPort: Int = 8889
+
+	def HTTPPort: Int = _httpPort
+	def HTTPPort_= (value: Int) {
+		_httpPort = value
 	}
 
 	private var _xmppProvider: Option[String] = None

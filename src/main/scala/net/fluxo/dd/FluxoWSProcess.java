@@ -66,7 +66,7 @@ public class FluxoWSProcess {
 	@Produces("application/json")
 	public Response getYIFYList(@PathParam("page") int page, @PathParam("quality") int quality, @PathParam("rating") int rating) {
 		try {
-			String response = YIFYP.procListMovie(page, quality, rating, OUtils.ExternalIP(), OUtils.readConfig().HTTPDPort());
+			String response = YIFYP.procListMovie(page, quality, rating, OUtils.ExternalIP(), OUtils.readConfig().HTTPPort());
 			return Response.status(200).entity(response).build();
 		} catch (Exception e) {
 			return Response.status(400).entity(e.getMessage()).build();
@@ -84,7 +84,7 @@ public class FluxoWSProcess {
 	@Produces("application/json")
 	public Response getYIFYMovieDetails(@PathParam("id") int id) {
 		try {
-			String response = YIFYP.procMovieDetails(id, OUtils.ExternalIP(), OUtils.readConfig().HTTPDPort());
+			String response = YIFYP.procMovieDetails(id, OUtils.ExternalIP(), OUtils.readConfig().HTTPPort());
 			return Response.status(200).entity(response).build();
 		} catch (Exception e) {
 			return Response.status(400).entity(e.getMessage()).build();

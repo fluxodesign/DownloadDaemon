@@ -38,7 +38,7 @@ import org.eclipse.jetty.util.ssl.SslContextFactory
  * @version 0.4.5, 12/03/14
  * @see java.lang.Runnable
  */
-class HttpDaemon(port: Int) extends Runnable {
+class HttpDaemon(port: Int, sslPort: Int) extends Runnable {
 
 	private val _server: Server = new Server()
 	private var _isRunning: Boolean = true
@@ -82,15 +82,21 @@ class HttpDaemon(port: Int) extends Runnable {
 		sslContextFactory setKeyManagerPassword (OUtils readConfig).SSLKeymanagerPassword.getOrElse("")
 		val httpsConfig = new HttpConfiguration()
 		httpsConfig setSecureScheme "https"
-		httpsConfig setSecurePort port
+		httpsConfig setSecurePort sslPort
 		httpsConfig setOutputBufferSize 32768
 		httpsConfig addCustomizer new SecureRequestCustomizer()
 		val https = new ServerConnector(_server, new SslConnectionFactory(sslContextFactory, "http/1.1"),
 			new HttpConnectionFactory(httpsConfig))
-		https setPort port
+		https setPort sslPort
 		https setIdleTimeout 60000
 
-		_server setConnectors Array(https)
+		val httpConfig = new HttpConfiguration()
+		httpConfig setOutputBufferSize 32768
+		val http = new ServerConnector(_server)
+		http setPort port
+		http setIdleTimeout 30000
+
+		_server setConnectors Array(https, http)
 
 		try {
 			_server start()
