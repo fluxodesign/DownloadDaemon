@@ -27,6 +27,7 @@
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="DownloadDaemon" target="1.7" />
+      <module name="setcredentials" target="1.7" />
     </bytecodeTargetLevel>
   </component>
 </project>

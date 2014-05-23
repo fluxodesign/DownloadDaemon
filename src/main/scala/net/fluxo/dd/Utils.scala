@@ -37,6 +37,7 @@ import org.apache.http.client.methods.HttpGet
 import org.json.simple.{JSONArray, JSONValue, JSONObject}
 import scala.Some
 import org.apache.commons.io.FileUtils
+import java.security.MessageDigest
 
 /**
  * This class contains methods that can be called from anywhere in the application.
@@ -403,6 +404,32 @@ class Utils {
 			sb insert(0, "0")
 		}
 		sb toString()
+	}
+
+	/**
+	 * Return a SHA-256 hashed string.
+	 *
+	 * @param value original string value
+	 * @return a hashed string value
+	 */
+	def hashString(value: String): String = {
+		var retVal = value
+		try {
+			val md = MessageDigest getInstance "SHA-256"
+			md update value.getBytes
+			val digestedBytes = md digest()
+			val sb = new StringBuilder
+			for (b <- digestedBytes) {
+				val strHex = Integer toHexString (0xff & b)
+				if ((strHex length) == 1) sb append '0'
+				sb append strHex
+			}
+			retVal = sb toString()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Failed to hash string: " + ex.getMessage, Level.ERROR)
+		}
+		retVal
 	}
 
 	/**

@@ -128,8 +128,8 @@ public class FluxoWSProcess {
 	public Response getDownloadStatus(@Context HttpServletRequest htRequest, @PathParam("id") String userID) {
 		String username = htRequest.getHeader("DDUSER");
 		String password = htRequest.getHeader("DDPWD");
-		if (!credAuth(username, password)) {
-
+		if (username == null || password == null || !DbControl.authCredentials(username, password)) {
+			return Response.status(400).entity("NOT-AUTHORIZED").build();
 		}
 		try {
 			Task[] arrTasks = DbControl.queryTasks(userID);
@@ -162,7 +162,13 @@ public class FluxoWSProcess {
 	@GET
 	@Path("/addtorrent/{owner}/{uri}")
 	@Produces("text/plain")
-	public Response getTorrentUrl(@DefaultValue("") @PathParam("uri") String uri, @DefaultValue("") @PathParam("owner") String owner) {
+	public Response getTorrentUrl(@Context HttpServletRequest htRequest, @DefaultValue("") @PathParam("uri") String uri,
+	                              @DefaultValue("") @PathParam("owner") String owner) {
+		String username = htRequest.getHeader("DDUSER");
+		String password = htRequest.getHeader("DDPWD");
+		if (username == null || password == null || !DbControl.authCredentials(username, password)) {
+			return Response.status(400).entity("NOT-AUTHORIZED").build();
+		}
 		try {
 			if (uri.length() > 0 && owner.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
@@ -185,11 +191,16 @@ public class FluxoWSProcess {
 	@GET
 	@Path("/adduri/{owner}/{uri}")
 	@Produces("text/plain")
-	public Response getHttpUrl(@DefaultValue("") @PathParam("uri") String uri, @DefaultValue("") @PathParam("owner") String owner) {
+	public Response getHttpUrl(@Context HttpServletRequest htRequest, @DefaultValue("") @PathParam("uri") String uri,
+	                           @DefaultValue("") @PathParam("owner") String owner) {
+		String username = htRequest.getHeader("DDUSER");
+		String password = htRequest.getHeader("DDPWD");
+		if (username == null || password == null || !DbControl.authCredentials(username, password)) {
+			return Response.status(400).entity("NOT-AUTHORIZED").build();
+		}
 		try {
 			if (uri.length() > 0 && owner.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
-				//String decodedUri = (new URLCodec()).decode(uri);
 				String response = OAria.processRequest(decodedURL, owner, true, "", "");
 				return Response.status(200).entity(response).build();
 			}
@@ -212,8 +223,14 @@ public class FluxoWSProcess {
 	@GET
 	@Path("/adduric/{owner}/{username}/{password}/{uri}")
 	@Produces("text/plain")
-	public Response getHttpUrlC(@DefaultValue("") @PathParam("uri") String uri, @DefaultValue("") @PathParam("owner") String owner,
-		@DefaultValue("") @PathParam("username") String username, @DefaultValue("") @PathParam("password") String password) {
+	public Response getHttpUrlC(@Context HttpServletRequest htRequest, @DefaultValue("") @PathParam("uri") String uri,
+	                            @DefaultValue("") @PathParam("owner") String owner, @DefaultValue("") @PathParam("username") String username,
+	                            @DefaultValue("") @PathParam("password") String password) {
+		String credUsername = htRequest.getHeader("DDUSER");
+		String credPassword = htRequest.getHeader("DDPWD");
+		if (credUsername == null || credPassword == null || !DbControl.authCredentials(credUsername, credPassword)) {
+			return Response.status(400).entity("NOT-AUTHORIZED").build();
+		}
 		try {
 			if (uri.length() > 0 && owner.length() > 0 && username.length() > 0 && password.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
@@ -289,15 +306,5 @@ public class FluxoWSProcess {
 			return Response.status(400).entity(e.getMessage()).build();
 		}
 		return Response.status(400).entity("Unable to process TPB Details request").build();
-	}
-
-	/**
-	 * Check whether the supplied credentials are valid. The password is a Hashed function.
-	 * @param username username for authentication
-	 * @param password password for authentication
-	 * @return true if credentials authenticated; false otherwise
-	 */
-	private boolean credAuth(String username, String password) {
-		return false;
 	}
 }

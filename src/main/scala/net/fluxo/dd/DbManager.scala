@@ -585,9 +585,40 @@ class DbManager {
 			case ex: Exception =>
 				LogWriter writeLog("Error querying movies by title", Level.ERROR)
 				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 		}
 		mlist.toArray
+	}
+
+	/**
+	 * Match the credentials pair to the one already in the database. The password is
+	 * a hashed string.
+	 *
+	 * @param username username to check
+	 * @param password password to check
+	 * @return true if credentials matched; false otherwise
+	 */
+	def authCredentials(username: String, password: String): Boolean = {
+		var status = false
+		val hashed = OUtils hashString password
+		val queryStatement = """SELECT COUNT(*) AS count FROM CREDS WHERE USERNAME = ? AND PASSWORD = ?"""
+		try {
+			val ps = _conn prepareStatement queryStatement
+			ps setString(1, username)
+			ps setString(2, hashed)
+			val rs = ps executeQuery()
+			while (rs.next) {
+				if ((rs getInt "count") > 0) status = true
+			}
+			rs close()
+			ps close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error authenticating credentials", Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+		}
+		status
 	}
 
 	/**
