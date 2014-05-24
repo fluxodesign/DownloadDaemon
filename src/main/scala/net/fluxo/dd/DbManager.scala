@@ -600,12 +600,11 @@ class DbManager {
 	 */
 	def authCredentials(username: String, password: String): Boolean = {
 		var status = false
-		val hashed = OUtils hashString password
 		val queryStatement = """SELECT COUNT(*) AS count FROM CREDS WHERE USERNAME = ? AND PASSWORD = ?"""
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, username)
-			ps setString(2, hashed)
+			ps setString(2, password)
 			val rs = ps executeQuery()
 			while (rs.next) {
 				if ((rs getInt "count") > 0) status = true
