@@ -51,6 +51,8 @@ class UpdateProgressJob extends Job {
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
 		try {
+			OVideoP restartDownload()
+
 			if (OUtils.allPortsFree) OAria restartDownloads()
 
 			val iterator = OAria.ActiveProcesses.iterator()
@@ -172,8 +174,10 @@ class UpdateProgressJob extends Job {
 										} else {
 											val packageDir = new File(qf.CPPackage.getOrElse(null))
 											val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
-											if (packageDir.isDirectory && packageDir.exists() && !destDir.exists()) {
+											if (packageDir.isDirectory && packageDir.exists && !destDir.exists) {
 												FileUtils moveDirectory(packageDir, destDir)
+											} else if (packageDir.isFile && packageDir.exists && !destDir.exists) {
+												FileUtils moveFile(packageDir, destDir)
 											} else LogWriter writeLog("directory " + destDir.getAbsolutePath + " exist!", Level.INFO)
 										}
 									}

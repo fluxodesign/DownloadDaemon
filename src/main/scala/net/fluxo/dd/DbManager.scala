@@ -123,6 +123,44 @@ class DbManager {
 	}
 
 	/**
+	 * Update a video download task record.
+	 *
+	 * @param gid the unique video download ID
+	 * @param owner user ID of the owner of the download process
+	 * @param targetFile name of the downloaded video
+	 * @param status 'active' or 'completed'
+	 * @param totalLength total video file size (in bytes)
+	 * @param completedLength the size of the completed download so far (in bytes)
+	 * @return true if updated is completed successfully; false othewise
+	 */
+	def updateVideoTask(gid: String, owner: String, targetFile: String, status: String, totalLength: Long, completedLength: Long): Boolean = {
+		var response: Boolean = true
+		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, completed = ? WHERE gid = ? AND owner = ?"""
+		try {
+			val ps = _conn prepareStatement updateStatement
+			ps setString(1, targetFile)
+			ps setString(2, status)
+			ps setLong(3, completedLength)
+			ps setLong(4, totalLength)
+			ps setBoolean(5, totalLength == completedLength)
+			ps setString(6, gid)
+			ps setString(7, owner)
+			val updated = ps executeUpdate()
+			if (updated == 0) {
+				LogWriter writeLog("Failed to update video task with GID " + gid, Level.ERROR)
+				response = false
+			}
+			ps close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error updating video task for GID " + gid, Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	/**
 	 * Update a tail GID on a particular download, in case of a restarted download.
 	 *
 	 * @param gid a unique download ID
@@ -247,6 +285,50 @@ class DbManager {
 				if (response) response = false
 		}
 		response
+	}
+
+	/**
+	 * Query the database for the list of unfinished video download tasks.
+	 *
+	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
+	 */
+	def queryActiveVideoTask(): Array[Task] = {
+		val queryStatement = """SELECT * FROM input WHERE info_hash = ? AND tail_gid = ? AND completed = ?"""
+		val mlist = new mutable.MutableList[Task]
+		try {
+			val ps = _conn prepareStatement queryStatement
+			ps setString(1, "noinfohash")
+			ps setString(2, "notailgid")
+			ps setBoolean(3, false)
+			val rs = ps executeQuery()
+			while (rs.next) {
+				mlist.+=(new Task {
+					TaskGID_=(rs getString "gid")
+					TaskTailGID_=(rs getString "tail_gid")
+					TaskInput_=(rs getString "input")
+					TaskStarted_=((rs getTimestamp "start").getTime)
+					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+					IsTaskCompleted_=(rs getBoolean "completed")
+					TaskOwner_=(rs getString "owner")
+					TaskPackage_=(rs getString "package")
+					TaskStatus_=(rs getString "status")
+					TaskTotalLength_=(rs getLong "total_length")
+					TaskCompletedLength_=(rs getLong "completed_length")
+					TaskInfoHash_=(rs getString "info_hash")
+					TaskIsHttp_=(rs getBoolean "is_http")
+					TaskHttpUsername_=(rs getString "http_username")
+					TaskHttpPassword_=(rs getString "http_password")
+				})
+			}
+			rs close()
+			ps close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error querying unfinished video tasks", Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+		}
+		mlist.toArray
 	}
 
 	/**

@@ -594,6 +594,9 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 							TPBP queryDetails (FilenameUtils getPath detailsURL)
 						}
 					}
+				case "VIDEO" =>
+					if (words.length != 4) "ERR VIDEO REQUEST LENGTH"
+					else OVideoP processRequest(words(3), words(2))
 				case _ => "ERR CMD"
 			}
 		}
