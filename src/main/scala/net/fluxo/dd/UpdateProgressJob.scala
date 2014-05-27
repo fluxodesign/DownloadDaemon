@@ -53,6 +53,17 @@ class UpdateProgressJob extends Job {
 		try {
 			OVideoP restartDownload()
 
+			val videoIterator = (OVideoP ActiveProcesses) iterator()
+
+			while (videoIterator.hasNext) {
+				val vidObj = videoIterator.next
+				// check for the "output" file; if exists, then read the file and update accordingly...
+				val outputFile = new File("./uridir/" + vidObj.VideoTaskGid + ".output")
+				if (outputFile.exists) {
+
+				}
+			}
+
 			if (OUtils.allPortsFree) OAria restartDownloads()
 
 			val iterator = OAria.ActiveProcesses.iterator()

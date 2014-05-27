@@ -224,8 +224,11 @@ class VideoProcessor {
 			OUtils createUriFile(gid: String, url: String)
 			// DEBUG
 			LogWriter writeLog("Youtube-dl STARTING!", Level.DEBUG)
+			// if the "output" file exists, delete it first
+			val outputFile = new File("./uridir/" + gid + ".output")
+			if (outputFile.exists) outputFile.delete
 			val sb = new StringBuilder
-			sb append "youtube-dl" append " " append url
+			sb append "youtube-dl" append " " append url  append " > uridir/" append gid append ".output"
 			val commandLine = CommandLine parse sb.toString
 			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
@@ -307,7 +310,6 @@ class VideoProcessor {
 			}
 		}
 	}
-
 }
 
 /**
