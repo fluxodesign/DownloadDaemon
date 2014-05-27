@@ -88,6 +88,35 @@ class DbManager {
 	}
 
 	/**
+	 * Add a new video download task into the database.
+	 *
+	 * @param gid unique task ID
+	 * @param owner user ID of the download owner
+	 * @return true if adding is successful; false otherwise
+	 */
+	def addVideoTask(gid: String, owner: String): Boolean = {
+		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,tail_gid,info_hash) VALUES(?,?,?,?,?,?,?)"""
+		var response: Boolean = true
+		try {
+			val ps = _conn prepareStatement insertStatement
+			ps setString(1, gid)
+			ps setString(2, "N/A")
+			ps setTimestamp(3, new Timestamp(DateTime.now.getMillis))
+			ps setString(4, owner)
+			ps setBoolean(5, false)
+			ps setString(6, "notailgid")
+			ps setString(7, "noinfohash")
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error inserting new video task for GID " + gid, Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	/**
 	 * Update a download task record.
 	 *
 	 * @param task a <code>net.fluxo.dd.dbo.Task</code> object
@@ -424,11 +453,13 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryUnfinishedTasks(): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE completed = ?"""
+		val queryStatement = """SELECT * FROM input WHERE completed = ? AND NOT (tail_gid = ?) AND NOT (info_hash = ?)"""
 		val mlist = new mutable.MutableList[Task]
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setBoolean(1, false)
+			ps setString(2, "notailgid")
+			ps setString(3, "noinfohash")
 			val rs = ps executeQuery()
 			while (rs.next) {
 				mlist.+=(new Task {

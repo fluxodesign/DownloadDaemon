@@ -24,7 +24,7 @@ import java.util
 import org.apache.commons.exec._
 import org.apache.log4j.Level
 import scala.Some
-import net.fluxo.dd.dbo.{VideoProcess, Task}
+import net.fluxo.dd.dbo.VideoProcess
 import org.joda.time.DateTime
 import scala.util.control.Breaks._
 import org.apache.commons.io.FileUtils
@@ -88,15 +88,7 @@ class VideoProcessor {
 	 * @param executor a <code>org.apache.commons.exec.DefaultExecutor</code> object
 	 */
 	def stat(gid: String, owner: String, url: String, executor: DefaultExecutor) {
-		DbControl addTask new Task {
-			TaskGID_=(gid)
-			TaskInput_=(url)
-			TaskOwner_=(owner)
-			TaskStarted_=(DateTime.now.getMillis)
-			TaskIsHttp_=(value = false)
-			TaskTailGID_=("notailgid")
-			TaskInfoHash_=("noinfohash")
-		}
+		DbControl addVideoTask(gid, owner)
 		// DEBUG
 		LogWriter writeLog("Adding new video download task to list...", Level.DEBUG)
 		ActiveProcesses add new VideoProcess {
@@ -234,6 +226,7 @@ class VideoProcessor {
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
 			_executor = Some(executor)
+			executor execute commandLine
 		}
 	}
 }
