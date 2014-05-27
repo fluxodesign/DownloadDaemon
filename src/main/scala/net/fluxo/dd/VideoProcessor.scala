@@ -220,7 +220,7 @@ class VideoProcessor {
 			val outputFile = new File("./uridir/" + gid + ".output")
 			if (outputFile.exists) outputFile.delete
 			val sb = new StringBuilder
-			sb append "youtube-dl" append " " append url  append " > uridir/" append gid append ".output"
+			sb append "youtube-dl" append " " append url append " > ./uridir/" append gid append ".output" append " 2>&1"
 			val commandLine = CommandLine parse sb.toString
 			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
