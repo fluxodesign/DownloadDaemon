@@ -27,7 +27,6 @@ import scala.Some
 import net.fluxo.dd.dbo.{VideoProcess, Task}
 import org.joda.time.DateTime
 import scala.util.control.Breaks._
-import java.util.regex.Pattern
 import org.apache.commons.io.FileUtils
 import java.io.File
 
@@ -146,7 +145,8 @@ class VideoProcessor {
 	}
 
 	/**
-	 * Kill the youtube-dl process tied to this download.
+	 * Kill the youtube-dl process ti
+		DbControl updateVideoTask(taskGID, getOwner(taskGID), _inputTitle, status, totalFileLength, completedLength)ed to this download.
 	 *
 	 * @param gid unique ID of the download
 	 */
@@ -234,80 +234,6 @@ class VideoProcessor {
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
 			_executor = Some(executor)
-			val pumpsh = new PumpStreamHandler(new VOStream(gid))
-			executor setStreamHandler pumpsh
-			executor execute commandLine
-		}
-	}
-
-	/**
-	 * Process the output result from <code>DefaultExecutor</code> into appropriate target(s).
-	 */
-	class VOStream(taskGID: String) extends LogOutputStream {
-		private var _inputTitle = "N/A"
-		private var _progressPercentage = 0.0d
-		private val _pattern = Pattern compile "[\\d+.]"
-		private var _totalFileLength = 0L
-
-		/**
-		 * This method is overriden. It calls the `updateDownloadProgress(String)` method.
-		 *
-		 * @param line the last string received from the app
-		 * @param level not used
-		 */
-		override def processLine(line: String, level: Int) {
-			updateDownloadProgress(line)
-			LogWriter writeLog("Youtube-dl Process: " + line, Level.INFO)
-		}
-
-		/**
-		 * This method tracks and updates the progress of the download. When it finishes, the method would do the cleanup and
-		 * moves the finished download into target directory.
-		 *
-		 * @param line the string output to be analysed
-		 */
-		private def updateDownloadProgress(line: String) {
-			if (line startsWith "[download] Destination:") {
-				_inputTitle = line replace("[download] Destination:", "")
-			} else if ((line contains "[download]") && (line contains "% of") && (line contains "ETA")) {
-				val strProgress = (line replace("[download]", "")).trim
-				val idxPercent = strProgress indexOf "%"
-				if (idxPercent > -1) _progressPercentage = java.lang.Double.parseDouble(strProgress.substring(0, idxPercent))
-				val idx1 = (strProgress indexOf "of") + 2
-				val idx2 = strProgress indexOf "at"
-				val strTotal = (strProgress substring(idx1, idx2)).trim
-				val matcher = _pattern matcher strTotal
-				val sb = new StringBuilder
-				while (matcher.find) {
-					val start = matcher.start
-					val end = matcher.end
-					sb append strTotal substring(start, end)
-				}
-				val iTotal = java.lang.Double.parseDouble(sb toString())
-				if ((strTotal indexOf "KiB") > -1 && iTotal > 0) {
-					_totalFileLength = (iTotal * 1024).toLong
-				} else if ((strTotal indexOf "MiB") > -1 && iTotal > 0) {
-					_totalFileLength = (iTotal * 1024 * 1024).toLong
-				} else if ((strTotal indexOf "GiB") > -1 && iTotal > 0) {
-					_totalFileLength = (iTotal * 1024 * 1024 * 1024).toLong
-				}
-			}
-			// update the database
-			val status = {
-				if (_progressPercentage == 100) "complete"
-				else "active"
-			}
-			val completedLength = ((_progressPercentage / 100) * _totalFileLength).toLong
-			DbControl updateVideoTask(taskGID, getOwner(taskGID), _inputTitle, status, _totalFileLength, completedLength)
-			updateTimestamp(taskGID)
-			// time to remove this task from our list...
-			if (_progressPercentage == 100) {
-				removeFromList(taskGID)
-				val destFile = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + _inputTitle)
-				if (!destFile.exists()) {
-					FileUtils moveFile(new File(_inputTitle), destFile)
-				}
-			}
 		}
 	}
 }

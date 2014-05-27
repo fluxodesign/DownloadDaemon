@@ -22,11 +22,13 @@ package net.fluxo.dd
 
 import org.quartz.{Job, JobExecutionContext, JobExecutionException}
 import org.apache.log4j.Level
-import java.io.File
+import java.io._
 import java.util
 import org.apache.commons.io.FileUtils
 import org.apache.xmlrpc.XmlRpcException
 import scala.util.control.Breaks._
+import java.util.regex.Pattern
+import net.fluxo.dd.dbo.VideoProcess
 
 /**
  * UpdateProgressJob represents a <code>Job</code> where it monitors the active and finished downloads and updates the
@@ -39,6 +41,7 @@ import scala.util.control.Breaks._
 class UpdateProgressJob extends Job {
 
 	private var _currentPort: Int = 0
+	private val _pattern = Pattern compile "[\\d+.]"
 
 	/**
 	 * Monitor the progress of downloads and update the records in the database. It restarts any unfinished downloads, then
@@ -49,6 +52,7 @@ class UpdateProgressJob extends Job {
 	 * @throws org.quartz.JobExecutionException JobExecutionException
 	 */
 	@throws(classOf[JobExecutionException])
+	@throws(classOf[IOException])
 	override def execute(context: JobExecutionContext) {
 		try {
 			OVideoP restartDownload()
@@ -60,7 +64,42 @@ class UpdateProgressJob extends Job {
 				// check for the "output" file; if exists, then read the file and update accordingly...
 				val outputFile = new File("./uridir/" + vidObj.VideoTaskGid + ".output")
 				if (outputFile.exists) {
-
+					val fis = new FileInputStream(outputFile)
+					val reader = new BufferedReader(new InputStreamReader(fis))
+					val line = reader readLine()
+					var inputTitle = "N/A"
+					var progressPercentage = 0.0d
+					var totalFileLength = 0L
+					while (line != null) {
+						if (line startsWith "[download] Destination:") {
+							inputTitle = line replace("[download] Destination:", "")
+						} else if ((line contains "[download]") && (line contains "% of") && (line contains "ETA")) {
+							val strProgress = (line replace("[download]", "")).trim
+							val idxPercent = strProgress indexOf "%"
+							if (idxPercent > -1) progressPercentage = java.lang.Double.parseDouble(strProgress.substring(0, idxPercent))
+							val idx1 = (strProgress indexOf "of") + 2
+							val idx2 = strProgress indexOf "at"
+							val strTotal = (strProgress substring(idx1, idx2)).trim
+							val matcher = _pattern matcher strTotal
+							val sb = new StringBuilder
+							while (matcher.find) {
+								val start = matcher.start
+								val end = matcher.end
+								sb append strTotal substring(start, end)
+							}
+							val iTotal = java.lang.Double.parseDouble(sb toString())
+							if ((strTotal indexOf "KiB") > -1 && iTotal > 0) {
+								totalFileLength = (iTotal * 1024).toLong
+							} else if ((strTotal indexOf "MiB") > -1 && iTotal > 0) {
+								totalFileLength = (iTotal * 1024 * 1024).toLong
+							} else if ((strTotal indexOf "GiB") > -1 && iTotal > 0) {
+								totalFileLength = (iTotal * 1024 * 1024 * 1024).toLong
+							}
+						}
+					}
+					updateDownloadProgress(inputTitle, progressPercentage, totalFileLength, vidObj)
+					reader close()
+					fis close()
 				}
 			}
 
@@ -218,6 +257,35 @@ class UpdateProgressJob extends Job {
 			case ie: InterruptedException =>
 				LogWriter writeLog(ie.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
+		}
+	}
+
+	/**
+	 * This method tracks and updates the progress of the download. When it finishes, the method would do the cleanup and
+	 * moves the finished download into target directory.
+	 *
+	 * @param inputTitle the title of the downloaded file
+	 * @param progressPercentage a Double value representing the percentage of completed download
+	 * @param totalFileLength the total file size of the download (in bytes)
+	 * @param vo a <code>net.fluxo.dd.dbo.VideoProcess</code> object
+	 */
+	private def updateDownloadProgress(inputTitle: String, progressPercentage: Double, totalFileLength: Long, vo: VideoProcess) {
+		// update the database
+		val status = {
+			if (progressPercentage == 100) "complete"
+			else "active"
+		}
+		val completedLength = ((progressPercentage / 100) * totalFileLength).toLong
+		val taskGID = (vo VideoTaskGid) getOrElse ""
+		DbControl updateVideoTask(taskGID, OVideoP getOwner taskGID, inputTitle, status, totalFileLength, completedLength)
+		OVideoP updateTimestamp taskGID
+		// time to remove this task from our list...
+		if (progressPercentage == 100) {
+			OVideoP removeFromList taskGID
+			val destFile = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + inputTitle)
+			if (!destFile.exists()) {
+				FileUtils moveFile(new File(inputTitle), destFile)
+			}
 		}
 	}
 }
