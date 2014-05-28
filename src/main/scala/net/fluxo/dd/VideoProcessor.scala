@@ -217,20 +217,36 @@ class VideoProcessor {
 			// DEBUG
 			LogWriter writeLog("Youtube-dl STARTING!", Level.DEBUG)
 			// if the "output" file exists, delete it first
-			val outputFile = new File("./uridir/" + gid + ".output")
-			if (outputFile.exists) outputFile.delete
+			//val outputFile = new File("./uridir/" + gid + ".output")
+			//if (outputFile.exists) outputFile.delete
+			// command line, e.g: youtube-dl --output="xxxfdf.%(ext)s" --write-info-json https://www.youtube.com/watch?v=TuZL0L4lZgo --print-traffic
 			val sb = new StringBuilder
-			sb append "bash -c " append "'youtube-dl" append " " append url
-			sb append " > " append (System getProperty "user.dir")
-			sb append "/uridir/" append gid append ".output" append " 2>&1'"
+			sb append "youtube-dl" append " --output=" append "\"" append gid append ".%(ext)s\""
+			sb append " --write-info-json " append url append " --print-traffic "
+			//sb append " > " append (System getProperty "user.dir")
+			//sb append "/uridir/" append gid append ".output" append " 2>&1"
 			val commandLine = CommandLine parse sb.toString
 			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
 			_executor = Some(executor)
+			val pumpsh = new PumpStreamHandler(new VOStream)
+			executor setStreamHandler pumpsh
 			executor execute commandLine
 		}
 	}
+
+	/**
+	 * Process the output result from <code>DefaultExecutor</code> into the log.
+	 */
+	class VOStream() extends LogOutputStream {
+		override def processLine(line: String, level: Int) {
+			if (line startsWith "header: Content-Length:") {
+				LogWriter writeLog("YTDL Processor: Content-Length -> " + (line replace("header: Content-Length:", "")).trim, Level.INFO)
+			}
+		}
+	}
+
 }
 
 /**
