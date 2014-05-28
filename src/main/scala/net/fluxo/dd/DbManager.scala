@@ -106,6 +106,12 @@ class DbManager {
 			ps setBoolean(5, false)
 			ps setString(6, "notailgid")
 			ps setString(7, "noinfohash")
+			val inserted = ps executeUpdate()
+			if (inserted == 0) {
+				LogWriter writeLog("Failed to insert new video task for GID " + gid, Level.ERROR)
+				response = false
+			}
+			ps close()
 		} catch {
 			case ex: Exception =>
 				LogWriter writeLog("Error inserting new video task for GID " + gid, Level.ERROR)
