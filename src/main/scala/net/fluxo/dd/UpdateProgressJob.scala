@@ -64,6 +64,8 @@ class UpdateProgressJob extends Job {
 				val infoObject = new File(tGID + ".info.json")
 				if (!((vidObj VideoExt) isDefined) && infoObject.exists) {
 					val bestFormat = OUtils extractValueFromJSONFile(infoObject, "format_id")
+					// DEBUG
+					LogWriter writeLog("--> best format found: " + bestFormat, Level.DEBUG)
 					val formatArray = OUtils extractArrayFromJSONObject(infoObject, "formats")
 					val formatIterator = formatArray.iterator
 					breakable {
@@ -71,6 +73,8 @@ class UpdateProgressJob extends Job {
 							val f = formatIterator.next.asInstanceOf[JSONObject]
 							if ((f get "format").asInstanceOf[String].equals(bestFormat)) {
 								OVideoP updateVideoExtension(tGID, (f get "ext").asInstanceOf[String])
+								// DEBUG
+								LogWriter writeLog("--> extension for best format: " + (f get "ext").asInstanceOf[String], Level.DEBUG)
 								break()
 							}
 						}
@@ -78,6 +82,8 @@ class UpdateProgressJob extends Job {
 				}
 				if (!((vidObj VideoTitle) isDefined) && infoObject.exists) {
 					val title = OUtils extractValueFromJSONFile(infoObject, "stitle")
+					// DEBUG
+					LogWriter writeLog("--> title: " + title, Level.DEBUG)
 					OVideoP updateVideoTitle(tGID, title)
 				}
 				// look for the ".part" file
@@ -89,6 +95,12 @@ class UpdateProgressJob extends Job {
 					val totalFileLength = vidObj.VideoTotalLength
 					val fileName = ((vidObj VideoTitle) getOrElse "") + ((vidObj VideoExt) getOrElse "")
 					DbControl updateVideoTask(tGID, OVideoP getOwner tGID, fileName, "active", totalFileLength, downloaded)
+					// DEBUG
+					LogWriter writeLog("--> PART file", Level.DEBUG)
+					LogWriter writeLog("--> task GID: " + tGID, Level.DEBUG)
+					LogWriter writeLog("--> downloaded: " + downloaded + " bytes", Level.DEBUG)
+					LogWriter writeLog("--> total: " + totalFileLength + " bytes", Level.DEBUG)
+					LogWriter writeLog("--> filename: " + fileName, Level.DEBUG)
 				} else if (fullFile.exists) {
 					// if full file exists, that means the download has finished. Rename and move the file to target dir, then cleanup
 					val videoFile = new File(tGID + ((vidObj VideoExt) getOrElse ""))
@@ -99,6 +111,9 @@ class UpdateProgressJob extends Job {
 					FileUtils forceDelete infoObject
 					DbControl finishVideoTask(FileUtils.sizeOf(targetVideoFile), tGID)
 					OVideoP removeFromList tGID
+					// DEBUG
+					LogWriter writeLog("--> DOWNLOAD FINISHED", Level.DEBUG)
+					LogWriter writeLog("--> " + targetVideoFile.getAbsoluteFile + ": " + targetVideoFile.exists, Level.DEBUG)
 				}
 			}
 
