@@ -41,6 +41,22 @@ class VideoProcess {
 		_process = Some(value)
 	}
 
+	private var _totalLength: Long = 0L
+
+	def VideoTotalLength: Long = _totalLength
+
+	def VideoTotalLength_:(value: Long) {
+		_totalLength = value
+	}
+
+	private var _fileExt: Option[String] = None
+
+	def VideoExt: Option[String] = _fileExt
+
+	def VideoExt_:(value: String) {
+		_fileExt = Some(value)
+	}
+
 	private var _owner: Option[String] = None
 
 	def Owner: Option[String] = _owner
@@ -79,5 +95,13 @@ class VideoProcess {
 
 	def VideoLastUpdated_=(value: Long) {
 		_lastUpdated = value
+	}
+
+	private var _title: Option[String] = None
+
+	def VideoTitle: Option[String] = _title
+
+	def VideoTitle_=(value: String) {
+		_title = Some(value)
 	}
 }

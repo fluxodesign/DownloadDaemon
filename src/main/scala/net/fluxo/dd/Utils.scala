@@ -38,6 +38,7 @@ import org.json.simple.{JSONArray, JSONValue, JSONObject}
 import scala.Some
 import org.apache.commons.io.FileUtils
 import java.security.MessageDigest
+import org.json.simple.parser.JSONParser
 
 /**
  * This class contains methods that can be called from anywhere in the application.
@@ -335,6 +336,49 @@ class Utils {
 		}
 		json put("MovieList", jsArray)
 		json.toString
+	}
+
+	/**
+	 * Read a file into a JSON object and return a value identified by the key.
+	 *
+	 * @param infoFile a file containing a JSON object
+	 * @param key the key whose value we are trying to extract
+	 * @return the value of associated key or empty string
+	 */
+	def extractValueFromJSONFile(infoFile: File, key: String): String = {
+		var retVal = ""
+		// open the info file and read the content into a string
+		try {
+			val content = FileUtils readFileToString(infoFile, "UTF-8")
+			val jsParser = new JSONParser
+			val jsObj = (jsParser parse content).asInstanceOf[JSONObject]
+			if (jsObj containsKey key) retVal = jsObj.get(key).toString
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Failed to extract value from file " + (infoFile getName) + "; key: " + key, Level.ERROR)
+		}
+		retVal
+	}
+
+	/**
+	 * Read a file into a JSON object and return a JSONArray that is contained within the JSON object.
+	 *
+	 * @param infoFile a file containing a JSON object
+	 * @param arrayName array name inside the JSON object
+	 * @return a <code>JSONArray</code> object
+	 */
+	def extractArrayFromJSONObject(infoFile: File, arrayName: String): JSONArray = {
+		var retVal: Option[JSONArray] = None
+		try {
+			val content = FileUtils readFileToString(infoFile, "UTF-8")
+			val jsParser = new JSONParser
+			val jsObj = (jsParser parse content).asInstanceOf[JSONObject]
+			retVal = Some(jsObj.get(arrayName).asInstanceOf[JSONArray])
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Failed to extract array from file " + (infoFile getName) + "; array name: " + arrayName, Level.ERROR)
+		}
+		retVal getOrElse null
 	}
 
 	/**

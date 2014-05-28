@@ -193,6 +193,63 @@ class VideoProcessor {
 	}
 
 	/**
+	 * Update the total length field of our download tracker object (Only if our new length is larger than the current one).
+	 *
+	 * @param taskGID unique ID of the download
+	 * @param length total length of the download (in bytes)
+	 */
+	def updateTotalLength(taskGID: String, length: Long) {
+		val iterator = ActiveProcesses iterator()
+		breakable {
+			while (iterator.hasNext) {
+				val e = iterator.next
+				if ((e VideoTaskGid).getOrElse(null) equals taskGID) {
+					if ((e VideoTotalLength) < length) e.VideoTotalLength_:(length)
+					break()
+				}
+			}
+		}
+	}
+
+	/**
+	 * Update the video extension of our download tracker object.
+	 *
+	 * @param taskGID unique ID of the download
+	 * @param ext new video extension for our tracker object
+	 */
+	def updateVideoExtension(taskGID: String, ext: String) {
+		val iterator = ActiveProcesses iterator()
+		breakable {
+			while (iterator.hasNext) {
+				val e = iterator.next
+				if ((e VideoTaskGid).getOrElse(null) equals taskGID) {
+					e.VideoExt_:(ext)
+					break()
+				}
+			}
+		}
+	}
+
+	/**
+	 * Update the video title field of our download tracker object.
+	 *
+	 * @param taskGID unique ID of the download
+	 * @param title video title for our tracker object
+	 */
+	def updateVideoTitle(taskGID: String, title: String) {
+		val iterator = ActiveProcesses iterator()
+		breakable {
+			while (iterator.hasNext) {
+				val e = iterator.next
+				if ((e VideoTaskGid).getOrElse(null) equals taskGID) {
+					e.VideoTitle_=(title)
+					break()
+				}
+			}
+		}
+	}
+
+	/**
 	 * VideoThread processes a new download process by calling youtube-dl through <code>DefaultExecutor</code>.
 	 * @param url Video URL to download
 	 */
@@ -216,21 +273,16 @@ class VideoProcessor {
 			OUtils createUriFile(gid: String, url: String)
 			// DEBUG
 			LogWriter writeLog("Youtube-dl STARTING!", Level.DEBUG)
-			// if the "output" file exists, delete it first
-			//val outputFile = new File("./uridir/" + gid + ".output")
-			//if (outputFile.exists) outputFile.delete
 			// command line, e.g: youtube-dl --output="xxxfdf.%(ext)s" --write-info-json https://www.youtube.com/watch?v=TuZL0L4lZgo --print-traffic
 			val sb = new StringBuilder
 			sb append "youtube-dl" append " --output=" append "\"" append gid append ".%(ext)s\""
 			sb append " --write-info-json " append url append " --print-traffic "
-			//sb append " > " append (System getProperty "user.dir")
-			//sb append "/uridir/" append gid append ".output" append " 2>&1"
 			val commandLine = CommandLine parse sb.toString
 			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
 			_executor = Some(executor)
-			val pumpsh = new PumpStreamHandler(new VOStream)
+			val pumpsh = new PumpStreamHandler(new VOStream(gid))
 			executor setStreamHandler pumpsh
 			executor execute commandLine
 		}
@@ -239,14 +291,15 @@ class VideoProcessor {
 	/**
 	 * Process the output result from <code>DefaultExecutor</code> into the log.
 	 */
-	class VOStream() extends LogOutputStream {
+	class VOStream(gid: String) extends LogOutputStream {
 		override def processLine(line: String, level: Int) {
 			if (line startsWith "header: Content-Length:") {
-				LogWriter writeLog("YTDL Processor: Content-Length -> " + (line replace("header: Content-Length:", "")).trim, Level.INFO)
+				val xLength = (line replace("header: Content-Length:", "")).trim.toLong
+				updateTotalLength(gid, xLength)
+				LogWriter writeLog("YTDL Processor: Content-Length -> " + xLength + " bytes", Level.INFO)
 			}
 		}
 	}
-
 }
 
 /**

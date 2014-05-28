@@ -27,8 +27,7 @@ import java.util
 import org.apache.commons.io.FileUtils
 import org.apache.xmlrpc.XmlRpcException
 import scala.util.control.Breaks._
-import java.util.regex.Pattern
-import net.fluxo.dd.dbo.VideoProcess
+import org.json.simple.JSONObject
 
 /**
  * UpdateProgressJob represents a <code>Job</code> where it monitors the active and finished downloads and updates the
@@ -41,7 +40,6 @@ import net.fluxo.dd.dbo.VideoProcess
 class UpdateProgressJob extends Job {
 
 	private var _currentPort: Int = 0
-	private val _pattern = Pattern compile "[\\d+.]"
 
 	/**
 	 * Monitor the progress of downloads and update the records in the database. It restarts any unfinished downloads, then
@@ -61,45 +59,46 @@ class UpdateProgressJob extends Job {
 
 			while (videoIterator.hasNext) {
 				val vidObj = videoIterator.next
-				// check for the "output" file; if exists, then read the file and update accordingly...
-				val outputFile = new File("./uridir/" + vidObj.VideoTaskGid + ".output")
-				if (outputFile.exists) {
-					val fis = new FileInputStream(outputFile)
-					val reader = new BufferedReader(new InputStreamReader(fis))
-					val line = reader readLine()
-					var inputTitle = "N/A"
-					var progressPercentage = 0.0d
-					var totalFileLength = 0L
-					while (line != null) {
-						if (line startsWith "[download] Destination:") {
-							inputTitle = line replace("[download] Destination:", "")
-						} else if ((line contains "[download]") && (line contains "% of") && (line contains "ETA")) {
-							val strProgress = (line replace("[download]", "")).trim
-							val idxPercent = strProgress indexOf "%"
-							if (idxPercent > -1) progressPercentage = java.lang.Double.parseDouble(strProgress.substring(0, idxPercent))
-							val idx1 = (strProgress indexOf "of") + 2
-							val idx2 = strProgress indexOf "at"
-							val strTotal = (strProgress substring(idx1, idx2)).trim
-							val matcher = _pattern matcher strTotal
-							val sb = new StringBuilder
-							while (matcher.find) {
-								val start = matcher.start
-								val end = matcher.end
-								sb append strTotal substring(start, end)
-							}
-							val iTotal = java.lang.Double.parseDouble(sb toString())
-							if ((strTotal indexOf "KiB") > -1 && iTotal > 0) {
-								totalFileLength = (iTotal * 1024).toLong
-							} else if ((strTotal indexOf "MiB") > -1 && iTotal > 0) {
-								totalFileLength = (iTotal * 1024 * 1024).toLong
-							} else if ((strTotal indexOf "GiB") > -1 && iTotal > 0) {
-								totalFileLength = (iTotal * 1024 * 1024 * 1024).toLong
+				val tGID = (vidObj VideoTaskGid) getOrElse null
+				// if there's no extension defined in the video tracker object, try to obtain one from the json file
+				val infoObject = new File(tGID + ".info.json")
+				if (!((vidObj VideoExt) isDefined) && infoObject.exists) {
+					val bestFormat = OUtils extractValueFromJSONFile(infoObject, "format_id")
+					val formatArray = OUtils extractArrayFromJSONObject(infoObject, "formats")
+					val formatIterator = formatArray.iterator
+					breakable {
+						while (formatIterator.hasNext) {
+							val f = formatIterator.next.asInstanceOf[JSONObject]
+							if ((f get "format").asInstanceOf[String].equals(bestFormat)) {
+								OVideoP updateVideoExtension(tGID, (f get "ext").asInstanceOf[String])
+								break()
 							}
 						}
 					}
-					updateDownloadProgress(inputTitle, progressPercentage, totalFileLength, vidObj)
-					reader close()
-					fis close()
+				}
+				if (!((vidObj VideoTitle) isDefined) && infoObject.exists) {
+					val title = OUtils extractValueFromJSONFile(infoObject, "stitle")
+					OVideoP updateVideoTitle(tGID, title)
+				}
+				// look for the ".part" file
+				val partFile = new File(tGID + "." + vidObj.VideoExt.getOrElse("") + ".part")
+				val fullFile = new File(tGID + "." + vidObj.VideoExt.getOrElse(""))
+				// if "part" file exists, calculate the download progress
+				if (partFile.exists) {
+					val downloaded = FileUtils sizeOf partFile
+					val totalFileLength = vidObj.VideoTotalLength
+					val fileName = ((vidObj VideoTitle) getOrElse "") + ((vidObj VideoExt) getOrElse "")
+					DbControl updateVideoTask(tGID, OVideoP getOwner tGID, fileName, "active", totalFileLength, downloaded)
+				} else if (fullFile.exists) {
+					// if full file exists, that means the download has finished. Rename and move the file to target dir, then cleanup
+					val videoFile = new File(tGID + ((vidObj VideoExt) getOrElse ""))
+					val targetVideoFile = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + ((vidObj VideoTitle) getOrElse "") +
+							"." + ((vidObj VideoExt) getOrElse ""))
+					FileUtils copyFile(videoFile, targetVideoFile)
+					FileUtils forceDelete videoFile
+					FileUtils forceDelete infoObject
+					DbControl finishVideoTask(FileUtils.sizeOf(targetVideoFile), tGID)
+					OVideoP removeFromList tGID
 				}
 			}
 
@@ -260,32 +259,4 @@ class UpdateProgressJob extends Job {
 		}
 	}
 
-	/**
-	 * This method tracks and updates the progress of the download. When it finishes, the method would do the cleanup and
-	 * moves the finished download into target directory.
-	 *
-	 * @param inputTitle the title of the downloaded file
-	 * @param progressPercentage a Double value representing the percentage of completed download
-	 * @param totalFileLength the total file size of the download (in bytes)
-	 * @param vo a <code>net.fluxo.dd.dbo.VideoProcess</code> object
-	 */
-	private def updateDownloadProgress(inputTitle: String, progressPercentage: Double, totalFileLength: Long, vo: VideoProcess) {
-		// update the database
-		val status = {
-			if (progressPercentage == 100) "complete"
-			else "active"
-		}
-		val completedLength = ((progressPercentage / 100) * totalFileLength).toLong
-		val taskGID = (vo VideoTaskGid) getOrElse ""
-		DbControl updateVideoTask(taskGID, OVideoP getOwner taskGID, inputTitle, status, totalFileLength, completedLength)
-		OVideoP updateTimestamp taskGID
-		// time to remove this task from our list...
-		if (progressPercentage == 100) {
-			OVideoP removeFromList taskGID
-			val destFile = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + inputTitle)
-			if (!destFile.exists()) {
-				FileUtils moveFile(new File(inputTitle), destFile)
-			}
-		}
-	}
 }

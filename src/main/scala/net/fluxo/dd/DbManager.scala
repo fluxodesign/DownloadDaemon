@@ -190,6 +190,40 @@ class DbManager {
 	}
 
 	/**
+	 * Update the database to mark that a particulr video download task is completed.
+	 *
+	 * @param cl the completed file size (should match the total file length)
+	 * @param taskGID unique task ID
+	 * @return true if record is successfully updated; false otherwise
+	 */
+	def finishVideoTask(cl: Long, taskGID: String): Boolean = {
+		var response: Boolean = true
+		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE gid = ? AND info_hash = ? AND tail_gid = ?"""
+		try {
+			val ps = _conn prepareStatement updateStatement
+			ps setTimestamp(1, new Timestamp(DateTime.now.getMillis))
+			ps setBoolean(2, true)
+			ps setString(3, "complete")
+			ps setLong(4, cl)
+			ps setString(5, taskGID)
+			ps setString(6, "noinfohash")
+			ps setString(7, "notailgid")
+			val updated = ps executeUpdate()
+			if (updated == 0) {
+				LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
+				response = false
+			}
+			ps close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	/**
 	 * Update a tail GID on a particular download, in case of a restarted download.
 	 *
 	 * @param gid a unique download ID
@@ -293,7 +327,7 @@ class DbManager {
 		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE tail_gid = ? AND info_hash = ? AND total_length = ?"""
 		try {
 			val ps = _conn prepareStatement updateStatement
-			ps setTimestamp(1, new Timestamp(DateTime.now().getMillis))
+			ps setTimestamp(1, new Timestamp(DateTime.now.getMillis))
 			ps setBoolean(2, true)
 			ps setString(3, status)
 			ps setLong(4, cl)
