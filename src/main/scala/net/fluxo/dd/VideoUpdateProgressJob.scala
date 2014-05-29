@@ -73,7 +73,7 @@ class VideoUpdateProgressJob extends Job {
 						// DEBUG
 						LogWriter writeLog("--> inside formatIterator", Level.DEBUG)
 						LogWriter writeLog("--> assessing f: " + (f get "format").asInstanceOf[String], Level.DEBUG)
-						if ((f get "format").asInstanceOf[String].equals(bestFormat)) {
+						if ((f get "format_id").asInstanceOf[String].equals(bestFormat)) {
 							OVideoP updateVideoExtension(tGID, (f get "ext").asInstanceOf[String])
 							// DEBUG
 							LogWriter writeLog("--> extension for best format: " + (f get "ext").asInstanceOf[String], Level.DEBUG)
