@@ -99,15 +99,37 @@ class VideoProcessor {
 	}
 
 	/**
-	 * Attempt to restart unfinished downloads.
+	 * Check whether a Task GID is in ActiveProcesses.
+	 *
+	 * @param tGID a unique task ID
+	 * @return true if the task ID is in ActiveProcesses; false otherwise
+	 */
+	def isTaskGIDInActiveProcesses(tGID: String): Boolean = {
+		var status = false
+		val iterator = ActiveProcesses iterator()
+		breakable {
+			while (iterator.hasNext) {
+				val obj = iterator.next
+				if (((obj VideoTaskGid) getOrElse "") equals tGID) {
+					status = true
+					break()
+				}
+			}
+		}
+		status
+	}
+
+	/**
+	 * Attempt to restart unfinished downloads. The restart process only starts those unfinished tasks that
+	 * are not in the ActiveProcesses.
 	 */
 	def restartDownload() {
-		// we need to clean everything up and start over
-		ActiveProcesses clear()
 		val arrUnfinishedTasks = DbControl queryActiveVideoTask()
 		if ((arrUnfinishedTasks length) > 0) {
 			for (t <- arrUnfinishedTasks) {
-				reprocessRequest(t.TaskInput.getOrElse(""), t.TaskOwner.getOrElse(""), t.TaskGID.getOrElse(""))
+				if (!isTaskGIDInActiveProcesses(t.TaskGID.getOrElse(""))) {
+					reprocessRequest(t.TaskInput.getOrElse(""), t.TaskOwner.getOrElse(""), t.TaskGID.getOrElse(""))
+				}
 			}
 		}
 	}

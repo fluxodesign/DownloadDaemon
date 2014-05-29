@@ -70,6 +70,8 @@ class VideoUpdateProgressJob extends Job {
 				breakable {
 					while (formatIterator.hasNext) {
 						val f = formatIterator.next.asInstanceOf[JSONObject]
+						// DEBUG
+
 						if ((f get "format").asInstanceOf[String].equals(bestFormat)) {
 							OVideoP updateVideoExtension(tGID, (f get "ext").asInstanceOf[String])
 							// DEBUG
