@@ -27,8 +27,6 @@ import scala.Some
 import net.fluxo.dd.dbo.VideoProcess
 import org.joda.time.DateTime
 import scala.util.control.Breaks._
-import org.apache.commons.io.FileUtils
-import java.io.File
 
 /**
  * VideoProcessor process commands that deal with youtube-dl. It also monitors running downloads and tries to
@@ -109,7 +107,6 @@ class VideoProcessor {
 		val arrUnfinishedTasks = DbControl queryActiveVideoTask()
 		if ((arrUnfinishedTasks length) > 0) {
 			for (t <- arrUnfinishedTasks) {
-				FileUtils.forceDelete(new File(t.TaskPackage.getOrElse("")))
 				reprocessRequest(t.TaskInput.getOrElse(""), t.TaskOwner.getOrElse(""), t.TaskGID.getOrElse(""))
 			}
 		}
@@ -300,6 +297,7 @@ class VideoProcessor {
 			}
 		}
 	}
+
 }
 
 /**
