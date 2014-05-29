@@ -22,7 +22,7 @@ package net.fluxo.dd
 
 import org.quartz.{Job, JobExecutionContext, JobExecutionException}
 import org.apache.log4j.Level
-import java.io.File
+import java.io._
 import java.util
 import org.apache.commons.io.FileUtils
 import org.apache.xmlrpc.XmlRpcException
@@ -172,8 +172,10 @@ class UpdateProgressJob extends Job {
 										} else {
 											val packageDir = new File(qf.CPPackage.getOrElse(null))
 											val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
-											if (packageDir.isDirectory && packageDir.exists() && !destDir.exists()) {
+											if (packageDir.isDirectory && packageDir.exists && !destDir.exists) {
 												FileUtils moveDirectory(packageDir, destDir)
+											} else if (packageDir.isFile && packageDir.exists && !destDir.exists) {
+												FileUtils moveFile(packageDir, destDir)
 											} else LogWriter writeLog("directory " + destDir.getAbsolutePath + " exist!", Level.INFO)
 										}
 									}
@@ -196,7 +198,6 @@ class UpdateProgressJob extends Job {
 							OAria killProcess _currentPort
 					}
 
-
 				}
 			}
 		} catch {
@@ -205,4 +206,5 @@ class UpdateProgressJob extends Job {
 				LogWriter writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
 		}
 	}
+
 }

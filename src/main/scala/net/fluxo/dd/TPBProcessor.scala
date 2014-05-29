@@ -30,6 +30,7 @@ import scala.util.control.Breaks._
 import com.google.gson.Gson
 import java.util
 import org.apache.commons.io.FilenameUtils
+import org.apache.log4j.Level
 
 /**
  * This class deals with searching and interpretation of the results of said searches of a certain notorious
@@ -114,13 +115,11 @@ class TPBProcessor {
 		try {
 			socket = new Socket(_url, 80)
 			reachable = true
-		} finally {
-			if (socket != null) {
-				try { socket close() }
-				catch {
-					case ioe: IOException =>
-				}
-			}
+			if (socket != null) socket close()
+			reachable
+		} catch {
+			case ioe: IOException =>
+				LogWriter writeLog("Failed to close socket connection to TPB", Level.ERROR)
 		}
 		reachable
 	}

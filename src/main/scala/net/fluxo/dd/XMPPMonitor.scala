@@ -101,7 +101,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				}
 			} catch {
 				case xmppEx: XMPPException =>
-				    LogWriter writeLog("Failed to connect to chat server", Level.ERROR)
+					LogWriter writeLog("Failed to connect to chat server", Level.ERROR)
 					LogWriter writeLog(xmppEx.getMessage, Level.ERROR)
 					if ((xmppEx getXMPPError) != null) {
 						LogWriter.writeLog("XMPP ERROR: " + xmppEx.getXMPPError.getMessage, Level.ERROR)
@@ -128,12 +128,12 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				_xmppc sendPacket presence
 			} catch {
 				case xmppEx: XMPPException =>
-				    LogWriter writeLog("Failed to authenticate to XMPP server", Level.ERROR)
+					LogWriter writeLog("Failed to authenticate to XMPP server", Level.ERROR)
 					LogWriter writeLog(xmppEx.getMessage, Level.ERROR)
 					if (xmppEx.getXMPPError != null) {
 						LogWriter writeLog("XMPP ERROR: " + xmppEx.getXMPPError.getMessage, Level.ERROR)
 					}
-				    LogWriter writeLog(LogWriter.stackTraceToString(xmppEx), Level.ERROR)
+					LogWriter writeLog(LogWriter.stackTraceToString(xmppEx), Level.ERROR)
 					retries -= 1
 			}
 		}
@@ -191,7 +191,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 	 *
 	 * @return string representing the operating system family
 	 */
-	def getOpSys : String = {
+	def getOpSys: String = {
 		val rawOS = System.getProperty("os.name").toLowerCase
 		var retVal = rawOS
 		if ((rawOS indexOf "win") >= 0) {
@@ -247,7 +247,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						if (!_isXmppServerReachable) {
 							if (retries >= 20) {
 								LogWriter writeLog("XMPP Server is not contactable after 20 retries. Retrying in 5 minutes",
-									Level.INFO)
+										Level.INFO)
 								Thread interrupted()
 								Thread sleep secondsToMillis(5 * 60)
 								retries = 0
@@ -283,13 +283,13 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						if (!connected) {
 							if (retries >= 20) {
 								LogWriter writeLog("Connecting to XMPP server '" + xmppServer +
-									"' has been unsuccessful after 20 retries. Retrying in 5 minutes...", Level.INFO)
+										"' has been unsuccessful after 20 retries. Retrying in 5 minutes...", Level.INFO)
 								Thread interrupted()
 								Thread sleep secondsToMillis(5 * 60)
 								retries = 0
 							} else {
 								LogWriter writeLog("Connecting to XMPP server '" + xmppServer +
-									"' failed. Retrying in 10 seconds...", Level.INFO)
+										"' failed. Retrying in 10 seconds...", Level.INFO)
 								Thread interrupted()
 								Thread sleep secondsToMillis(10)
 								retries += 1
@@ -420,10 +420,12 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 							if ((marker + 1) * CHAR_LIMIT > (response length)) response.length
 							else (marker + 1) * CHAR_LIMIT
 						}
-						val substring = (marker+1) + "/" + chunks + ":::" + (response substring(start, end))
+						val substring = (marker + 1) + "/" + chunks + ":::" + (response substring(start, end))
 						chat sendMessage substring
 						marker += 1
-						try { Thread sleep 1000 }
+						try {
+							Thread sleep 1000
+						}
 						catch {
 							case ie: InterruptedException =>
 						}
@@ -459,9 +461,8 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				case "STATUS" =>
 					if (words.length < 3) "ERR LENGTH"
 					else {
-						val hMap = new util.HashMap[String,String]
+						val hMap = new util.HashMap[String, String]
 						val tasks: Array[Task] = DbControl queryTasks words(2)
-						//val sb: StringBuilder = new StringBuilder
 						for (t <- tasks) {
 							val progress: Int = {
 								if (t.TaskCompletedLength > 0 && t.TaskTotalLength > 0) ((t.TaskCompletedLength * 100) / t.TaskTotalLength).toInt
@@ -471,11 +472,8 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								if (t.TaskPackage.getOrElse(null).length > 1) t.TaskPackage.getOrElse(null)
 								else "Unknown Download"
 							}
-							//sb.append(dlName + " --> " + progress + "%" + System.lineSeparator())
 							hMap put(dlName, String valueOf progress)
 						}
-						//if (tasks.length == 0) sb.append("No active tasks are running!")
-						//sb.toString()
 						OUtils DownloadProgressToJson hMap
 					}
 				case "DELETE" =>
@@ -519,7 +517,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 										intObj.getOrElse(0).asInstanceOf[Int]
 									}
 									YIFYP procListMovie(page, quality, rating, _externalIP.getOrElse("127.0.0.1"),
-										OUtils.readConfig.HTTPPort)
+											OUtils.readConfig.HTTPPort)
 								}
 							case "DETAILS" =>
 								if (words.length != 4) "ERR LENGTH: \"DETAILS\" requires 4 params, found " + words.length
@@ -538,11 +536,11 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								else {
 									val searchTerm: String = {
 										val ucodec = new URLCodec
-										ucodec decode words(3) substring("ST=" length) replaceAllLiterally("\"", "")
+										ucodec decode words(3) substring ("ST=" length) replaceAllLiterally("\"", "")
 									}
 									YIFYP procYIFYSearch searchTerm
 								}
-							case _  => "ERR CMD"
+							case _ => "ERR CMD"
 						}
 					}
 				case "TPB" =>
@@ -588,14 +586,18 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				case "TPBDETAILS" =>
 					if (words.length != 3) "ERR TPBDETAILS SYNTAX"
 					else {
-						val detailsURL = URLDecoder decode (words(2), "UTF-8")
+						val detailsURL = URLDecoder decode(words(2), "UTF-8")
 						if (!(detailsURL startsWith "http://thepiratebay.se/")) "ERR TPBDETAILS URL"
 						else {
 							TPBP queryDetails (FilenameUtils getPath detailsURL)
 						}
 					}
+				case "VIDEO" =>
+					if (words.length != 4) "ERR VIDEO REQUEST LENGTH"
+					else OVideoP processRequest(words(3), words(2))
 				case _ => "ERR CMD"
 			}
 		}
 	}
+
 }

@@ -46,6 +46,7 @@ public class FluxoWSProcess {
 	/**
 	 * This method should return a HTTP/200 and a string ("FLUXO-REST-WS") when called.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/ping</p>
+	 *
 	 * @return a {@link javax.ws.rs.core.Response} object signifying that the server is alive and responding.
 	 */
 	@GET
@@ -58,9 +59,10 @@ public class FluxoWSProcess {
 	/**
 	 * Return a JSON object containing the list of movies available on YIFY site, newest to oldest.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/ylist/page/[page]/quality/[quality]/rating/[rating]</p>
-	 * @param page page number to serve (starts from 1)
+	 *
+	 * @param page    page number to serve (starts from 1)
 	 * @param quality movie quality to display (0: all movies; 1: 720p movies only; 2: 1080p movies only; 3: 3D movies only)
-	 * @param rating IMDB rating to filter the list; starts from 0, which displays all movies all through to 9
+	 * @param rating  IMDB rating to filter the list; starts from 0, which displays all movies all through to 9
 	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object of movie list
 	 */
 	@GET
@@ -78,6 +80,7 @@ public class FluxoWSProcess {
 	/**
 	 * Return a JSON object containing the details of a particular movie.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/ydetails/[movie-id]</p>
+	 *
 	 * @param id the id of the movie
 	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object of the movie details
 	 */
@@ -96,6 +99,7 @@ public class FluxoWSProcess {
 	/**
 	 * Return a JSON object containing the results of a search on YIFY site.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/ysearch?st=[search-term]</p>
+	 *
 	 * @param search the search term, could be title or part of title of the movie(s)
 	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object of the search results
 	 */
@@ -118,6 +122,7 @@ public class FluxoWSProcess {
 	/**
 	 * Returns the status of the downloads for a particular user.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/status/[user-id]</p>
+	 *
 	 * @param userID the user ID to query
 	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object with list of current downloads for
 	 * a particular user
@@ -133,7 +138,7 @@ public class FluxoWSProcess {
 		}
 		try {
 			Task[] arrTasks = DbControl.queryTasks(userID);
-			HashMap<String,String> progressMap = new HashMap<>();
+			HashMap<String, String> progressMap = new HashMap<>();
 			for (Task t : arrTasks) {
 				int progress = -1;
 				if (t.TaskCompletedLength() > 0 && t.TaskTotalLength() > 0) {
@@ -155,7 +160,8 @@ public class FluxoWSProcess {
 	/**
 	 * Add a bittorrent URL to current list of downloads for the server to process.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/addtorrent/[user-id]/[torrent-url]</p>
-	 * @param uri bittorrent magnet url or http torrent url to download
+	 *
+	 * @param uri   bittorrent magnet url or http torrent url to download
 	 * @param owner user ID associated with this download
 	 * @return a string containing the status of the request; "OK" followed by download ID or an error message
 	 */
@@ -175,7 +181,30 @@ public class FluxoWSProcess {
 				String response = OAria.processRequest(decodedURL, owner, false, "", "");
 				return Response.status(200).entity(response).build();
 			}
-		} catch(UnsupportedEncodingException uee) {
+		} catch (UnsupportedEncodingException uee) {
+			return Response.status(500).entity(uee.getMessage()).build();
+		}
+		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
+	}
+
+
+	@GET
+	@Path("/addvid/{owner}/{uri}")
+	@Produces("text/plain")
+	public Response addNewVideoDownload(@Context HttpServletRequest htRequest, @DefaultValue("") @PathParam("uri") String uri,
+	                                    @DefaultValue("") @PathParam("owner") String owner) {
+		String username = htRequest.getHeader("DDUSER");
+		String password = htRequest.getHeader("DDPWD");
+		if (username == null || password == null || !DbControl.authCredentials(username, password)) {
+			return Response.status(400).entity("NOT-AUTHORIZED").build();
+		}
+		try {
+			if (uri.length() > 0 && owner.length() > 0) {
+				String decodedURL = URLDecoder.decode(uri, "UTF-8");
+				String response = OVideoP.processRequest(decodedURL, owner);
+				return Response.status(200).entity(response).build();
+			}
+		} catch (UnsupportedEncodingException uee) {
 			return Response.status(500).entity(uee.getMessage()).build();
 		}
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
@@ -184,7 +213,8 @@ public class FluxoWSProcess {
 	/**
 	 * Add a HTTP-based download to current list of downloads for the server to process.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/adduri/[user-id]/[http-url]</p>
-	 * @param uri HTTP download url
+	 *
+	 * @param uri   HTTP download url
 	 * @param owner user ID associated with this download
 	 * @return a string containing the status of the request; "OK" followed by download ID or an error message
 	 */
@@ -204,7 +234,7 @@ public class FluxoWSProcess {
 				String response = OAria.processRequest(decodedURL, owner, true, "", "");
 				return Response.status(200).entity(response).build();
 			}
-		} catch(UnsupportedEncodingException uee) {
+		} catch (UnsupportedEncodingException uee) {
 			return Response.status(500).entity(uee.getMessage()).build();
 		}
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
@@ -214,8 +244,9 @@ public class FluxoWSProcess {
 	 * Add a HTTP-based download to current list of downloads for the server to process, with authentication (username
 	 * and password).
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/adduric/[user-id]/[username]/[password]/[http-url]</p>
-	 * @param uri HTTP download url
-	 * @param owner user ID associated with this download
+	 *
+	 * @param uri      HTTP download url
+	 * @param owner    user ID associated with this download
 	 * @param username username for authentication
 	 * @param password password for authentication
 	 * @return a string containing the status of the request; "OK" followed by download ID or an error message
@@ -237,7 +268,7 @@ public class FluxoWSProcess {
 				String response = OAria.processRequest(decodedURL, owner, true, username, password);
 				return Response.status(200).entity(response).build();
 			}
-		} catch(UnsupportedEncodingException uee) {
+		} catch (UnsupportedEncodingException uee) {
 			return Response.status(500).entity(uee.getMessage()).build();
 		}
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER-OR-USERNAME-PASSWORD-ERROR").build();
@@ -246,9 +277,10 @@ public class FluxoWSProcess {
 	/**
 	 * Return a JSON object containing the list of search results from a certain notorius torrent site.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/tpb/[search-term]/[page]/[categories]</p>
+	 *
 	 * @param searchTerm the search term
-	 * @param page page number to page number to serve (starts from 0)
-	 * @param cats list of category number, separated by commas
+	 * @param page       page number to page number to serve (starts from 0)
+	 * @param cats       list of category number, separated by commas
 	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object with search results from a notorious
 	 * torrents site
 	 */
@@ -256,7 +288,7 @@ public class FluxoWSProcess {
 	@Path("/tpb/{st}/{page}/{cat}")
 	@Produces("application/json")
 	public Response getTPBSearchResult(@DefaultValue("") @PathParam("st") String searchTerm, @DefaultValue("0") @PathParam("page") int page,
-	    @DefaultValue("0") @PathParam("cat") String cats) {
+	                                   @DefaultValue("0") @PathParam("cat") String cats) {
 		try {
 			if (searchTerm.length() > 0) {
 				URLCodec ucodec = new URLCodec();
@@ -272,7 +304,7 @@ public class FluxoWSProcess {
 						arrIndex++;
 					}
 				} else {
-					arrCats = new int[]{ Integer.parseInt(cats) };
+					arrCats = new int[]{Integer.parseInt(cats)};
 				}
 				String response = TPBP.query(decodedTerm, page, arrCats);
 				return Response.status(200).entity(response).build();
@@ -286,6 +318,7 @@ public class FluxoWSProcess {
 	/**
 	 * Return the description of a particular torrent object from a certain notorious torrent site.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/tpbdetails/[url-to-torrent]</p>
+	 *
 	 * @param url the url a particular torrent
 	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object with details of a particular torrent
 	 * from a notorious torrent site
