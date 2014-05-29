@@ -60,7 +60,7 @@ class DbManager {
 	 * @return true if adding is successful; false otherwise
 	 */
 	def addTask(task: Task): Boolean = {
-		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,http_username,http_password) VALUES(?,?,?,?,?,?,?)"""
+		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,http_username,http_password, process) VALUES(?,?,?,?,?,?,?,?)"""
 		var response: Boolean = true
 		try {
 			val ps = _conn prepareStatement insertStatement
@@ -71,6 +71,7 @@ class DbManager {
 			ps setBoolean(5, task.TaskIsHttp)
 			ps setString(6, task.TaskHttpUsername.getOrElse(null))
 			ps setString(7, task.TaskHttpPassword.getOrElse(null))
+			ps setString(8, "aria2c")
 			val inserted = ps executeUpdate()
 			if (inserted == 0) {
 				LogWriter writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
@@ -95,7 +96,7 @@ class DbManager {
 	 * @return true if adding is successful; false otherwise
 	 */
 	def addVideoTask(gid: String, owner: String): Boolean = {
-		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,tail_gid,info_hash) VALUES(?,?,?,?,?,?,?)"""
+		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,tail_gid,info_hash,process) VALUES(?,?,?,?,?,?,?,?)"""
 		var response: Boolean = true
 		try {
 			val ps = _conn prepareStatement insertStatement
@@ -106,6 +107,7 @@ class DbManager {
 			ps setBoolean(5, false)
 			ps setString(6, "notailgid")
 			ps setString(7, "noinfohash")
+			ps setString(8, "youtube-dl")
 			val inserted = ps executeUpdate()
 			if (inserted == 0) {
 				LogWriter writeLog("Failed to insert new video task for GID " + gid, Level.ERROR)
@@ -238,11 +240,12 @@ class DbManager {
 	 */
 	def updateTaskTailGID(gid: String, tailGid: String): Boolean = {
 		var response: Boolean = true
-		val updateStatement = """UPDATE input SET tail_gid = ? WHERE gid = ?"""
+		val updateStatement = """UPDATE input SET tail_gid = ? WHERE gid = ? AND process = ?"""
 		try {
 			val ps = _conn prepareStatement updateStatement
 			ps setString(1, tailGid)
 			ps setString(2, gid)
+			ps setString(3, "aria2c")
 			val updated = ps executeUpdate()
 			if (updated == 0) {
 				LogWriter writeLog("Failed to update tail GID for GID " + gid, Level.ERROR)
@@ -263,18 +266,20 @@ class DbManager {
 	 * Query the number of near-finished/finished download tasks that has not been marked as "complete" in the database.
 	 *
 	 * @param tailGID the tail GID of queried process
-	 * @param infoHash the infoHasah of queried process
+	 * @param infoHash the infoHash of queried process
 	 * @param tl total length of download
 	 * @return a <code>net.fluxo.dd.dbo.CountPackage</code> object
 	 */
 	def queryFinishTask(tailGID: String, infoHash: String, tl: Long): CountPackage = {
 		val cp: CountPackage = new CountPackage
-		val queryStatement = """SELECT COUNT(*) AS count, package FROM input WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND completed = false"""
+		val queryStatement = """SELECT COUNT(*) AS count, package FROM input WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND completed = ? AND process = ?"""
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, tailGID)
 			ps setString(2, infoHash)
 			ps setLong(3, tl)
+			ps setBoolean(4, false)
+			ps setString(5, "aria2c")
 			val rs = ps executeQuery()
 			while (rs.next) {
 				cp.CPCount_=(rs.getInt("count"))
@@ -330,7 +335,7 @@ class DbManager {
 	 */
 	def finishTask(status: String, cl: Long, tailGID: String, infoHash: String, tl: Long): Boolean = {
 		var response: Boolean = true
-		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE tail_gid = ? AND info_hash = ? AND total_length = ?"""
+		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND process = ?"""
 		try {
 			val ps = _conn prepareStatement updateStatement
 			ps setTimestamp(1, new Timestamp(DateTime.now.getMillis))
@@ -340,6 +345,7 @@ class DbManager {
 			ps setString(5, tailGID)
 			ps setString(6, infoHash)
 			ps setLong(7, tl)
+			ps setString(8, "aria2c")
 			val updated = ps executeUpdate()
 			if (updated == 0) {
 				LogWriter writeLog("Failed to update finished task for tail GID " + tailGID, Level.ERROR)
@@ -362,13 +368,14 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryActiveVideoTask(): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE info_hash = ? AND tail_gid = ? AND completed = ?"""
+		val queryStatement = """SELECT * FROM input WHERE info_hash = ? AND tail_gid = ? AND completed = ? AND process = ?"""
 		val mlist = new mutable.MutableList[Task]
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, "noinfohash")
 			ps setString(2, "notailgid")
 			ps setBoolean(3, false)
+			ps setString(4, "youtube-dl")
 			val rs = ps executeQuery()
 			while (rs.next) {
 				mlist.+=(new Task {
@@ -407,11 +414,12 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryTask(gid: String): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE gid = ?"""
+		val queryStatement = """SELECT * FROM input WHERE gid = ? AND process = ?"""
 		val mlist = new mutable.MutableList[Task]
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, gid)
+			ps setString(2, "aria2c")
 			val rs = ps executeQuery()
 			while (rs.next) {
 				mlist.+=(new Task {
@@ -493,13 +501,12 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryUnfinishedTasks(): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE completed = ? AND NOT (tail_gid = ?) AND NOT (info_hash = ?)"""
+		val queryStatement = """SELECT * FROM input WHERE completed = ? AND process = ?"""
 		val mlist = new mutable.MutableList[Task]
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setBoolean(1, false)
-			ps setString(2, "notailgid")
-			ps setString(3, "noinfohash")
+			ps setString(2, "aria2c")
 			val rs = ps executeQuery()
 			while (rs.next) {
 				mlist.+=(new Task {
@@ -558,12 +565,13 @@ class DbManager {
 	 * @return a <code>net.fluxo.dd.dbo.Task</code> object
 	 */
 	def queryTaskTailGID(tailGid: String): Task = {
-		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ?"""
+		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ? AND process = ?"""
 		val t = new Task
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, tailGid)
 			ps setBoolean(2, false)
+			ps setString(3, "aria2c")
 			val rs = ps.executeQuery()
 			while (rs.next()) {
 				t.TaskGID_=(rs getString "gid")

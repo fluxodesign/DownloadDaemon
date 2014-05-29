@@ -104,4 +104,20 @@ class VideoProcess {
 	def VideoTitle_=(value: String) {
 		_title = Some(value)
 	}
+
+	private var _stallCount: Int = 0
+
+	def StallCount: Int = _stallCount
+
+	def StallCount_=(value: Int) {
+		_stallCount = value
+	}
+
+	private var _lastDownloaded: Long = 0L
+
+	def LastDownloadedBytes: Long = _lastDownloaded
+
+	def LastDownloadedBytes_=(value: Long) {
+		_lastDownloaded = value
+	}
 }

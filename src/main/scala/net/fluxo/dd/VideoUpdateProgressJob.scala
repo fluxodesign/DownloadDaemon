@@ -50,20 +50,13 @@ class VideoUpdateProgressJob extends Job {
 			OVideoP restartDownload()
 
 			val videoIterator = (OVideoP ActiveProcesses) iterator()
-			// DEBUG
-			LogWriter writeLog("Starting VideoUpdateProgressJob, objects: ", Level.DEBUG)
-
 			while (videoIterator.hasNext) {
 				val vidObj = videoIterator.next
 				val tGID = (vidObj VideoTaskGid) getOrElse null
-				// DEBUG
-				LogWriter writeLog("Video object, GID: " + tGID, Level.DEBUG)
 				// if there's no extension defined in the video tracker object, try to obtain one from the json file
 				val infoObject = new File(tGID + ".info.json")
 				if (!((vidObj VideoExt) isDefined) && infoObject.exists) {
 					val bestFormat = OUtils extractValueFromJSONFile(infoObject, "format_id")
-					// DEBUG
-					LogWriter writeLog("--> best format found: " + bestFormat, Level.DEBUG)
 					val formatArray = OUtils extractArrayFromJSONObject(infoObject, "formats")
 					val formatIterator = formatArray.iterator
 					breakable {
@@ -78,8 +71,6 @@ class VideoUpdateProgressJob extends Job {
 				}
 				if (!((vidObj VideoTitle) isDefined) && infoObject.exists) {
 					val title = OUtils extractValueFromJSONFile(infoObject, "stitle")
-					// DEBUG
-					LogWriter writeLog("--> title: " + title, Level.DEBUG)
 					OVideoP updateVideoTitle(tGID, title)
 				}
 				// look for the ".part" file
@@ -88,15 +79,19 @@ class VideoUpdateProgressJob extends Job {
 				// if "part" file exists, calculate the download progress
 				if (partFile.exists) {
 					val downloaded = FileUtils sizeOf partFile
-					val totalFileLength = vidObj.VideoTotalLength
-					val fileName = ((vidObj VideoTitle) getOrElse "") + "." + ((vidObj VideoExt) getOrElse "")
-					DbControl updateVideoTask(tGID, OVideoP getOwner tGID, fileName, "active", totalFileLength, downloaded)
-					// DEBUG
-					LogWriter writeLog("--> PART file", Level.DEBUG)
-					LogWriter writeLog("--> task GID: " + tGID, Level.DEBUG)
-					LogWriter writeLog("--> downloaded: " + downloaded + " bytes", Level.DEBUG)
-					LogWriter writeLog("--> total: " + totalFileLength + " bytes", Level.DEBUG)
-					LogWriter writeLog("--> filename: " + fileName, Level.DEBUG)
+					if ((vidObj LastDownloadedBytes) == downloaded) {
+						vidObj.StallCount_=((vidObj StallCount) + 1)
+						if ((vidObj StallCount) > 3) {
+							// the process has stalled for more than 30 seconds, kill it!
+							OVideoP killProcess ((vidObj VideoTaskGid) getOrElse "")
+						}
+					} else {
+						vidObj.StallCount_=(0)
+						val totalFileLength = vidObj.VideoTotalLength
+						vidObj.LastDownloadedBytes_=(totalFileLength)
+						val fileName = ((vidObj VideoTitle) getOrElse "") + "." + ((vidObj VideoExt) getOrElse "")
+						DbControl updateVideoTask(tGID, OVideoP getOwner tGID, fileName, "active", totalFileLength, downloaded)
+					}
 				} else if (fullFile.exists) {
 					// if full file exists, that means the download has finished. Rename and move the file to target dir, then cleanup
 					val targetVideoFile = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + ((vidObj VideoTitle) getOrElse "") +
@@ -106,9 +101,6 @@ class VideoUpdateProgressJob extends Job {
 					FileUtils forceDelete infoObject
 					DbControl finishVideoTask(FileUtils sizeOf targetVideoFile, tGID)
 					OVideoP removeFromList tGID
-					// DEBUG
-					LogWriter writeLog("--> DOWNLOAD FINISHED", Level.DEBUG)
-					LogWriter writeLog("--> " + (targetVideoFile getAbsoluteFile) + ": " + targetVideoFile.exists, Level.DEBUG)
 				}
 			}
 		} catch {
