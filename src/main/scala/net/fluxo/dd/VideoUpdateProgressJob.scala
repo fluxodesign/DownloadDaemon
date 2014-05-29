@@ -71,7 +71,8 @@ class VideoUpdateProgressJob extends Job {
 					while (formatIterator.hasNext) {
 						val f = formatIterator.next.asInstanceOf[JSONObject]
 						// DEBUG
-
+						LogWriter writeLog("--> inside formatIterator", Level.DEBUG)
+						LogWriter writeLog("--> assessing f: " + (f get "format").asInstanceOf[String], Level.DEBUG)
 						if ((f get "format").asInstanceOf[String].equals(bestFormat)) {
 							OVideoP updateVideoExtension(tGID, (f get "ext").asInstanceOf[String])
 							// DEBUG
