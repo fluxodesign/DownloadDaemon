@@ -69,7 +69,7 @@ class AriaProcessor {
 				return "ERR URI"
 			}
 		} else {
-			if (!(uri startsWith "http://")) {
+			if (!(uri startsWith "http://") && !(uri startsWith "https://")) {
 				return "ERR URI"
 			}
 		}
