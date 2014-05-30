@@ -56,7 +56,7 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 
 			val trigger: Trigger = TriggerBuilder.newTrigger().withIdentity("UpdateTrigger", "UpdateGroup")
 				.startNow()
-					.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(8).repeatForever())
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(8).repeatForever())
 				.build()
 			_scheduler scheduleJob(jobDetail, trigger)
 
