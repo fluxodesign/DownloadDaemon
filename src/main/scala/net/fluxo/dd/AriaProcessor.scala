@@ -295,7 +295,9 @@ class AriaProcessor {
 	 */
 	class OStream() extends LogOutputStream {
 		override def processLine(line: String, level: Int) {
-			LogWriter writeLog("Aria Processor: " + line, Level.INFO)
+			if (((line trim) length) > 0) {
+				LogWriter writeLog("Aria Processor: " + line, Level.INFO)
+			}
 		}
 	}
 }
