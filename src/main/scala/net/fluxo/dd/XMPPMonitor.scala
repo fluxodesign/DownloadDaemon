@@ -547,7 +547,10 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					val pm = OPlugin.getPluginManager
 					// DEBUG
 					LogWriter writeLog("PluginManager: " + pm.toString, Level.DEBUG)
-					val tpbPlugin = (OPlugin getPluginManager) getPlugin classOf[TrTPB]
+					val tpbPlugin = pm getPlugin classOf[TrTPB]
+
+					// DEBUG
+					LogWriter writeLog("tpb plugin null? " + (tpbPlugin == null), Level.DEBUG)
 					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
 					else if (!((tpbPlugin primaryCommand()) equals "TPB")) "ERR WRONG PLUGIN"
 					else {
