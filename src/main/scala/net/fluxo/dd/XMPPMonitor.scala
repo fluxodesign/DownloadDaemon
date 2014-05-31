@@ -25,12 +25,12 @@ import org.apache.log4j.Level
 import org.joda.time.DateTime
 import org.jivesoftware.smack.packet.{Presence, Message}
 import net.fluxo.dd.dbo.Task
+import net.fluxo.dd.traits.TrPlugin
 import org.apache.commons.validator.routines.IntegerValidator
 import java.io.{File, InputStreamReader, BufferedReader}
 import org.apache.commons.codec.net.URLCodec
-import java.net.URLDecoder
-import org.apache.commons.io.FilenameUtils
 import java.util
+import net.xeoh.plugins.base.options.getplugin.OptionCapabilities
 
 /**
  * XMPPMonitor manages XMPP connection to Facebook or GMail's chat. This enables user(s) to issue commands directly via
@@ -544,10 +544,18 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						}
 					}
 				case "TPB" =>
+					val tpbPlugin = (OPlugin getPluginManager) getPlugin(classOf[TrPlugin], new OptionCapabilities("targetSite:TPB"))
+					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
+					else if (!((tpbPlugin primaryCommand()) equals "TPB")) "ERR WRONG PLUGIN"
+					else {
+						tpbPlugin setMailLoggerName "net.fluxo.MailLogger"
+						_isTPBSearch = true
+						tpbPlugin process words
+					}
 					// at the very least we need search term...
 					// page and categories can also be added
 					// syntax: DD TPB ST=[Search Term] PG=[page starting from 0] CAT=[comma-separated xxx code]
-					if (words.length < 3) "ERR LENGTH"
+					/*if (words.length < 3) "ERR LENGTH"
 					else {
 						if (words.length == 3 && !words(2).startsWith("ST=")) "SYNTAX ERROR 1"
 						else if (words.length == 4 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG="))) "SYNTAX ERROR 2 "
@@ -582,16 +590,23 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 							_isTPBSearch = true
 							TPBP query(searchTerm, page, cat)
 						}
-					}
+					}*/
 				case "TPBDETAILS" =>
-					if (words.length != 3) "ERR TPBDETAILS SYNTAX"
+					val tpbPlugin = (OPlugin getPluginManager) getPlugin(classOf[TrPlugin], new OptionCapabilities("targetSite:TPB"))
+					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
+					else if (!((tpbPlugin primaryCommand()) equals "TPBDETAILS")) "ERR WRONG PLUGIN"
+					else {
+						tpbPlugin setMailLoggerName "net.fluxo.MailLogger"
+						tpbPlugin process words
+					}
+					/*if (words.length != 3) "ERR TPBDETAILS SYNTAX"
 					else {
 						val detailsURL = URLDecoder decode(words(2), "UTF-8")
 						if (!(detailsURL startsWith "http://thepiratebay.se/")) "ERR TPBDETAILS URL"
 						else {
 							TPBP queryDetails (FilenameUtils getPath detailsURL)
 						}
-					}
+					}*/
 				case "VIDEO" =>
 					if (words.length != 4) "ERR VIDEO REQUEST LENGTH"
 					else OVideoP processRequest(words(3), words(2))
