@@ -1,4 +1,4 @@
-package net.fluxo.dd.traits
+package net.fluxo.plugins.tpb
 
 import net.xeoh.plugins.base.Plugin
 import org.apache.log4j.Level

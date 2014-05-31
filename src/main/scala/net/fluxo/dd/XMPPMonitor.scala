@@ -25,12 +25,12 @@ import org.apache.log4j.Level
 import org.joda.time.DateTime
 import org.jivesoftware.smack.packet.{Presence, Message}
 import net.fluxo.dd.dbo.Task
-import net.fluxo.dd.traits.TrTPB
 import org.apache.commons.validator.routines.IntegerValidator
 import java.io.{File, InputStreamReader, BufferedReader}
 import org.apache.commons.codec.net.URLCodec
 import java.util
 import net.xeoh.plugins.base.options.getplugin.OptionCapabilities
+import net.fluxo.plugins.tpb.TrTPB
 
 /**
  * XMPPMonitor manages XMPP connection to Facebook or GMail's chat. This enables user(s) to issue commands directly via
