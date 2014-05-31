@@ -29,7 +29,6 @@ import org.apache.commons.validator.routines.IntegerValidator
 import java.io.{File, InputStreamReader, BufferedReader}
 import org.apache.commons.codec.net.URLCodec
 import java.util
-import net.xeoh.plugins.base.options.getplugin.OptionCapabilities
 import net.fluxo.plugins.tpb.TrTPB
 
 /**
@@ -554,61 +553,16 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						_isTPBSearch = true
 						tpbPlugin process words
 					}
-					// at the very least we need search term...
-					// page and categories can also be added
-					// syntax: DD TPB ST=[Search Term] PG=[page starting from 0] CAT=[comma-separated xxx code]
-					/*if (words.length < 3) "ERR LENGTH"
-					else {
-						if (words.length == 3 && !words(2).startsWith("ST=")) "SYNTAX ERROR 1"
-						else if (words.length == 4 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG="))) "SYNTAX ERROR 2 "
-						else if (words.length >= 5 && (!words(2).startsWith("ST=") || !words(3).startsWith("PG=") || !words(4).startsWith("CAT="))) "SYNTAX ERROR 3"
-						else {
-							val searchTerm: String = {
-								val ucodec = new URLCodec
-								ucodec decode words(2).substring("ST=".length) replaceAllLiterally("\"", "")
-							}
-							val page: Int = {
-								if (words.length >= 4) {
-									try {
-										words(3).substring("PG=".length).toInt
-									} catch {
-										case nfe: NumberFormatException => 0
-									}
-								} else 0
-							}
-							val cat: Array[Int] = {
-								if (words.length >= 5) {
-									val cats = words(4).substring("CAT=".length).split(",")
-									val c = new Array[Int](cats.length)
-									var counter: Int = 0
-									for (x <- cats) {
-										c(counter) = x.toInt
-										counter += 1
-									}
-									c
-								} else Array[Int]()
-							}
-
-							_isTPBSearch = true
-							TPBP query(searchTerm, page, cat)
-						}
-					}*/
 				case "TPBDETAILS" =>
-					val tpbPlugin = (OPlugin getPluginManager) getPlugin(classOf[TrTPB], new OptionCapabilities("targetSite:TPB"))
+					val pm = OPlugin.getPluginManager
+					val tpbPlugin = pm getPlugin classOf[TrTPB]
+
 					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
 					else if (!((tpbPlugin primaryCommand()) equals "TPB")) "ERR WRONG PLUGIN"
 					else {
 						tpbPlugin setMailLoggerName "net.fluxo.MailLogger"
 						tpbPlugin process words
 					}
-					/*if (words.length != 3) "ERR TPBDETAILS SYNTAX"
-					else {
-						val detailsURL = URLDecoder decode(words(2), "UTF-8")
-						if (!(detailsURL startsWith "http://thepiratebay.se/")) "ERR TPBDETAILS URL"
-						else {
-							TPBP queryDetails (FilenameUtils getPath detailsURL)
-						}
-					}*/
 				case "VIDEO" =>
 					if (words.length != 4) "ERR VIDEO REQUEST LENGTH"
 					else OVideoP processRequest(words(3), words(2))
