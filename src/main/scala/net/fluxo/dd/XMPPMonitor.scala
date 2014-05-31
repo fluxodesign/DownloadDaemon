@@ -558,11 +558,19 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					val cpIterator = cp iterator()
 					while (cpIterator.hasNext) {
 						val o = cpIterator.next
-						val pluginfo = new PluginInformationImpl
+						val pluginfo = pm.getPlugin(classOf[PluginInformationImpl])
 						val cp_origin = pluginfo.getInformation(Information.CLASSPATH_ORIGIN, o)
 						val cp_caps = pluginfo.getInformation(Information.CAPABILITIES, o)
-						for (s <- cp_origin) LogWriter writeLog (s, Level.DEBUG)
-						for (s <- cp_caps) LogWriter writeLog (s, Level.DEBUG)
+						var col_itera = cp_origin iterator()
+						while (col_itera.hasNext) {
+							val s = col_itera.next
+							LogWriter writeLog("classpath_origin: " + s, Level.DEBUG)
+						}
+						col_itera = cp_caps iterator()
+						while (col_itera.hasNext) {
+							val s = col_itera.next
+							LogWriter writeLog("capabilities: " + s, Level.DEBUG)
+						}
 					}
 
 					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
