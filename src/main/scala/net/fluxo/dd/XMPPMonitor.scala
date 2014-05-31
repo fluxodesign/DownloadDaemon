@@ -594,7 +594,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				case "TPBDETAILS" =>
 					val tpbPlugin = (OPlugin getPluginManager) getPlugin(classOf[TrTPB], new OptionCapabilities("targetSite:TPB"))
 					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
-					else if (!((tpbPlugin primaryCommand()) equals "TPBDETAILS")) "ERR WRONG PLUGIN"
+					else if (!((tpbPlugin primaryCommand()) equals "TPB")) "ERR WRONG PLUGIN"
 					else {
 						tpbPlugin setMailLoggerName "net.fluxo.MailLogger"
 						tpbPlugin process words
