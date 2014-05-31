@@ -7,7 +7,7 @@ import org.apache.log4j.Level
  * Created by viper 
  * Time: 31/05/14.
  */
-trait TrPlugin extends Plugin {
+trait TrTPB extends Plugin {
 
 	def primaryCommand(): String
 	def setMailLoggerName(name: String)

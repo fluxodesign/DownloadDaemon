@@ -25,7 +25,7 @@ import org.apache.log4j.Level
 import org.joda.time.DateTime
 import org.jivesoftware.smack.packet.{Presence, Message}
 import net.fluxo.dd.dbo.Task
-import net.fluxo.dd.traits.TrPlugin
+import net.fluxo.dd.traits.TrTPB
 import org.apache.commons.validator.routines.IntegerValidator
 import java.io.{File, InputStreamReader, BufferedReader}
 import org.apache.commons.codec.net.URLCodec
@@ -544,7 +544,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						}
 					}
 				case "TPB" =>
-					val tpbPlugin = (OPlugin getPluginManager) getPlugin(classOf[TrPlugin], new OptionCapabilities("targetSite:TPB"))
+					val tpbPlugin = (OPlugin getPluginManager) getPlugin(classOf[TrTPB], new OptionCapabilities("targetSite:TPB"))
 					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
 					else if (!((tpbPlugin primaryCommand()) equals "TPB")) "ERR WRONG PLUGIN"
 					else {
@@ -592,7 +592,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						}
 					}*/
 				case "TPBDETAILS" =>
-					val tpbPlugin = (OPlugin getPluginManager) getPlugin(classOf[TrPlugin], new OptionCapabilities("targetSite:TPB"))
+					val tpbPlugin = (OPlugin getPluginManager) getPlugin(classOf[TrTPB], new OptionCapabilities("targetSite:TPB"))
 					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
 					else if (!((tpbPlugin primaryCommand()) equals "TPBDETAILS")) "ERR WRONG PLUGIN"
 					else {
