@@ -19,7 +19,7 @@ class PluginProcessor {
 		if (!(_plugMan isDefined)) {
 			val pm = PluginManagerFactory createPluginManager jspfProp
 			_plugMan = Some(pm)
-			val plugDir = new File("plugins/")
+			val plugDir = new File("plugins/PluginTPB-0.4.5.jar")
 			(_plugMan getOrElse null) addPluginsFrom(plugDir toURI)
 			try {
 				Thread sleep 5000
