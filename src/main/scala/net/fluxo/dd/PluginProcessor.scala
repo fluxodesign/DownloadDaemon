@@ -21,6 +21,11 @@ class PluginProcessor {
 			_plugMan = Some(pm)
 			val plugDir = new File("plugins/")
 			(_plugMan getOrElse null) addPluginsFrom(plugDir toURI)
+			try {
+				Thread sleep 5000
+			} catch {
+				case ie: InterruptedException =>
+			}
 		}
 		_plugMan getOrElse null
 	}
