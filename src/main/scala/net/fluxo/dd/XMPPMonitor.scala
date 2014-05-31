@@ -544,7 +544,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 						}
 					}
 				case "TPB" =>
-					val tpbPlugin = (OPlugin getPluginManager) getPlugin(classOf[TrTPB])
+					val tpbPlugin = (OPlugin getPluginManager) getPlugin classOf[TrTPB]
 					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
 					else if (!((tpbPlugin primaryCommand()) equals "TPB")) "ERR WRONG PLUGIN"
 					else {
