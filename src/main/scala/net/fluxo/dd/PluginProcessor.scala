@@ -3,7 +3,7 @@ package net.fluxo.dd
 import net.xeoh.plugins.base.PluginManager
 import net.xeoh.plugins.base.impl.PluginManagerFactory
 import java.io.File
-import net.xeoh.plugins.base.util.JSPFProperties
+import net.xeoh.plugins.base.util.{PluginManagerUtil, JSPFProperties}
 
 /**
  * @author Ronald Kurniawan (viper)
@@ -23,6 +23,11 @@ class PluginProcessor {
 			(_plugMan getOrElse null) addPluginsFrom(plugDir toURI)
 		}
 		_plugMan getOrElse null
+	}
+
+	def getPluginManagerUtil: PluginManagerUtil = {
+		val pmu = new PluginManagerUtil(getPluginManager)
+		pmu
 	}
 
 }
