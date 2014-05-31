@@ -3,7 +3,7 @@ package net.fluxo.dd
 import net.xeoh.plugins.base.PluginManager
 import net.xeoh.plugins.base.impl.PluginManagerFactory
 import java.io.File
-import net.xeoh.plugins.base.util.{PluginManagerUtil, JSPFProperties}
+import net.xeoh.plugins.base.util.PluginManagerUtil
 
 /**
  * @author Ronald Kurniawan (viper)
@@ -14,18 +14,11 @@ class PluginProcessor {
 	private var _plugMan: Option[PluginManager] = None
 
 	def getPluginManager: PluginManager = {
-		val jspfProp = new JSPFProperties
-		jspfProp setProperty(classOf[PluginManager], "logging.level", "ALL")
 		if (!(_plugMan isDefined)) {
-			val pm = PluginManagerFactory createPluginManager jspfProp
+			val pm = PluginManagerFactory createPluginManager()
 			_plugMan = Some(pm)
-			val plugDir = new File("plugins/PluginTPB-0.4.5.jar")
+			val plugDir = new File("plugins/")
 			(_plugMan getOrElse null) addPluginsFrom(plugDir toURI)
-			try {
-				Thread sleep 5000
-			} catch {
-				case ie: InterruptedException =>
-			}
 		}
 		_plugMan getOrElse null
 	}
