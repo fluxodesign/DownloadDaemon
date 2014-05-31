@@ -31,9 +31,6 @@ import java.io.{File, InputStreamReader, BufferedReader}
 import org.apache.commons.codec.net.URLCodec
 import java.util
 import net.xeoh.plugins.base.options.getplugin.OptionCapabilities
-import net.xeoh.plugins.base.Plugin
-import net.xeoh.plugins.base.impl.PluginInformationImpl
-import net.xeoh.plugins.base.PluginInformation.Information
 
 /**
  * XMPPMonitor manages XMPP connection to Facebook or GMail's chat. This enables user(s) to issue commands directly via
@@ -552,26 +549,6 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 					// DEBUG
 					LogWriter writeLog("PluginManager: " + pm.toString, Level.DEBUG)
 					val tpbPlugin = pm getPlugin classOf[TrTPB]
-
-					// DEBUG
-					val cp: util.Collection[Plugin] = pmu.getPlugins
-					val cpIterator = cp iterator()
-					while (cpIterator.hasNext) {
-						val o = cpIterator.next
-						val pluginfo = pm.getPlugin(classOf[PluginInformationImpl])
-						val cp_origin = pluginfo.getInformation(Information.CLASSPATH_ORIGIN, o)
-						val cp_caps = pluginfo.getInformation(Information.CAPABILITIES, o)
-						var col_itera = cp_origin iterator()
-						while (col_itera.hasNext) {
-							val s = col_itera.next
-							LogWriter writeLog("classpath_origin: " + s, Level.DEBUG)
-						}
-						col_itera = cp_caps iterator()
-						while (col_itera.hasNext) {
-							val s = col_itera.next
-							LogWriter writeLog("capabilities: " + s, Level.DEBUG)
-						}
-					}
 
 					if (tpbPlugin == null) "ERR PLUGIN NOT FOUND"
 					else if (!((tpbPlugin primaryCommand()) equals "TPB")) "ERR WRONG PLUGIN"
