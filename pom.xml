@@ -177,6 +177,11 @@
             <artifactId>commons-exec</artifactId>
             <version>1.2</version>
         </dependency>
+        <dependency>
+            <groupId>jspf-core</groupId>
+            <artifactId>jspf-core</artifactId>
+            <version>1.0.2</version>
+        </dependency>
     </dependencies>
 
     <build>

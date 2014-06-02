@@ -60,7 +60,7 @@ class DbManager {
 	 * @return true if adding is successful; false otherwise
 	 */
 	def addTask(task: Task): Boolean = {
-		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,http_username,http_password) VALUES(?,?,?,?,?,?,?)"""
+		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,http_username,http_password, process) VALUES(?,?,?,?,?,?,?,?)"""
 		var response: Boolean = true
 		try {
 			val ps = _conn prepareStatement insertStatement
@@ -71,6 +71,7 @@ class DbManager {
 			ps setBoolean(5, task.TaskIsHttp)
 			ps setString(6, task.TaskHttpUsername.getOrElse(null))
 			ps setString(7, task.TaskHttpPassword.getOrElse(null))
+			ps setString(8, "aria2c")
 			val inserted = ps executeUpdate()
 			if (inserted == 0) {
 				LogWriter writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
@@ -81,6 +82,42 @@ class DbManager {
 			case ex: Exception =>
 				LogWriter writeLog("Error inserting new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
 				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	/**
+	 * Add a new video download task into the database.
+	 *
+	 * @param gid unique task ID
+	 * @param owner user ID of the download owner
+	 * @return true if adding is successful; false otherwise
+	 */
+	def addVideoTask(gid: String, owner: String): Boolean = {
+		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,tail_gid,info_hash,process) VALUES(?,?,?,?,?,?,?,?)"""
+		var response: Boolean = true
+		try {
+			val ps = _conn prepareStatement insertStatement
+			ps setString(1, gid)
+			ps setString(2, "N/A")
+			ps setTimestamp(3, new Timestamp(DateTime.now.getMillis))
+			ps setString(4, owner)
+			ps setBoolean(5, false)
+			ps setString(6, "notailgid")
+			ps setString(7, "noinfohash")
+			ps setString(8, "youtube-dl")
+			val inserted = ps executeUpdate()
+			if (inserted == 0) {
+				LogWriter writeLog("Failed to insert new video task for GID " + gid, Level.ERROR)
+				response = false
+			}
+			ps close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error inserting new video task for GID " + gid, Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 				if (response) response = false
 		}
@@ -123,6 +160,78 @@ class DbManager {
 	}
 
 	/**
+	 * Update a video download task record.
+	 *
+	 * @param gid the unique video download ID
+	 * @param owner user ID of the owner of the download process
+	 * @param targetFile name of the downloaded video
+	 * @param status 'active' or 'completed'
+	 * @param totalLength total video file size (in bytes)
+	 * @param completedLength the size of the completed download so far (in bytes)
+	 * @return true if updated is completed successfully; false othewise
+	 */
+	def updateVideoTask(gid: String, owner: String, targetFile: String, status: String, totalLength: Long, completedLength: Long): Boolean = {
+		var response: Boolean = true
+		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, completed = ? WHERE gid = ? AND owner = ?"""
+		try {
+			val ps = _conn prepareStatement updateStatement
+			ps setString(1, targetFile)
+			ps setString(2, status)
+			ps setLong(3, completedLength)
+			ps setLong(4, totalLength)
+			ps setBoolean(5, totalLength == completedLength)
+			ps setString(6, gid)
+			ps setString(7, owner)
+			val updated = ps executeUpdate()
+			if (updated == 0) {
+				LogWriter writeLog("Failed to update video task with GID " + gid, Level.ERROR)
+				response = false
+			}
+			ps close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error updating video task for GID " + gid, Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	/**
+	 * Update the database to mark that a particulr video download task is completed.
+	 *
+	 * @param cl the completed file size (should match the total file length)
+	 * @param taskGID unique task ID
+	 * @return true if record is successfully updated; false otherwise
+	 */
+	def finishVideoTask(cl: Long, taskGID: String): Boolean = {
+		var response: Boolean = true
+		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE gid = ? AND info_hash = ? AND tail_gid = ?"""
+		try {
+			val ps = _conn prepareStatement updateStatement
+			ps setTimestamp(1, new Timestamp(DateTime.now.getMillis))
+			ps setBoolean(2, true)
+			ps setString(3, "complete")
+			ps setLong(4, cl)
+			ps setString(5, taskGID)
+			ps setString(6, "noinfohash")
+			ps setString(7, "notailgid")
+			val updated = ps executeUpdate()
+			if (updated == 0) {
+				LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
+				response = false
+			}
+			ps close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				if (response) response = false
+		}
+		response
+	}
+
+	/**
 	 * Update a tail GID on a particular download, in case of a restarted download.
 	 *
 	 * @param gid a unique download ID
@@ -131,11 +240,12 @@ class DbManager {
 	 */
 	def updateTaskTailGID(gid: String, tailGid: String): Boolean = {
 		var response: Boolean = true
-		val updateStatement = """UPDATE input SET tail_gid = ? WHERE gid = ?"""
+		val updateStatement = """UPDATE input SET tail_gid = ? WHERE gid = ? AND process = ?"""
 		try {
 			val ps = _conn prepareStatement updateStatement
 			ps setString(1, tailGid)
 			ps setString(2, gid)
+			ps setString(3, "aria2c")
 			val updated = ps executeUpdate()
 			if (updated == 0) {
 				LogWriter writeLog("Failed to update tail GID for GID " + gid, Level.ERROR)
@@ -156,18 +266,20 @@ class DbManager {
 	 * Query the number of near-finished/finished download tasks that has not been marked as "complete" in the database.
 	 *
 	 * @param tailGID the tail GID of queried process
-	 * @param infoHash the infoHasah of queried process
+	 * @param infoHash the infoHash of queried process
 	 * @param tl total length of download
 	 * @return a <code>net.fluxo.dd.dbo.CountPackage</code> object
 	 */
 	def queryFinishTask(tailGID: String, infoHash: String, tl: Long): CountPackage = {
 		val cp: CountPackage = new CountPackage
-		val queryStatement = """SELECT COUNT(*) AS count, package FROM input WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND completed = false"""
+		val queryStatement = """SELECT COUNT(*) AS count, package FROM input WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND completed = ? AND process = ?"""
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, tailGID)
 			ps setString(2, infoHash)
 			ps setLong(3, tl)
+			ps setBoolean(4, false)
+			ps setString(5, "aria2c")
 			val rs = ps executeQuery()
 			while (rs.next) {
 				cp.CPCount_=(rs.getInt("count"))
@@ -223,16 +335,17 @@ class DbManager {
 	 */
 	def finishTask(status: String, cl: Long, tailGID: String, infoHash: String, tl: Long): Boolean = {
 		var response: Boolean = true
-		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE tail_gid = ? AND info_hash = ? AND total_length = ?"""
+		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND process = ?"""
 		try {
 			val ps = _conn prepareStatement updateStatement
-			ps setTimestamp(1, new Timestamp(DateTime.now().getMillis))
+			ps setTimestamp(1, new Timestamp(DateTime.now.getMillis))
 			ps setBoolean(2, true)
 			ps setString(3, status)
 			ps setLong(4, cl)
 			ps setString(5, tailGID)
 			ps setString(6, infoHash)
 			ps setLong(7, tl)
+			ps setString(8, "aria2c")
 			val updated = ps executeUpdate()
 			if (updated == 0) {
 				LogWriter writeLog("Failed to update finished task for tail GID " + tailGID, Level.ERROR)
@@ -250,17 +363,63 @@ class DbManager {
 	}
 
 	/**
+	 * Query the database for the list of unfinished video download tasks.
+	 *
+	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
+	 */
+	def queryActiveVideoTask(): Array[Task] = {
+		val queryStatement = """SELECT * FROM input WHERE info_hash = ? AND tail_gid = ? AND completed = ? AND process = ?"""
+		val mlist = new mutable.MutableList[Task]
+		try {
+			val ps = _conn prepareStatement queryStatement
+			ps setString(1, "noinfohash")
+			ps setString(2, "notailgid")
+			ps setBoolean(3, false)
+			ps setString(4, "youtube-dl")
+			val rs = ps executeQuery()
+			while (rs.next) {
+				mlist.+=(new Task {
+					TaskGID_=(rs getString "gid")
+					TaskTailGID_=(rs getString "tail_gid")
+					TaskInput_=(rs getString "input")
+					TaskStarted_=((rs getTimestamp "start").getTime)
+					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+					IsTaskCompleted_=(rs getBoolean "completed")
+					TaskOwner_=(rs getString "owner")
+					TaskPackage_=(rs getString "package")
+					TaskStatus_=(rs getString "status")
+					TaskTotalLength_=(rs getLong "total_length")
+					TaskCompletedLength_=(rs getLong "completed_length")
+					TaskInfoHash_=(rs getString "info_hash")
+					TaskIsHttp_=(rs getBoolean "is_http")
+					TaskHttpUsername_=(rs getString "http_username")
+					TaskHttpPassword_=(rs getString "http_password")
+				})
+			}
+			rs close()
+			ps close()
+		} catch {
+			case ex: Exception =>
+				LogWriter writeLog("Error querying unfinished video tasks", Level.ERROR)
+				LogWriter writeLog(ex.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+		}
+		mlist.toArray
+	}
+
+	/**
 	 * Query if a <code>Task</code> with particular ID exists in the database.
 	 *
 	 * @param gid unique download ID
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryTask(gid: String): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE gid = ?"""
+		val queryStatement = """SELECT * FROM input WHERE gid = ? AND process = ?"""
 		val mlist = new mutable.MutableList[Task]
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, gid)
+			ps setString(2, "aria2c")
 			val rs = ps executeQuery()
 			while (rs.next) {
 				mlist.+=(new Task {
@@ -342,11 +501,12 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryUnfinishedTasks(): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE completed = ?"""
+		val queryStatement = """SELECT * FROM input WHERE completed = ? AND process = ?"""
 		val mlist = new mutable.MutableList[Task]
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setBoolean(1, false)
+			ps setString(2, "aria2c")
 			val rs = ps executeQuery()
 			while (rs.next) {
 				mlist.+=(new Task {
@@ -405,12 +565,13 @@ class DbManager {
 	 * @return a <code>net.fluxo.dd.dbo.Task</code> object
 	 */
 	def queryTaskTailGID(tailGid: String): Task = {
-		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ?"""
+		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ? AND process = ?"""
 		val t = new Task
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, tailGid)
 			ps setBoolean(2, false)
+			ps setString(3, "aria2c")
 			val rs = ps.executeQuery()
 			while (rs.next()) {
 				t.TaskGID_=(rs getString "gid")

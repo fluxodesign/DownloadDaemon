@@ -56,9 +56,19 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 
 			val trigger: Trigger = TriggerBuilder.newTrigger().withIdentity("UpdateTrigger", "UpdateGroup")
 				.startNow()
-				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(20).repeatForever())
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(8).repeatForever())
 				.build()
 			_scheduler scheduleJob(jobDetail, trigger)
+
+			val vidJobDetail: JobDetail = JobBuilder.newJob(classOf[VideoUpdateProgressJob])
+					.withIdentity("VideoUpdateJob", "VideoUpdateGroup")
+					.build()
+
+			val vidTrigger: Trigger = TriggerBuilder.newTrigger().withIdentity("VideoUpdateTrigger", "VideoUpdateGroup")
+					.startNow()
+					.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(8).repeatForever())
+					.build()
+			_scheduler scheduleJob(vidJobDetail, vidTrigger)
 		} catch {
 			case se: SchedulerException =>
 				LogWriter writeLog("Quartz Scheduler ERROR: " + se.getMessage + " caused by " + se.getUnderlyingException.getMessage, Level.ERROR)

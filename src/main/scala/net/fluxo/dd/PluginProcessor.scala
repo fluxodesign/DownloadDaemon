@@ -1,5 +1,5 @@
 /*
- * YTDLProcessor.scala
+ * PluginProcessor.scala
  *
  * Copyright (c) 2014 Ronald Kurniawan. All rights reserved.
  *
@@ -20,22 +20,39 @@
  */
 package net.fluxo.dd
 
+import net.xeoh.plugins.base.PluginManager
+import net.xeoh.plugins.base.impl.PluginManagerFactory
+import java.io.File
+
 /**
- * This class manages downloads using youtube-dl.
+ * This is the entry point to access our plugins.
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.5, 14/05/14.
+ * @version 0.4.5, 31/05/14.
  */
-class YTDLProcessor {
+class PluginProcessor {
 
-	class YTDLThread extends Runnable {
-		override def run() {
+	private var _plugMan: Option[PluginManager] = None
 
+	/**
+	 * Return our PluginManager (creating it from the factory if necessary, and load all
+	 * the plugins from the "plugins/" directory.
+	 *
+	 * @return <code>net.xeoh.plugins.base.PluginManager</code>
+	 */
+	def getPluginManager: PluginManager = {
+		if (!(_plugMan isDefined)) {
+			val pm = PluginManagerFactory createPluginManager()
+			_plugMan = Some(pm)
+			val plugDir = new File("plugins/")
+			(_plugMan getOrElse null) addPluginsFrom(plugDir toURI)
 		}
+		_plugMan getOrElse null
 	}
+
 }
 
 /**
- * Singleton Object for YTDLProcessor.
+ * A singleton object for PluginProcessor.
  */
-object YTDLP extends YTDLProcessor
+object OPlugin extends PluginProcessor

@@ -88,6 +88,7 @@
     <orderEntry type="library" name="Maven: com.sun.xml.fastinfoset:FastInfoset:1.2.12" level="project" />
     <orderEntry type="library" name="Maven: javax.xml.bind:jsr173_api:1.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-exec:1.2" level="project" />
+    <orderEntry type="library" name="Maven: jspf-core:jspf-core:1.0.2" level="project" />
   </component>
 </module>
 

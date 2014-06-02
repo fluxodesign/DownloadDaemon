@@ -1,5 +1,5 @@
 /*
- * TPBDetails.scala
+ * TrTPB.scala
  *
  * Copyright (c) 2014 Ronald Kurniawan. All rights reserved.
  *
@@ -18,26 +18,23 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  * MA 02110-1301  USA
  */
-package net.fluxo.dd.dbo
+package net.fluxo.plugins.tpb
+
+import net.xeoh.plugins.base.Plugin
+import org.apache.log4j.Level
 
 /**
- * Data Object for representing details of a bittorent object from a certain notorious
- * torrents site.
+ * The trait (interface) that defines the methods used for processing TPB requests. This trait is directly
+ * borrowed from the plugin.
+ * <p>Part of the DownloadDaemon plugin framework.</p>
  *
  * @author Ronald Kurniawan (viper)
- * @version 0.4.5, 2/05/14
+ * @version 30/05/14.
  */
-class TPBDetails {
+trait TrTPB extends Plugin {
 
-	private val _id = "TPB_DETAILS"
-
-	private var _info: String = ""
-
-	def Info: String = { _info  }
-	def Info_:(value: String) { _info = value }
-
-	private var _request: String = ""
-
-	def Request: String = { _request  }
-	def Request_:(value: String) { _request = value }
+	def primaryCommand(): String
+	def setMailLoggerName(name: String)
+	def process(fullCommand: Array[String]): String
+	def writeToLog(entry: String, logLevel: Level)
 }

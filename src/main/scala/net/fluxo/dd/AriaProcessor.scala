@@ -69,7 +69,7 @@ class AriaProcessor {
 				return "ERR URI"
 			}
 		} else {
-			if (!(uri startsWith "http://")) {
+			if (!(uri startsWith "http://") && !(uri startsWith "https://")) {
 				return "ERR URI"
 			}
 		}
@@ -84,8 +84,8 @@ class AriaProcessor {
 			}
 		}
 		if (rpcPort < 0) return "All download slots taken, try again later"
-		var newGid = OUtils.generateGID()
-		while (DbControl.isTaskGIDUsed(newGid)) newGid = OUtils.generateGID()
+		var newGid = OUtils generateGID()
+		while (DbControl isTaskGIDUsed newGid) newGid = OUtils generateGID()
 		val ariaThread = new AriaThread(rpcPort, uri, newGid, isHttp)
 		if (httpUsername.length > 0 && httpPassword.length > 0) {
 			ariaThread setCredentials(httpUsername, httpPassword)
@@ -168,30 +168,30 @@ class AriaProcessor {
 		if (!restarting) {
 			// DEBUG
 			LogWriter writeLog ("Adding new task to DB", Level.DEBUG)
-			DbControl.addTask(new Task {
+			DbControl addTask new Task {
 				TaskGID_=(gid)
 				TaskInput_=(uri)
 				TaskOwner_=(owner)
-				TaskStarted_=(DateTime.now().getMillis)
+				TaskStarted_=(DateTime.now.getMillis)
 				TaskIsHttp_=(isHttp)
 				if (httpUsername.length > 0 && httpPassword.length > 0) {
 					TaskHttpUsername_=(httpUsername)
 					TaskHttpPassword_=(httpPassword)
 				}
-			})
+			}
 		}
 		// DEBUG
 		LogWriter writeLog ("Adding new active task to list...", Level.DEBUG)
-		ActiveProcesses.add(new AriaProcess {
+		ActiveProcesses add new AriaProcess {
 			AriaPort_=(port)
 			AriaProcess_:(executor)
 			AriaTaskGid_=(gid)
 			AriaTaskRestarting_=(restarting)
 			AriaHttpDownload_=(isHttp)
-		})
+		}
 		// set all necessary parameters if this is an HTTP download...
 		if (isHttp) {
-			DbControl.updateTaskTailGID(gid, gid)
+			DbControl updateTaskTailGID(gid, gid)
 			try {
 				TimeUnit.SECONDS.sleep(5)
 			} catch {
@@ -293,9 +293,11 @@ class AriaProcessor {
 	/**
 	 * Process the output result from <code>DefaultExecutor</code> into the log.
 	 */
-	class OStream extends LogOutputStream {
+	class OStream() extends LogOutputStream {
 		override def processLine(line: String, level: Int) {
-			LogWriter writeLog("AriaProcessor: " + line, Level.INFO)
+			if (((line trim) length) > 0) {
+				LogWriter writeLog("Aria Processor: " + line, Level.INFO)
+			}
 		}
 	}
 }
