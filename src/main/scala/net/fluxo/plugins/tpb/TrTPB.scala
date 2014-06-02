@@ -25,7 +25,8 @@ import org.apache.log4j.Level
 
 /**
  * The trait (interface) that defines the methods used for processing TPB requests. This trait is directly
- * borrowed from the plugin. Part of the DownloadDaemon plugin framework.
+ * borrowed from the plugin.
+ * <p>Part of the DownloadDaemon plugin framework.</p>
  *
  * @author Ronald Kurniawan (viper)
  * @version 30/05/14.
