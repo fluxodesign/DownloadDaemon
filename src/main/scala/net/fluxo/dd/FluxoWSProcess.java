@@ -21,8 +21,9 @@
 package net.fluxo.dd;
 
 import net.fluxo.dd.dbo.Task;
+import net.fluxo.plugins.tpb.TrTPB;
+import net.xeoh.plugins.base.PluginManager;
 import org.apache.commons.codec.net.URLCodec;
-import org.apache.commons.io.FilenameUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -31,7 +32,6 @@ import javax.ws.rs.core.Response;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
-import java.util.StringTokenizer;
 
 /**
  * This class contains REST methods that are served via the embedded Jetty server.
@@ -289,30 +289,24 @@ public class FluxoWSProcess {
 	@Produces("application/json")
 	public Response getTPBSearchResult(@DefaultValue("") @PathParam("st") String searchTerm, @DefaultValue("0") @PathParam("page") int page,
 	                                   @DefaultValue("0") @PathParam("cat") String cats) {
+		PluginManager pm = OPlugin.getPluginManager();
+		TrTPB trTPB = pm.getPlugin(TrTPB.class);
+		if (trTPB == null) {
+			return Response.status(500).entity("Plugin not found!").build();
+		}
 		try {
-			if (searchTerm.length() > 0) {
-				URLCodec ucodec = new URLCodec();
-				String decodedTerm = ucodec.decode(searchTerm);
-				int[] arrCats;
-				if (cats.length() > 0 && cats.contains(",")) {
-					StringTokenizer tokenizer = new StringTokenizer(cats, ",");
-					arrCats = new int[tokenizer.countTokens()];
-					int arrIndex = 0;
-					while (tokenizer.hasMoreTokens()) {
-						String t = tokenizer.nextToken();
-						arrCats[arrIndex] = Integer.parseInt(t);
-						arrIndex++;
-					}
-				} else {
-					arrCats = new int[]{Integer.parseInt(cats)};
-				}
-				String response = TPBP.query(decodedTerm, page, arrCats);
-				return Response.status(200).entity(response).build();
-			}
+			// Build the String array of "chat" commands...
+			String[] arrTerm = new String[5];
+			arrTerm[0] = "DD";
+			arrTerm[1] = "TPB";
+			arrTerm[2] = "ST=\"" + searchTerm + "\"";
+			arrTerm[3] = "PG=" + page;
+			arrTerm[4] = "CAT=" + cats;
+			String response = trTPB.process(arrTerm); //TPBP.query(decodedTerm, page, arrCats);
+			return Response.status(200).entity(response).build();
 		} catch (Exception e) {
 			return Response.status(400).entity(e.getMessage()).build();
 		}
-		return Response.status(400).entity("Unable to process TPB request").build();
 	}
 
 	/**
@@ -327,11 +321,20 @@ public class FluxoWSProcess {
 	@Path("/tpbdetails/{url}")
 	@Produces("application/json")
 	public Response getTPBDetails(@DefaultValue("") @PathParam("url") String url) {
+		PluginManager pm = OPlugin.getPluginManager();
+		TrTPB trTPB = pm.getPlugin(TrTPB.class);
+		if (trTPB == null) {
+			return Response.status(500).entity("Plugin not found!").build();
+		}
 		try {
 			if (url.length() > 0) {
+				String[] arrTerm = new String[3];
+				arrTerm[0] = "DD";
+				arrTerm[1] = "TPBDETAILS";
+				arrTerm[2] = url;
 				String decodedURL = URLDecoder.decode(url, "UTF-8");
 				if (decodedURL.startsWith("http://thepiratebay.se/")) {
-					String response = TPBP.queryDetails(FilenameUtils.getPath(decodedURL));
+					String response = trTPB.process(arrTerm); //TPBP.queryDetails(FilenameUtils.getPath(decodedURL));
 					return Response.status(200).entity(response).build();
 				}
 			}
