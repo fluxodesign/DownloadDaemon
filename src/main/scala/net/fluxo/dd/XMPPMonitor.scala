@@ -30,6 +30,7 @@ import java.io.{File, InputStreamReader, BufferedReader}
 import org.apache.commons.codec.net.URLCodec
 import java.util
 import net.fluxo.plugins.tpb.TrTPB
+import org.apache.http.conn.util.InetAddressUtils
 
 /**
  * XMPPMonitor manages XMPP connection to Facebook or GMail's chat. This enables user(s) to issue commands directly via
@@ -361,10 +362,20 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 				line = br readLine()
 			}
 			wgetProc waitFor()
-			_externalIP = Some(sb toString())
+			_externalIP = Some(getProcessedIP(sb toString()))
 			br close()
 			OUtils.ExternalIP_:(_externalIP getOrElse "127.0.0.1")
 			LogWriter writeLog("External IP: " + _externalIP.getOrElse("N/A"), Level.INFO)
+		}
+
+		/**
+		 * Process the supplied string into a fit-for-use IP address (v4 or v6).
+		 * @param raw supplied, alleged IP address
+		 * @return a fit-for-use IP address
+		 */
+		private def getProcessedIP(raw: String): String = {
+			if (InetAddressUtils isIPv6Address raw) "[" + raw + "]"
+			else raw
 		}
 	}
 
