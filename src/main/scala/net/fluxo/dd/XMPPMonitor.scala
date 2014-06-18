@@ -31,6 +31,7 @@ import org.apache.commons.codec.net.URLCodec
 import java.util
 import net.fluxo.plugins.tpb.TrTPB
 import org.apache.http.conn.util.InetAddressUtils
+import java.net.InetAddress
 
 /**
  * XMPPMonitor manages XMPP connection to Facebook or GMail's chat. This enables user(s) to issue commands directly via
@@ -353,7 +354,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 	 */
 	class WgetExternalIP() extends Runnable {
 		override def run() {
-			val wgetProc = new ProcessBuilder("wget", "-q", "-O", "-", "http://myexternalip.com/raw").start()
+			/*val wgetProc = new ProcessBuilder("wget", "-q", "-O", "-", "http://myexternalip.com/raw").start()
 			val br = new BufferedReader(new InputStreamReader(wgetProc.getInputStream))
 			val sb = new StringBuilder
 			var line = br readLine()
@@ -363,20 +364,24 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 			}
 			wgetProc waitFor()
 			_externalIP = Some(getProcessedIP(sb toString()))
-			br close()
+			br close()*/
+			try {
+				val local = InetAddress.getLocalHost
+				_externalIP = Some(local.getHostAddress)
+			}
 			OUtils.ExternalIP_:(_externalIP getOrElse "127.0.0.1")
 			LogWriter writeLog("External IP: " + _externalIP.getOrElse("N/A"), Level.INFO)
 		}
 
-		/**
+		/*
 		 * Process the supplied string into a fit-for-use IP address (v4 or v6).
 		 * @param raw supplied, alleged IP address
 		 * @return a fit-for-use IP address
 		 */
-		private def getProcessedIP(raw: String): String = {
+		/*private def getProcessedIP(raw: String): String = {
 			if (InetAddressUtils isIPv6Address raw) "[" + raw + "]"
 			else raw
-		}
+		}*/
 	}
 
 	/**
