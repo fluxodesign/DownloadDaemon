@@ -26,11 +26,10 @@ import org.joda.time.DateTime
 import org.jivesoftware.smack.packet.{Presence, Message}
 import net.fluxo.dd.dbo.Task
 import org.apache.commons.validator.routines.IntegerValidator
-import java.io.{File, InputStreamReader, BufferedReader}
+import java.io.File
 import org.apache.commons.codec.net.URLCodec
 import java.util
 import net.fluxo.plugins.tpb.TrTPB
-import org.apache.http.conn.util.InetAddressUtils
 import java.net.InetAddress
 
 /**
