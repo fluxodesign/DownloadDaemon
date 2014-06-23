@@ -161,6 +161,7 @@ public class FluxoWSProcess {
 	 * Add a bittorrent URL to current list of downloads for the server to process.
 	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/addtorrent/[user-id]/[torrent-url]</p>
 	 *
+	 * @param htRequest  a HttpServletRequest object
 	 * @param uri   bittorrent magnet url or http torrent url to download
 	 * @param owner user ID associated with this download
 	 * @return a string containing the status of the request; "OK" followed by download ID or an error message
@@ -187,7 +188,13 @@ public class FluxoWSProcess {
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
 	}
 
-
+	/**
+	 * Add a video site URL to current list of downloads for the server to process.
+	 * @param htRequest a HttpServletRequest object
+	 * @param uri video URL from a supported video sharing website
+	 * @param owner user ID associated with this download
+	 * @return a string containing the status of the request; "OK" followed by download ID or an error message
+	 */
 	@GET
 	@Path("/addvid/{owner}/{uri}")
 	@Produces("text/plain")
@@ -343,4 +350,5 @@ public class FluxoWSProcess {
 		}
 		return Response.status(400).entity("Unable to process TPB Details request").build();
 	}
+
 }
