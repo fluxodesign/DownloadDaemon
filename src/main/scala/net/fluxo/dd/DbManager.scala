@@ -60,32 +60,34 @@ class DbManager {
 	 * @return true if adding is successful; false otherwise
 	 */
 	def addTask(task: Task): Boolean = {
-		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,http_username,http_password, process) VALUES(?,?,?,?,?,?,?,?)"""
-		var response: Boolean = true
-		try {
-			val ps = _conn prepareStatement insertStatement
-			ps setString(1, task.TaskGID.getOrElse(null))
-			ps setString(2, task.TaskInput.getOrElse(null))
-			ps setTimestamp(3, new Timestamp(task.TaskStarted))
-			ps setString(4, task.TaskOwner.getOrElse(null))
-			ps setBoolean(5, task.TaskIsHttp)
-			ps setString(6, task.TaskHttpUsername.getOrElse(null))
-			ps setString(7, task.TaskHttpPassword.getOrElse(null))
-			ps setString(8, "aria2c")
-			val inserted = ps executeUpdate()
-			if (inserted == 0) {
-				LogWriter writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
-				response = false
+		synchronized {
+			val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,http_username,http_password, process) VALUES(?,?,?,?,?,?,?,?)"""
+			var response: Boolean = true
+			try {
+				val ps = _conn prepareStatement insertStatement
+				ps setString(1, task.TaskGID.getOrElse(null))
+				ps setString(2, task.TaskInput.getOrElse(null))
+				ps setTimestamp(3, new Timestamp(task.TaskStarted))
+				ps setString(4, task.TaskOwner.getOrElse(null))
+				ps setBoolean(5, task.TaskIsHttp)
+				ps setString(6, task.TaskHttpUsername.getOrElse(null))
+				ps setString(7, task.TaskHttpPassword.getOrElse(null))
+				ps setString(8, "aria2c")
+				val inserted = ps executeUpdate()
+				if (inserted == 0) {
+					LogWriter writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+					response = false
+				}
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error inserting new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+					if (response) response = false
 			}
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error inserting new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
-				if (response) response = false
+			response
 		}
-		response
 	}
 
 	/**
@@ -96,32 +98,34 @@ class DbManager {
 	 * @return true if adding is successful; false otherwise
 	 */
 	def addVideoTask(gid: String, owner: String): Boolean = {
-		val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,tail_gid,info_hash,process) VALUES(?,?,?,?,?,?,?,?)"""
-		var response: Boolean = true
-		try {
-			val ps = _conn prepareStatement insertStatement
-			ps setString(1, gid)
-			ps setString(2, "N/A")
-			ps setTimestamp(3, new Timestamp(DateTime.now.getMillis))
-			ps setString(4, owner)
-			ps setBoolean(5, false)
-			ps setString(6, "notailgid")
-			ps setString(7, "noinfohash")
-			ps setString(8, "youtube-dl")
-			val inserted = ps executeUpdate()
-			if (inserted == 0) {
-				LogWriter writeLog("Failed to insert new video task for GID " + gid, Level.ERROR)
-				response = false
+		synchronized {
+			val insertStatement = """INSERT INTO input(gid,input,start,owner,is_http,tail_gid,info_hash,process) VALUES(?,?,?,?,?,?,?,?)"""
+			var response: Boolean = true
+			try {
+				val ps = _conn prepareStatement insertStatement
+				ps setString(1, gid)
+				ps setString(2, "N/A")
+				ps setTimestamp(3, new Timestamp(DateTime.now.getMillis))
+				ps setString(4, owner)
+				ps setBoolean(5, false)
+				ps setString(6, "notailgid")
+				ps setString(7, "noinfohash")
+				ps setString(8, "youtube-dl")
+				val inserted = ps executeUpdate()
+				if (inserted == 0) {
+					LogWriter writeLog("Failed to insert new video task for GID " + gid, Level.ERROR)
+					response = false
+				}
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error inserting new video task for GID " + gid, Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+					if (response) response = false
 			}
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error inserting new video task for GID " + gid, Level.ERROR)
-				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
-				if (response) response = false
+			response
 		}
-		response
 	}
 
 	/**
@@ -131,32 +135,34 @@ class DbManager {
 	 * @return true if update is successful; false otherwise
 	 */
 	def updateTask(task: Task): Boolean = {
-		var response: Boolean = true
-		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
-		try {
-			val ps = _conn prepareStatement updateStatement
-			ps setString(1, task.TaskPackage.getOrElse(null))
-			ps setString(2, task.TaskStatus.getOrElse(null))
-			ps setLong(3, task.TaskCompletedLength)
-			ps setLong(4, task.TaskTotalLength)
-			ps setString(5, task.TaskInfoHash.getOrElse("XXX"))
-			ps setString(6, task.TaskGID.getOrElse(null))
-			ps setString(7, task.TaskTailGID.getOrElse(null))
-			ps setString(8, task.TaskOwner.getOrElse(null))
-			val updated = ps executeUpdate()
-			if (updated == 0) {
-				LogWriter writeLog("Failed to update task with GID " + task.TaskGID.getOrElse(null), Level.ERROR)
-				response = false
+		synchronized {
+			var response: Boolean = true
+			val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
+			try {
+				val ps = _conn prepareStatement updateStatement
+				ps setString(1, task.TaskPackage.getOrElse(null))
+				ps setString(2, task.TaskStatus.getOrElse(null))
+				ps setLong(3, task.TaskCompletedLength)
+				ps setLong(4, task.TaskTotalLength)
+				ps setString(5, task.TaskInfoHash.getOrElse("XXX"))
+				ps setString(6, task.TaskGID.getOrElse(null))
+				ps setString(7, task.TaskTailGID.getOrElse(null))
+				ps setString(8, task.TaskOwner.getOrElse(null))
+				val updated = ps executeUpdate()
+				if (updated == 0) {
+					LogWriter writeLog("Failed to update task with GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+					response = false
+				}
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error updating task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+					if (response) response = false
 			}
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error updating task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
-				if (response) response = false
+			response
 		}
-		response
 	}
 
 	/**
@@ -171,30 +177,32 @@ class DbManager {
 	 * @return true if updated is completed successfully; false othewise
 	 */
 	def updateVideoTask(gid: String, owner: String, targetFile: String, status: String, totalLength: Long, completedLength: Long): Boolean = {
-		var response: Boolean = true
-		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, completed = ? WHERE gid = ? AND owner = ?"""
-		try {
-			val ps = _conn prepareStatement updateStatement
-			ps setString(1, targetFile)
-			ps setString(2, status)
-			ps setLong(3, completedLength)
-			ps setLong(4, totalLength)
-			ps setBoolean(5, totalLength == completedLength)
-			ps setString(6, gid)
-			ps setString(7, owner)
-			val updated = ps executeUpdate()
-			if (updated == 0) {
-				LogWriter writeLog("Failed to update video task with GID " + gid, Level.ERROR)
-				response = false
+		synchronized {
+			var response: Boolean = true
+			val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, completed = ? WHERE gid = ? AND owner = ?"""
+			try {
+				val ps = _conn prepareStatement updateStatement
+				ps setString(1, targetFile)
+				ps setString(2, status)
+				ps setLong(3, completedLength)
+				ps setLong(4, totalLength)
+				ps setBoolean(5, totalLength == completedLength)
+				ps setString(6, gid)
+				ps setString(7, owner)
+				val updated = ps executeUpdate()
+				if (updated == 0) {
+					LogWriter writeLog("Failed to update video task with GID " + gid, Level.ERROR)
+					response = false
+				}
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error updating video task for GID " + gid, Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					if (response) response = false
 			}
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error updating video task for GID " + gid, Level.ERROR)
-				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				if (response) response = false
+			response
 		}
-		response
 	}
 
 	/**
@@ -205,30 +213,32 @@ class DbManager {
 	 * @return true if record is successfully updated; false otherwise
 	 */
 	def finishVideoTask(cl: Long, taskGID: String): Boolean = {
-		var response: Boolean = true
-		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE gid = ? AND info_hash = ? AND tail_gid = ?"""
-		try {
-			val ps = _conn prepareStatement updateStatement
-			ps setTimestamp(1, new Timestamp(DateTime.now.getMillis))
-			ps setBoolean(2, true)
-			ps setString(3, "complete")
-			ps setLong(4, cl)
-			ps setString(5, taskGID)
-			ps setString(6, "noinfohash")
-			ps setString(7, "notailgid")
-			val updated = ps executeUpdate()
-			if (updated == 0) {
-				LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
-				response = false
+		synchronized {
+			var response: Boolean = true
+			val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE gid = ? AND info_hash = ? AND tail_gid = ?"""
+			try {
+				val ps = _conn prepareStatement updateStatement
+				ps setTimestamp(1, new Timestamp(DateTime.now.getMillis))
+				ps setBoolean(2, true)
+				ps setString(3, "complete")
+				ps setLong(4, cl)
+				ps setString(5, taskGID)
+				ps setString(6, "noinfohash")
+				ps setString(7, "notailgid")
+				val updated = ps executeUpdate()
+				if (updated == 0) {
+					LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
+					response = false
+				}
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					if (response) response = false
 			}
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
-				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				if (response) response = false
+			response
 		}
-		response
 	}
 
 	/**
@@ -239,27 +249,29 @@ class DbManager {
 	 * @return true if update is successful; false otherwise
 	 */
 	def updateTaskTailGID(gid: String, tailGid: String): Boolean = {
-		var response: Boolean = true
-		val updateStatement = """UPDATE input SET tail_gid = ? WHERE gid = ? AND process = ?"""
-		try {
-			val ps = _conn prepareStatement updateStatement
-			ps setString(1, tailGid)
-			ps setString(2, gid)
-			ps setString(3, "aria2c")
-			val updated = ps executeUpdate()
-			if (updated == 0) {
-				LogWriter writeLog("Failed to update tail GID for GID " + gid, Level.ERROR)
-				response = false
+		synchronized {
+			var response: Boolean = true
+			val updateStatement = """UPDATE input SET tail_gid = ? WHERE gid = ? AND process = ?"""
+			try {
+				val ps = _conn prepareStatement updateStatement
+				ps setString(1, tailGid)
+				ps setString(2, gid)
+				ps setString(3, "aria2c")
+				val updated = ps executeUpdate()
+				if (updated == 0) {
+					LogWriter writeLog("Failed to update tail GID for GID " + gid, Level.ERROR)
+					response = false
+				}
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error updating tail GID for GID " + gid, Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+					if (response) response = false
 			}
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error updating tail GID for GID " + gid, Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
-				if (response) response = false
+			response
 		}
-		response
 	}
 
 	/**
@@ -271,29 +283,31 @@ class DbManager {
 	 * @return a <code>net.fluxo.dd.dbo.CountPackage</code> object
 	 */
 	def queryFinishTask(tailGID: String, infoHash: String, tl: Long): CountPackage = {
-		val cp: CountPackage = new CountPackage
-		val queryStatement = """SELECT COUNT(*) AS count, package FROM input WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND completed = ? AND process = ?"""
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setString(1, tailGID)
-			ps setString(2, infoHash)
-			ps setLong(3, tl)
-			ps setBoolean(4, false)
-			ps setString(5, "aria2c")
-			val rs = ps executeQuery()
-			while (rs.next) {
-				cp.CPCount_=(rs.getInt("count"))
-				cp.CPPackage_=(rs.getString("package"))
+		synchronized {
+			val cp: CountPackage = new CountPackage
+			val queryStatement = """SELECT COUNT(*) AS count, package FROM input WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND completed = ? AND process = ?"""
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setString(1, tailGID)
+				ps setString(2, infoHash)
+				ps setLong(3, tl)
+				ps setBoolean(4, false)
+				ps setString(5, "aria2c")
+				val rs = ps executeQuery()
+				while (rs.next) {
+					cp.CPCount_=(rs.getInt("count"))
+					cp.CPPackage_=(rs.getString("package"))
+				}
+				rs close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying almost finish task(s) with tail GID " + tailGID, Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			rs close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying almost finish task(s) with tail GID " + tailGID, Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			cp
 		}
-		cp
 	}
 
 	/**
@@ -303,24 +317,26 @@ class DbManager {
 	 * @return true if the ID has been used before; false otherwise
 	 */
 	def isTaskGIDUsed(gid: String): Boolean = {
-		var response: Boolean = false
-		val queryStatement = """SELECT COUNT(*) AS count FROM input WHERE gid = ?"""
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setString(1, gid)
-			val rs = ps executeQuery()
-			while (rs.next) {
-				if ((rs getInt "count") > 0) response = true
+		synchronized {
+			var response: Boolean = false
+			val queryStatement = """SELECT COUNT(*) AS count FROM input WHERE gid = ?"""
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setString(1, gid)
+				val rs = ps executeQuery()
+				while (rs.next) {
+					if ((rs getInt "count") > 0) response = true
+				}
+				rs close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying task GID for unfinished tasks: " + gid, Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
 			}
-			rs close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying task GID for unfinished tasks: " + gid, Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter.stackTraceToString(ex), Level.ERROR)
+			response
 		}
-		response
 	}
 
 	/**
@@ -334,32 +350,34 @@ class DbManager {
 	 * @return true if status updated successfully; false otherwise
 	 */
 	def finishTask(status: String, cl: Long, tailGID: String, infoHash: String, tl: Long): Boolean = {
-		var response: Boolean = true
-		val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND process = ?"""
-		try {
-			val ps = _conn prepareStatement updateStatement
-			ps setTimestamp(1, new Timestamp(DateTime.now.getMillis))
-			ps setBoolean(2, true)
-			ps setString(3, status)
-			ps setLong(4, cl)
-			ps setString(5, tailGID)
-			ps setString(6, infoHash)
-			ps setLong(7, tl)
-			ps setString(8, "aria2c")
-			val updated = ps executeUpdate()
-			if (updated == 0) {
-				LogWriter writeLog("Failed to update finished task for tail GID " + tailGID, Level.ERROR)
-				response = false
+		synchronized {
+			var response: Boolean = true
+			val updateStatement = """UPDATE input SET end = ?, completed = ?, status = ?, completed_length = ? WHERE tail_gid = ? AND info_hash = ? AND total_length = ? AND process = ?"""
+			try {
+				val ps = _conn prepareStatement updateStatement
+				ps setTimestamp(1, new Timestamp(DateTime.now.getMillis))
+				ps setBoolean(2, true)
+				ps setString(3, status)
+				ps setLong(4, cl)
+				ps setString(5, tailGID)
+				ps setString(6, infoHash)
+				ps setLong(7, tl)
+				ps setString(8, "aria2c")
+				val updated = ps executeUpdate()
+				if (updated == 0) {
+					LogWriter writeLog("Failed to update finished task for tail GID " + tailGID, Level.ERROR)
+					response = false
+				}
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error updating status for finished task with GID " + tailGID, Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+					if (response) response = false
 			}
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error updating status for finished task with GID " + tailGID, Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
-				if (response) response = false
+			response
 		}
-		response
 	}
 
 	/**
@@ -368,43 +386,45 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryActiveVideoTask(): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE info_hash = ? AND tail_gid = ? AND completed = ? AND process = ?"""
-		val mlist = new mutable.MutableList[Task]
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setString(1, "noinfohash")
-			ps setString(2, "notailgid")
-			ps setBoolean(3, false)
-			ps setString(4, "youtube-dl")
-			val rs = ps executeQuery()
-			while (rs.next) {
-				mlist.+=(new Task {
-					TaskGID_=(rs getString "gid")
-					TaskTailGID_=(rs getString "tail_gid")
-					TaskInput_=(rs getString "input")
-					TaskStarted_=((rs getTimestamp "start").getTime)
-					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
-					IsTaskCompleted_=(rs getBoolean "completed")
-					TaskOwner_=(rs getString "owner")
-					TaskPackage_=(rs getString "package")
-					TaskStatus_=(rs getString "status")
-					TaskTotalLength_=(rs getLong "total_length")
-					TaskCompletedLength_=(rs getLong "completed_length")
-					TaskInfoHash_=(rs getString "info_hash")
-					TaskIsHttp_=(rs getBoolean "is_http")
-					TaskHttpUsername_=(rs getString "http_username")
-					TaskHttpPassword_=(rs getString "http_password")
-				})
+		synchronized {
+			val queryStatement = """SELECT * FROM input WHERE info_hash = ? AND tail_gid = ? AND completed = ? AND process = ?"""
+			val mlist = new mutable.MutableList[Task]
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setString(1, "noinfohash")
+				ps setString(2, "notailgid")
+				ps setBoolean(3, false)
+				ps setString(4, "youtube-dl")
+				val rs = ps executeQuery()
+				while (rs.next) {
+					mlist.+=(new Task {
+						TaskGID_=(rs getString "gid")
+						TaskTailGID_=(rs getString "tail_gid")
+						TaskInput_=(rs getString "input")
+						TaskStarted_=((rs getTimestamp "start").getTime)
+						TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+						IsTaskCompleted_=(rs getBoolean "completed")
+						TaskOwner_=(rs getString "owner")
+						TaskPackage_=(rs getString "package")
+						TaskStatus_=(rs getString "status")
+						TaskTotalLength_=(rs getLong "total_length")
+						TaskCompletedLength_=(rs getLong "completed_length")
+						TaskInfoHash_=(rs getString "info_hash")
+						TaskIsHttp_=(rs getBoolean "is_http")
+						TaskHttpUsername_=(rs getString "http_username")
+						TaskHttpPassword_=(rs getString "http_password")
+					})
+				}
+				rs close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying unfinished video tasks", Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			rs close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying unfinished video tasks", Level.ERROR)
-				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			mlist.toArray
 		}
-		mlist.toArray
 	}
 
 	/**
@@ -414,41 +434,43 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryTask(gid: String): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE gid = ? AND process = ?"""
-		val mlist = new mutable.MutableList[Task]
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setString(1, gid)
-			ps setString(2, "aria2c")
-			val rs = ps executeQuery()
-			while (rs.next) {
-				mlist.+=(new Task {
-					TaskGID_=(rs getString "gid")
-					TaskTailGID_=(rs getString "tail_gid")
-					TaskInput_=(rs getString "input")
-					TaskStarted_=((rs getTimestamp "start").getTime)
-					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
-					IsTaskCompleted_=(rs getBoolean "completed")
-					TaskOwner_=(rs getString "owner")
-					TaskPackage_=(rs getString "package")
-					TaskStatus_=(rs getString "status")
-					TaskTotalLength_=(rs getLong "total_length")
-					TaskCompletedLength_=(rs getLong "completed_length")
-					TaskInfoHash_=(rs getString "info_hash")
-					TaskIsHttp_=(rs getBoolean "is_http")
-					TaskHttpUsername_=(rs getString "http_username")
-					TaskHttpPassword_=(rs getString "http_password")
-				})
+		synchronized {
+			val queryStatement = """SELECT * FROM input WHERE gid = ? AND process = ?"""
+			val mlist = new mutable.MutableList[Task]
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setString(1, gid)
+				ps setString(2, "aria2c")
+				val rs = ps executeQuery()
+				while (rs.next) {
+					mlist.+=(new Task {
+						TaskGID_=(rs getString "gid")
+						TaskTailGID_=(rs getString "tail_gid")
+						TaskInput_=(rs getString "input")
+						TaskStarted_=((rs getTimestamp "start").getTime)
+						TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+						IsTaskCompleted_=(rs getBoolean "completed")
+						TaskOwner_=(rs getString "owner")
+						TaskPackage_=(rs getString "package")
+						TaskStatus_=(rs getString "status")
+						TaskTotalLength_=(rs getLong "total_length")
+						TaskCompletedLength_=(rs getLong "completed_length")
+						TaskInfoHash_=(rs getString "info_hash")
+						TaskIsHttp_=(rs getBoolean "is_http")
+						TaskHttpUsername_=(rs getString "http_username")
+						TaskHttpPassword_=(rs getString "http_password")
+					})
+				}
+				rs close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying task with GID " + gid, Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			rs close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying task with GID " + gid, Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			mlist.toArray
 		}
-		mlist.toArray
 	}
 
 	/**
@@ -458,41 +480,43 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryTasks(owner: String): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE owner = ? AND completed = ?"""
-		val mlist = new mutable.MutableList[Task]
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setString(1, owner)
-			ps setBoolean(2, false)
-			val rs = ps.executeQuery()
-			while (rs.next) {
-				mlist.+=(new Task {
-					TaskGID_=(rs getString "gid")
-					TaskTailGID_=(rs getString "tail_gid")
-					TaskInput_=(rs getString "input")
-					TaskStarted_=((rs getTimestamp "start").getTime)
-					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
-					IsTaskCompleted_=(rs getBoolean "completed")
-					TaskOwner_=(rs getString "owner")
-					TaskPackage_=(rs getString "package")
-					TaskStatus_=(rs getString "status")
-					TaskTotalLength_=(rs getLong "total_length")
-					TaskCompletedLength_=(rs getLong "completed_length")
-					TaskInfoHash_=(rs getString "info_hash")
-					TaskIsHttp_=(rs getBoolean "is_http")
-					TaskHttpUsername_=(rs getString "http_username")
-					TaskHttpPassword_=(rs getString "http_password")
-				})
+		synchronized {
+			val queryStatement = """SELECT * FROM input WHERE owner = ? AND completed = ?"""
+			val mlist = new mutable.MutableList[Task]
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setString(1, owner)
+				ps setBoolean(2, false)
+				val rs = ps.executeQuery()
+				while (rs.next) {
+					mlist.+=(new Task {
+						TaskGID_=(rs getString "gid")
+						TaskTailGID_=(rs getString "tail_gid")
+						TaskInput_=(rs getString "input")
+						TaskStarted_=((rs getTimestamp "start").getTime)
+						TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+						IsTaskCompleted_=(rs getBoolean "completed")
+						TaskOwner_=(rs getString "owner")
+						TaskPackage_=(rs getString "package")
+						TaskStatus_=(rs getString "status")
+						TaskTotalLength_=(rs getLong "total_length")
+						TaskCompletedLength_=(rs getLong "completed_length")
+						TaskInfoHash_=(rs getString "info_hash")
+						TaskIsHttp_=(rs getBoolean "is_http")
+						TaskHttpUsername_=(rs getString "http_username")
+						TaskHttpPassword_=(rs getString "http_password")
+					})
+				}
+				rs close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying active task(s) for owner " + owner, Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			rs close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying active task(s) for owner " + owner, Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			mlist.toArray
 		}
-		mlist.toArray
 	}
 
 	/**
@@ -501,41 +525,43 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.Task</code>
 	 */
 	def queryUnfinishedTasks(): Array[Task] = {
-		val queryStatement = """SELECT * FROM input WHERE completed = ? AND process = ?"""
-		val mlist = new mutable.MutableList[Task]
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setBoolean(1, false)
-			ps setString(2, "aria2c")
-			val rs = ps executeQuery()
-			while (rs.next) {
-				mlist.+=(new Task {
-					TaskGID_=(rs getString "gid")
-					TaskTailGID_=(rs getString "tail_gid")
-					TaskInput_=(rs getString "input")
-					TaskStarted_=((rs getTimestamp "start").getTime)
-					TaskEnded_=(DateTime.now().minusYears(10).getMillis)
-					IsTaskCompleted_=(rs getBoolean "completed")
-					TaskOwner_=(rs getString "owner")
-					TaskPackage_=(rs getString "package")
-					TaskStatus_=(rs getString "status")
-					TaskTotalLength_=(rs getLong "total_length")
-					TaskCompletedLength_=(rs getLong "completed_length")
-					TaskInfoHash_=(rs getString "info_hash")
-					TaskIsHttp_=(rs getBoolean "is_http")
-					TaskHttpUsername_=(rs getString "http_username")
-					TaskHttpPassword_=(rs getString "http_password")
-				})
+		synchronized {
+			val queryStatement = """SELECT * FROM input WHERE completed = ? AND process = ?"""
+			val mlist = new mutable.MutableList[Task]
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setBoolean(1, false)
+				ps setString(2, "aria2c")
+				val rs = ps executeQuery()
+				while (rs.next) {
+					mlist.+=(new Task {
+						TaskGID_=(rs getString "gid")
+						TaskTailGID_=(rs getString "tail_gid")
+						TaskInput_=(rs getString "input")
+						TaskStarted_=((rs getTimestamp "start").getTime)
+						TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+						IsTaskCompleted_=(rs getBoolean "completed")
+						TaskOwner_=(rs getString "owner")
+						TaskPackage_=(rs getString "package")
+						TaskStatus_=(rs getString "status")
+						TaskTotalLength_=(rs getLong "total_length")
+						TaskCompletedLength_=(rs getLong "completed_length")
+						TaskInfoHash_=(rs getString "info_hash")
+						TaskIsHttp_=(rs getBoolean "is_http")
+						TaskHttpUsername_=(rs getString "http_username")
+						TaskHttpPassword_=(rs getString "http_password")
+					})
+				}
+				rs close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying all active task(s)", Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			rs close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying all active task(s)", Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			mlist.toArray
 		}
-		mlist.toArray
 	}
 
 	/**
@@ -544,17 +570,19 @@ class DbManager {
 	 * @param taskGID a unique ID
 	 */
 	def removeTask(taskGID: String) {
-		val queryStatement = """DELETE FROM input WHERE GID = ?"""
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setString(1, taskGID)
-			ps executeUpdate()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error deleting unfinished task " + taskGID, Level.ERROR)
-				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+		synchronized {
+			val queryStatement = """DELETE FROM input WHERE GID = ?"""
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setString(1, taskGID)
+				ps executeUpdate()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error deleting unfinished task " + taskGID, Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			}
 		}
 	}
 
@@ -565,40 +593,42 @@ class DbManager {
 	 * @return a <code>net.fluxo.dd.dbo.Task</code> object
 	 */
 	def queryTaskTailGID(tailGid: String): Task = {
-		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ? AND process = ?"""
-		val t = new Task
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setString(1, tailGid)
-			ps setBoolean(2, false)
-			ps setString(3, "aria2c")
-			val rs = ps.executeQuery()
-			while (rs.next()) {
-				t.TaskGID_=(rs getString "gid")
-				t.TaskTailGID_=(rs getString "tail_gid")
-				t.TaskInput_=(rs getString "input")
-				t.TaskStarted_=((rs getTimestamp "start").getTime)
-				t.TaskEnded_=(DateTime.now().minusYears(10).getMillis)
-				t.IsTaskCompleted_=(rs getBoolean "completed")
-				t.TaskOwner_=(rs getString "owner")
-				t.TaskPackage_=(rs getString "package")
-				t.TaskStatus_=(rs getString "status")
-				t.TaskTotalLength_=(rs getLong "total_length")
-				t.TaskCompletedLength_=(rs getLong "completed_length")
-				t.TaskInfoHash_=(rs getString "info_hash")
-				t.TaskIsHttp_=(rs getBoolean "is_http")
-				t.TaskHttpUsername_=(rs getString "http_username")
-				t.TaskHttpPassword_=(rs getString "http_password")
+		synchronized {
+			val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ? AND process = ?"""
+			val t = new Task
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setString(1, tailGid)
+				ps setBoolean(2, false)
+				ps setString(3, "aria2c")
+				val rs = ps.executeQuery()
+				while (rs.next()) {
+					t.TaskGID_=(rs getString "gid")
+					t.TaskTailGID_=(rs getString "tail_gid")
+					t.TaskInput_=(rs getString "input")
+					t.TaskStarted_=((rs getTimestamp "start").getTime)
+					t.TaskEnded_=(DateTime.now().minusYears(10).getMillis)
+					t.IsTaskCompleted_=(rs getBoolean "completed")
+					t.TaskOwner_=(rs getString "owner")
+					t.TaskPackage_=(rs getString "package")
+					t.TaskStatus_=(rs getString "status")
+					t.TaskTotalLength_=(rs getLong "total_length")
+					t.TaskCompletedLength_=(rs getLong "completed_length")
+					t.TaskInfoHash_=(rs getString "info_hash")
+					t.TaskIsHttp_=(rs getBoolean "is_http")
+					t.TaskHttpUsername_=(rs getString "http_username")
+					t.TaskHttpPassword_=(rs getString "http_password")
+				}
+				rs close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying task with tail GID " + tailGid, Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			rs close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying task with tail GID " + tailGid, Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			t
 		}
-		t
 	}
 
 	/**
@@ -609,22 +639,24 @@ class DbManager {
 	 * @param owner user ID of the download
 	 */
 	def replaceGID(oldGID: String, newGID: String, owner: String) {
-		val updateStatement = """UPDATE input SET gid = ?, tail_gid = ? WHERE gid = ? AND owner = ?"""
-		try {
-			val ps = _conn prepareStatement updateStatement
-			ps setString(1, newGID)
-			ps setString(2, oldGID)
-			ps setString(3, owner)
-			val updated = ps executeUpdate()
-			if (updated == 0) {
-				LogWriter writeLog("Failed to replace new GID for GID: " + oldGID, Level.ERROR)
+		synchronized {
+			val updateStatement = """UPDATE input SET gid = ?, tail_gid = ? WHERE gid = ? AND owner = ?"""
+			try {
+				val ps = _conn prepareStatement updateStatement
+				ps setString(1, newGID)
+				ps setString(2, oldGID)
+				ps setString(3, owner)
+				val updated = ps executeUpdate()
+				if (updated == 0) {
+					LogWriter writeLog("Failed to replace new GID for GID: " + oldGID, Level.ERROR)
+				}
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error replacing new GID for GID: " + oldGID, Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error replacing new GID for GID: " + oldGID, Level.ERROR)
-				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 		}
 	}
 
@@ -634,23 +666,25 @@ class DbManager {
 	 * @return total number of YIFY cache items
 	 */
 	def ycQueryCount(): Int = {
-		var count = 0
-		val queryStatement = """SELECT COUNT(*) AS count FROM YIFY_CACHE"""
-		try {
-			val ps = _conn prepareStatement queryStatement
-			val rs = ps executeQuery()
-			if (rs next()) {
-				count = rs getInt "count"
+		synchronized {
+			var count = 0
+			val queryStatement = """SELECT COUNT(*) AS count FROM YIFY_CACHE"""
+			try {
+				val ps = _conn prepareStatement queryStatement
+				val rs = ps executeQuery()
+				if (rs next()) {
+					count = rs getInt "count"
+				}
+				rs close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying YIFY cache count", Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			rs close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying YIFY cache count", Level.ERROR)
-				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			count
 		}
-		count
 	}
 
 	/**
@@ -660,24 +694,26 @@ class DbManager {
 	 * @return true if a movie is found; false otherwise
 	 */
 	def ycQueryMovieID(movieID: Int): Boolean = {
-		var status = false
-		val queryStatement = """SELECT COUNT(*) AS count FROM YIFY_CACHE WHERE movie_id = ?"""
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setInt(1, movieID)
-			val result = ps executeQuery()
-			if (result next()) {
-				if ((result getInt "count") > 0) status = true
+		synchronized {
+			var status = false
+			val queryStatement = """SELECT COUNT(*) AS count FROM YIFY_CACHE WHERE movie_id = ?"""
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setInt(1, movieID)
+				val result = ps executeQuery()
+				if (result next()) {
+					if ((result getInt "count") > 0) status = true
+				}
+				result close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying YIFY cache for ID " + movieID, Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			result close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying YIFY cache for ID " + movieID, Level.ERROR)
-				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			status
 		}
-		status
 	}
 
 	/**
@@ -687,31 +723,33 @@ class DbManager {
 	 * @return true if insert is successful; false otherwise
 	 */
 	def ycInsertNewData(obj: YIFYCache): Boolean = {
-		val insertStatement = """INSERT INTO yify_cache(movie_id,title,year,quality,size,cover_image) VALUES(?,?,?,?,?,?)"""
-		var response: Boolean = true
-		try {
-			val ps = _conn prepareStatement insertStatement
-			ps setInt (1, obj.MovieID)
-			ps setString(2, obj.MovieTitle.getOrElse(""))
-			ps setString(3, obj.MovieYear.getOrElse(""))
-			ps setString (4, obj.MovieQuality.getOrElse(""))
-			ps setString (5, obj.MovieSize.getOrElse(""))
-			ps setString(6, obj.MovieCoverImage.getOrElse(""))
-			val inserted = ps executeUpdate()
-			if (inserted == 0) {
-				LogWriter writeLog("Failed to insert new cache object for movie ID " + obj.MovieID, Level.ERROR)
-				response = false
-			} else LogWriter writeLog("Inserted " + (obj MovieID) + "/" + obj.MovieTitle.getOrElse("")
-				+ " to DB", Level.INFO)
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error inserting new cache object for movie ID " + obj.MovieID, Level.ERROR)
-				LogWriter writeLog(ex.getMessage , Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
-				if (response) response = false
+		synchronized {
+			val insertStatement = """INSERT INTO yify_cache(movie_id,title,year,quality,size,cover_image) VALUES(?,?,?,?,?,?)"""
+			var response: Boolean = true
+			try {
+				val ps = _conn prepareStatement insertStatement
+				ps setInt(1, obj.MovieID)
+				ps setString(2, obj.MovieTitle.getOrElse(""))
+				ps setString(3, obj.MovieYear.getOrElse(""))
+				ps setString(4, obj.MovieQuality.getOrElse(""))
+				ps setString(5, obj.MovieSize.getOrElse(""))
+				ps setString(6, obj.MovieCoverImage.getOrElse(""))
+				val inserted = ps executeUpdate()
+				if (inserted == 0) {
+					LogWriter writeLog("Failed to insert new cache object for movie ID " + obj.MovieID, Level.ERROR)
+					response = false
+				} else LogWriter writeLog("Inserted " + (obj MovieID) + "/" + obj.MovieTitle.getOrElse("")
+					+ " to DB", Level.INFO)
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error inserting new cache object for movie ID " + obj.MovieID, Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+					if (response) response = false
+			}
+			response
 		}
-		response
 	}
 
 	/**
@@ -721,34 +759,36 @@ class DbManager {
 	 * @return an array of <code>net.fluxo.dd.dbo.YIFYCache</code> objects
 	 */
 	def ycQueryMoviesByTitle(title: String): Array[YIFYCache] = {
-		val queryStatement = """SELECT * FROM yify_cache WHERE LOWER(title) LIKE ?"""
-		val mlist = new mutable.MutableList[YIFYCache]
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setString(1, "%" + title.toLowerCase + "%")
-			val rs = ps executeQuery()
-			var counter = 0
-			while (rs.next()) {
-				mlist.+=(new YIFYCache {
-					MovieID_:(rs getInt "movie_id")
-					MovieTitle_:(rs getString "title")
-					MovieYear_:(rs getString "year")
-					MovieQuality_:(rs getString "quality")
-					MovieSize_:(rs getString "size")
-					MovieCoverImage_:(rs getString "cover_image")
-				})
-				counter += 1
+		synchronized {
+			val queryStatement = """SELECT * FROM yify_cache WHERE LOWER(title) LIKE ?"""
+			val mlist = new mutable.MutableList[YIFYCache]
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setString(1, "%" + title.toLowerCase + "%")
+				val rs = ps executeQuery()
+				var counter = 0
+				while (rs.next()) {
+					mlist.+=(new YIFYCache {
+						MovieID_:(rs getInt "movie_id")
+						MovieTitle_:(rs getString "title")
+						MovieYear_:(rs getString "year")
+						MovieQuality_:(rs getString "quality")
+						MovieSize_:(rs getString "size")
+						MovieCoverImage_:(rs getString "cover_image")
+					})
+					counter += 1
+				}
+				rs close()
+				ps close()
+				LogWriter writeLog("ycQueryMoviesByTitle: " + counter + " found", Level.INFO)
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error querying movies by title", Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			rs close()
-			ps close()
-			LogWriter writeLog("ycQueryMoviesByTitle: " + counter + " found", Level.INFO)
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error querying movies by title", Level.ERROR)
-				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			mlist.toArray
 		}
-		mlist.toArray
 	}
 
 	/**
@@ -760,28 +800,30 @@ class DbManager {
 	 * @return true if credentials matched; false otherwise
 	 */
 	def authCredentials(username: String, password: String): Boolean = {
-		var status = false
-		//val hashed = OUtils hashString password
-		// DEBUG
-		LogWriter writeLog("AUTH username: " + username + "; pass: " + password, Level.DEBUG)
-		val queryStatement = """SELECT COUNT(*) AS count FROM CREDS WHERE USERNAME = ? AND PASSWORD = ?"""
-		try {
-			val ps = _conn prepareStatement queryStatement
-			ps setString(1, username)
-			ps setString(2, password)
-			val rs = ps executeQuery()
-			while (rs.next) {
-				if ((rs getInt "count") > 0) status = true
+		synchronized {
+			var status = false
+			//val hashed = OUtils hashString password
+			// DEBUG
+			LogWriter writeLog("AUTH username: " + username + "; pass: " + password, Level.DEBUG)
+			val queryStatement = """SELECT COUNT(*) AS count FROM CREDS WHERE USERNAME = ? AND PASSWORD = ?"""
+			try {
+				val ps = _conn prepareStatement queryStatement
+				ps setString(1, username)
+				ps setString(2, password)
+				val rs = ps executeQuery()
+				while (rs.next) {
+					if ((rs getInt "count") > 0) status = true
+				}
+				rs close()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error authenticating credentials", Level.ERROR)
+					LogWriter writeLog(ex.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 			}
-			rs close()
-			ps close()
-		} catch {
-			case ex: Exception =>
-				LogWriter writeLog("Error authenticating credentials", Level.ERROR)
-				LogWriter writeLog(ex.getMessage, Level.ERROR)
-				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+			status
 		}
-		status
 	}
 
 	/**
