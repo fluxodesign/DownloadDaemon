@@ -77,6 +77,7 @@ class DbManager {
 				LogWriter writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
 				response = false
 			}
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
@@ -84,6 +85,7 @@ class DbManager {
 				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 				if (response) response = false
+				_conn rollback()
 		}
 		response
 	}
@@ -113,6 +115,7 @@ class DbManager {
 				LogWriter writeLog("Failed to insert new video task for GID " + gid, Level.ERROR)
 				response = false
 			}
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
@@ -120,6 +123,7 @@ class DbManager {
 				LogWriter writeLog(ex.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 				if (response) response = false
+				_conn rollback()
 		}
 		response
 	}
@@ -148,6 +152,7 @@ class DbManager {
 				LogWriter writeLog("Failed to update task with GID " + task.TaskGID.getOrElse(null), Level.ERROR)
 				response = false
 			}
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
@@ -155,6 +160,7 @@ class DbManager {
 				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 				if (response) response = false
+				_conn rollback()
 		}
 		response
 	}
@@ -187,12 +193,14 @@ class DbManager {
 				LogWriter writeLog("Failed to update video task with GID " + gid, Level.ERROR)
 				response = false
 			}
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
 				LogWriter writeLog("Error updating video task for GID " + gid, Level.ERROR)
 				LogWriter writeLog(ex.getMessage, Level.ERROR)
 				if (response) response = false
+				_conn rollback()
 		}
 		response
 	}
@@ -221,12 +229,14 @@ class DbManager {
 				LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
 				response = false
 			}
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
 				LogWriter writeLog("Error finishing video task for GID " + taskGID, Level.ERROR)
 				LogWriter writeLog(ex.getMessage, Level.ERROR)
 				if (response) response = false
+				_conn rollback()
 		}
 		response
 	}
@@ -251,6 +261,7 @@ class DbManager {
 				LogWriter writeLog("Failed to update tail GID for GID " + gid, Level.ERROR)
 				response = false
 			}
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
@@ -258,6 +269,7 @@ class DbManager {
 				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 				if (response) response = false
+				_conn rollback()
 		}
 		response
 	}
@@ -351,6 +363,7 @@ class DbManager {
 				LogWriter writeLog("Failed to update finished task for tail GID " + tailGID, Level.ERROR)
 				response = false
 			}
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
@@ -358,6 +371,7 @@ class DbManager {
 				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 				if (response) response = false
+				_conn rollback()
 		}
 		response
 	}
@@ -549,12 +563,14 @@ class DbManager {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, taskGID)
 			ps executeUpdate()
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
 				LogWriter writeLog("Error deleting unfinished task " + taskGID, Level.ERROR)
 				LogWriter writeLog(ex.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+				_conn rollback()
 		}
 	}
 
@@ -619,12 +635,14 @@ class DbManager {
 			if (updated == 0) {
 				LogWriter writeLog("Failed to replace new GID for GID: " + oldGID, Level.ERROR)
 			}
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
 				LogWriter writeLog("Error replacing new GID for GID: " + oldGID, Level.ERROR)
 				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+				_conn rollback()
 		}
 	}
 
@@ -703,6 +721,7 @@ class DbManager {
 				response = false
 			} else LogWriter writeLog("Inserted " + (obj MovieID) + "/" + obj.MovieTitle.getOrElse("")
 				+ " to DB", Level.INFO)
+			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
@@ -710,6 +729,7 @@ class DbManager {
 				LogWriter writeLog(ex.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 				if (response) response = false
+				_conn rollback()
 		}
 		response
 	}
