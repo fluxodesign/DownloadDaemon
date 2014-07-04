@@ -45,9 +45,9 @@ class PluginProcessor {
 			val pm = PluginManagerFactory createPluginManager()
 			_plugMan = Some(pm)
 			val plugDir = new File("plugins/")
-			(_plugMan getOrElse null) addPluginsFrom(plugDir toURI)
+			_plugMan.orNull addPluginsFrom(plugDir toURI)
 		}
-		_plugMan getOrElse null
+		_plugMan.orNull
 	}
 
 }

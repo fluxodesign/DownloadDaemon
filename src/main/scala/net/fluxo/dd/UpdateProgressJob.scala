@@ -65,7 +65,7 @@ class UpdateProgressJob extends Job {
 						// get an RPC client for a particular port...
 						val client = OUtils getXmlRpcClient a.AriaPort
 						// we need to acquire the TAIL GID if this is a new download, or a restart...
-						val tasks = DbControl queryTask a.AriaTaskGid.getOrElse(null)
+						val tasks = DbControl queryTask a.AriaTaskGid.orNull
 						if (tasks.length > 0 && !tasks(0).IsTaskCompleted) {
 							val ts = OUtils sendAriaTellStatus(tasks(0).TaskGID.getOrElse(""), client)
 							val jmap = ts.asInstanceOf[util.HashMap[String, Object]]
@@ -160,17 +160,17 @@ class UpdateProgressJob extends Job {
 									DbControl finishTask(status, cl, gid, infoHash, tl)
 									flagCompleted = true
 									// move the package to a directory specified in config...
-									if (OUtils.readConfig.DownloadDir.getOrElse(null).length > 0) {
+									if (OUtils.readConfig.DownloadDir.orNull.length > 0) {
 										if (a.AriaHttpDownload) {
 											// HTTP downloads usually are just for 1 file...
-											val packageFile = new File(qf.CPPackage.getOrElse(null))
+											val packageFile = new File(qf.CPPackage.orNull)
 											val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse(""))
 											if (packageFile.isFile && packageFile.exists() && destDir.isDirectory && destDir.exists()) {
 												FileUtils moveFileToDirectory(packageFile, destDir, false)
 											} else LogWriter writeLog("Failed to move file " + qf.CPPackage.getOrElse("{empty file}") +
 													" to " + OUtils.readConfig.DownloadDir.getOrElse("{empty target dir}"), Level.INFO)
 										} else {
-											val packageDir = new File(qf.CPPackage.getOrElse(null))
+											val packageDir = new File(qf.CPPackage.orNull)
 											val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
 											if (packageDir.isDirectory && packageDir.exists && !destDir.exists) {
 												FileUtils moveDirectory(packageDir, destDir)

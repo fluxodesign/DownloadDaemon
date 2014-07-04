@@ -23,7 +23,6 @@ package net.fluxo.dd
 import java.util
 import org.apache.commons.exec._
 import org.apache.log4j.Level
-import scala.Some
 import net.fluxo.dd.dbo.VideoProcess
 import org.joda.time.DateTime
 import scala.util.control.Breaks._
@@ -146,8 +145,8 @@ class VideoProcessor {
 		breakable {
 			while (iterator.hasNext) {
 				val e = iterator.next
-				if ((e VideoTaskGid).getOrElse(null) equals gid) {
-					owner = Some((e Owner).getOrElse(null))
+				if ((e VideoTaskGid).orNull equals gid) {
+					owner = Some((e Owner).orNull)
 					break()
 				}
 			}
@@ -166,7 +165,7 @@ class VideoProcessor {
 		breakable {
 			while (iterator.hasNext) {
 				val e = iterator.next
-				if ((e VideoTaskGid).getOrElse(null) equals gid) {
+				if ((e VideoTaskGid).orNull equals gid) {
 					e killVideoProcess()
 					iterator remove()
 					break()
@@ -185,7 +184,7 @@ class VideoProcessor {
 		breakable {
 			while (iterator.hasNext) {
 				val e = iterator.next
-				if ((e VideoTaskGid).getOrElse(null) equals gid) {
+				if ((e VideoTaskGid).orNull equals gid) {
 					iterator remove()
 					break()
 				}
@@ -203,7 +202,7 @@ class VideoProcessor {
 		breakable {
 			while (iterator.hasNext) {
 				val e = iterator.next
-				if ((e VideoTaskGid).getOrElse(null) equals taskGID) {
+				if ((e VideoTaskGid).orNull equals taskGID) {
 					e VideoLastUpdated_= DateTime.now.getMillis
 					break()
 				}
@@ -222,7 +221,7 @@ class VideoProcessor {
 		breakable {
 			while (iterator.hasNext) {
 				val e = iterator.next
-				if ((e VideoTaskGid).getOrElse(null) equals taskGID) {
+				if ((e VideoTaskGid).orNull equals taskGID) {
 					if ((e VideoTotalLength) < length) e.VideoTotalLength_:(length)
 					break()
 				}
@@ -241,7 +240,7 @@ class VideoProcessor {
 		breakable {
 			while (iterator.hasNext) {
 				val e = iterator.next
-				if ((e VideoTaskGid).getOrElse(null) equals taskGID) {
+				if ((e VideoTaskGid).orNull equals taskGID) {
 					e.VideoExt_:(ext)
 					break()
 				}
@@ -260,7 +259,7 @@ class VideoProcessor {
 		breakable {
 			while (iterator.hasNext) {
 				val e = iterator.next
-				if ((e VideoTaskGid).getOrElse(null) equals taskGID) {
+				if ((e VideoTaskGid).orNull equals taskGID) {
 					e.VideoTitle_=(title)
 					break()
 				}
@@ -282,7 +281,7 @@ class VideoProcessor {
 		 * @return a <code>org.apache.commons.exec.DefaultExecutor</code> object
 		 */
 		def getExecutor: DefaultExecutor = {
-			_executor getOrElse null
+			_executor.orNull
 		}
 
 		/**

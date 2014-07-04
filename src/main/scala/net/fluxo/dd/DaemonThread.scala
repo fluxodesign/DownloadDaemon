@@ -78,25 +78,25 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		if (_isRunning) {
 			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan, this)
 			_tDlMonitor = Some(dlMon)
-			_threadDlMonitor = new Thread(_tDlMonitor getOrElse null)
+			_threadDlMonitor = new Thread(_tDlMonitor.orNull)
 			_threadDlMonitor start()
 			val xmppMon: XMPPMonitor = {
-				if (OUtils.readConfig.XMPPProvider.getOrElse(null).toLowerCase.equals("google")) {
-					new XMPPMonitor("google", "talk.google.com", 5222, OUtils.readConfig.XMPPAccount.getOrElse(null), OUtils.readConfig.XMPPPassword.getOrElse(null), this)
-				} else if (OUtils.readConfig.XMPPProvider.getOrElse(null).toLowerCase.equals("facebook")) {
-					new XMPPMonitor("facebook", "chat.facebook.com", 5222, OUtils.readConfig.XMPPAccount.getOrElse(null), OUtils.readConfig.XMPPPassword.getOrElse(null), this)
+				if (OUtils.readConfig.XMPPProvider.orNull.toLowerCase.equals("google")) {
+					new XMPPMonitor("google", "talk.google.com", 5222, OUtils.readConfig.XMPPAccount.orNull, OUtils.readConfig.XMPPPassword.orNull, this)
+				} else if (OUtils.readConfig.XMPPProvider.orNull.toLowerCase.equals("facebook")) {
+					new XMPPMonitor("facebook", "chat.facebook.com", 5222, OUtils.readConfig.XMPPAccount.orNull, OUtils.readConfig.XMPPPassword.orNull, this)
 				} else null
 			}
 			_tXMPPMonitor = Some(xmppMon)
-			_threadXMPPMonitor = new Thread(_tXMPPMonitor getOrElse null)
+			_threadXMPPMonitor = new Thread(_tXMPPMonitor.orNull)
 			_threadXMPPMonitor start()
 			val httpd: HttpDaemon = new HttpDaemon((OUtils readConfig) HTTPPort, (OUtils readConfig) HTTPSPort)
 			_tHttpd = Some(httpd)
-			_threadHttpD = new Thread(_tHttpd getOrElse null)
+			_threadHttpD = new Thread(_tHttpd.orNull)
 			_threadHttpD start()
 			val ycMonitor = new YIFYCacheMonitor
 			_tYIFYCacheMonitor = Some(ycMonitor)
-			_threadYIFYCacheMonitor = new Thread(_tYIFYCacheMonitor getOrElse null)
+			_threadYIFYCacheMonitor = new Thread(_tYIFYCacheMonitor.orNull)
 			_threadYIFYCacheMonitor start()
 		}
 	}
@@ -175,19 +175,19 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	 */
 	def tryStop() {
 		if (_tDlMonitor.isDefined) {
-			(_tDlMonitor getOrElse null) stop()
+			_tDlMonitor.orNull stop()
 			_threadDlMonitor interrupt()
 		}
 		if (_tXMPPMonitor.isDefined) {
-			(_tXMPPMonitor getOrElse null) stop()
+			_tXMPPMonitor.orNull stop()
 			_threadXMPPMonitor interrupt()
 		}
 		if (_tHttpd.isDefined) {
-			(_tHttpd getOrElse null) stop()
+			_tHttpd.orNull stop()
 			_threadHttpD interrupt()
 		}
 		if (_tYIFYCacheMonitor.isDefined) {
-			(_tYIFYCacheMonitor getOrElse null) stop()
+			_tYIFYCacheMonitor.orNull stop()
 			_threadYIFYCacheMonitor interrupt()
 		}
 	}

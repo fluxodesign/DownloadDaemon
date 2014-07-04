@@ -28,7 +28,6 @@ import org.apache.log4j.Level
 import java.util.concurrent.TimeUnit
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.exec._
-import scala.Some
 
 /**
  * AriaProcessor process commands that deal with "aria2c". It also monitors the currently running download. Whenever a
@@ -121,7 +120,7 @@ class AriaProcessor {
 		if (activeTasks.length > 0) LogWriter writeLog("Trying to restart " + activeTasks.length + " unfinished downloads...", Level.INFO)
 		var rpcPort = -1
 		for (t <- activeTasks) {
-			LogWriter writeLog("Resuming download for " + t.TaskGID.getOrElse(null), Level.INFO)
+			LogWriter writeLog("Resuming download for " + t.TaskGID.orNull, Level.INFO)
 			breakable {
 				for (x <- OUtils.readConfig.RPCPort to OUtils.readConfig.RPCPort + OUtils.readConfig.RPCLimit) {
 					if (!(OUtils portInUse x)) {
@@ -134,7 +133,7 @@ class AriaProcessor {
 				LogWriter writeLog("All download slots taken, cannot restart downloads", Level.INFO)
 				return
 			}
-			val ariaThread = new AriaThread(rpcPort, t.TaskInput.getOrElse(null), t.TaskGID.getOrElse(null), t.TaskIsHttp)
+			val ariaThread = new AriaThread(rpcPort, t.TaskInput.orNull, t.TaskGID.orNull, t.TaskIsHttp)
 			if (t.TaskIsHttp) {
 				if (t.TaskHttpUsername.getOrElse("").length > 0 && t.TaskHttpPassword.getOrElse("").length > 0) {
 					ariaThread setCredentials(t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""))
@@ -258,7 +257,7 @@ class AriaProcessor {
 		 * @return a <code>org.apache.commons.exec.DefaultExecutor</code> object
 		 */
 		def getExecutor: DefaultExecutor = {
-			_executor getOrElse null
+			_executor.orNull
 		}
 
 		/**

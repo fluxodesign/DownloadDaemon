@@ -35,7 +35,6 @@ import scala.util.control.Breaks._
 import org.apache.http.impl.client.HttpClientBuilder
 import org.apache.http.client.methods.HttpGet
 import org.json.simple.{JSONArray, JSONValue, JSONObject}
-import scala.Some
 import org.apache.commons.io.FileUtils
 import java.security.MessageDigest
 import org.json.simple.parser.JSONParser
@@ -73,7 +72,7 @@ class Utils {
 	 */
 	def readConfig: Config = {
 		if (_config.isEmpty) _config = Some(readConfiguration)
-		_config.getOrElse(null)
+		_config.orNull
 	}
 
 	/**
@@ -306,7 +305,7 @@ class Utils {
 		json put("SearchResult", "YIFY")
 		json put("MovieCount", obj.MovieCount)
 		val jsArray = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, String]]]
-		val movieIterator = (obj MovieList) getOrElse null iterator()
+		val movieIterator = obj.MovieList.orNull iterator()
 		while (movieIterator.hasNext) {
 			val x = movieIterator next()
 			val movieObject = (new JSONObject).asInstanceOf[util.HashMap[String, String]]
@@ -378,7 +377,7 @@ class Utils {
 			case ex: Exception =>
 				LogWriter writeLog("Failed to extract array from file " + (infoFile getName) + "; array name: " + arrayName, Level.ERROR)
 		}
-		retVal getOrElse null
+		retVal.orNull
 	}
 
 	/**

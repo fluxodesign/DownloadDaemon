@@ -52,7 +52,7 @@ class VideoUpdateProgressJob extends Job {
 			val videoIterator = (OVideoP ActiveProcesses) iterator()
 			while (videoIterator.hasNext) {
 				val vidObj = videoIterator.next
-				val tGID = (vidObj VideoTaskGid) getOrElse null
+				val tGID = vidObj.VideoTaskGid.orNull
 				// if there's no extension defined in the video tracker object, try to obtain one from the json file
 				val infoObject = new File(tGID + ".info.json")
 				if (!((vidObj VideoExt) isDefined) && infoObject.exists) {

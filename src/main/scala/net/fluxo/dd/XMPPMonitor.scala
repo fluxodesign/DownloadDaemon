@@ -483,7 +483,7 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								else -1
 							}
 							val dlName: String = {
-								if (t.TaskPackage.getOrElse(null).length > 1) t.TaskPackage.getOrElse(null)
+								if (t.TaskPackage.orNull.length > 1) t.TaskPackage.orNull
 								else "Unknown Download"
 							}
 							hMap put(dlName, String valueOf progress)
