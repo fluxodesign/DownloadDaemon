@@ -64,24 +64,24 @@ class DbManager {
 		var response: Boolean = true
 		try {
 			val ps = _conn prepareStatement insertStatement
-			ps setString(1, task.TaskGID.getOrElse(null))
-			ps setString(2, task.TaskInput.getOrElse(null))
+			ps setString(1, task.TaskGID.orNull)
+			ps setString(2, task.TaskInput.orNull)
 			ps setTimestamp(3, new Timestamp(task.TaskStarted))
-			ps setString(4, task.TaskOwner.getOrElse(null))
+			ps setString(4, task.TaskOwner.orNull)
 			ps setBoolean(5, task.TaskIsHttp)
-			ps setString(6, task.TaskHttpUsername.getOrElse(null))
-			ps setString(7, task.TaskHttpPassword.getOrElse(null))
+			ps setString(6, task.TaskHttpUsername.orNull)
+			ps setString(7, task.TaskHttpPassword.orNull)
 			ps setString(8, "aria2c")
 			val inserted = ps executeUpdate()
 			if (inserted == 0) {
-				LogWriter writeLog("Failed to insert new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter writeLog("Failed to insert new task for GID " + task.TaskGID.orNull, Level.ERROR)
 				response = false
 			}
 			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
-				LogWriter writeLog("Error inserting new task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter writeLog("Error inserting new task for GID " + task.TaskGID.orNull, Level.ERROR)
 				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 				if (response) response = false
@@ -139,24 +139,24 @@ class DbManager {
 		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
 		try {
 			val ps = _conn prepareStatement updateStatement
-			ps setString(1, task.TaskPackage.getOrElse(null))
-			ps setString(2, task.TaskStatus.getOrElse(null))
+			ps setString(1, task.TaskPackage.orNull)
+			ps setString(2, task.TaskStatus.orNull)
 			ps setLong(3, task.TaskCompletedLength)
 			ps setLong(4, task.TaskTotalLength)
 			ps setString(5, task.TaskInfoHash.getOrElse("XXX"))
-			ps setString(6, task.TaskGID.getOrElse(null))
-			ps setString(7, task.TaskTailGID.getOrElse(null))
-			ps setString(8, task.TaskOwner.getOrElse(null))
+			ps setString(6, task.TaskGID.orNull)
+			ps setString(7, task.TaskTailGID.orNull)
+			ps setString(8, task.TaskOwner.orNull)
 			val updated = ps executeUpdate()
 			if (updated == 0) {
-				LogWriter writeLog("Failed to update task with GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter writeLog("Failed to update task with GID " + task.TaskGID.orNull, Level.ERROR)
 				response = false
 			}
 			_conn commit()
 			ps close()
 		} catch {
 			case ex: Exception =>
-				LogWriter writeLog("Error updating task for GID " + task.TaskGID.getOrElse(null), Level.ERROR)
+				LogWriter writeLog("Error updating task for GID " + task.TaskGID.orNull, Level.ERROR)
 				LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
 				if (response) response = false
