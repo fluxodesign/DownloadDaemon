@@ -13,7 +13,22 @@ The daemon itself is essentially a monitor that can spawn aria2 instances to pro
 The daemon uses [H2 Database](http://www.h2database.com) to store its data, including cache and download request details. We use H2 db because of its compact size and the fact that it is embeddable into our daemon.
 
 The daemon consists of several parts working together in the background:
-* HTTP Daemon
-* XMPP Monitor
-* Cache Monitor
-* Download Monitor
+
+* HTTP Daemon  
+* XMPP Monitor  
+* Cache Monitor  
+* Download Monitor  
+
+### HTTP Daemon ###  
+
+This part serves the REST web service methods for the client. We use embedded Jetty server to actually serve the REST methods. It is a much more elegant option than coding up our own application server.
+
+### XMPP Monitor ###
+
+Beside the REST methods, we can also send commands to the daemon via Facebook chat and Google chat. To achieve this, we use [Ignite Realtime's Smack API](www.igniterealtime.org/projects/smack) to implement XMPP chat client. 
+
+### Cache Monitor ###
+
+The cache monitor consumes the web service from YIFY site every X hours to check whether there are any new movies being uploaded. Data for new movies is saved into the database to enable the Android client to perform title-based search. We implemented this design because there are no search capabilities available from YIFY.
+
+### Download Monitor ###
