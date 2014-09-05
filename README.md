@@ -7,5 +7,5 @@ This project is tied closely with BlackPearl, an Android client project that tal
 
 The daemon itself is essentially a monitor that can spawn aria2 instances to process the downloads. It queries the aria2c instances via the RPC capabilities that are built-in into aria2.
 
-![Block Diagram of DownloadDaemon](https://lh3.googleusercontent.com/B7y2BhXrlmfH25T7CJi-XlKXusLE1HK0NHZNBkPgz_M=w292-h207-p-no)
+![Block Diagram of DownloadDaemon](https://lh3.googleusercontent.com/B7y2BhXrlmfH25T7CJi-XlKXusLE1HK0NHZNBkPgz_M=w292-h207-p-no)  
 **Block Diagram of DownloadDaemon**
