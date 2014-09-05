@@ -19,7 +19,7 @@ The daemon consists of several parts working together in the background:
 * Cache Monitor  
 * Download Monitor  
 
-### HTTP Daemon ###  
+### HTTP Daemon   
 
 This part serves the REST web service methods for the client. We use embedded Jetty server to actually serve the REST methods. It is a much more elegant option than coding up our own application server.
 
@@ -32,3 +32,5 @@ Beside the REST methods, we can also send commands to the daemon via Facebook ch
 The cache monitor consumes the web service from YIFY site every X hours to check whether there are any new movies being uploaded. Data for new movies is saved into the database to enable the Android client to perform title-based search. We implemented this design because there are no search capabilities available from YIFY.
 
 ### Download Monitor ###
+
+Whenever there is a download happening, this monitor checks the download status every X seconds, by sending RPC message to the aria2 instance that handles the download. The monitor then saves the returned data into the database so that in the case the daemon crashes and get restarted later, it knows where to pick up the download from.
