@@ -9,3 +9,11 @@ The daemon itself is essentially a monitor that can spawn aria2 instances to pro
 
 ![Block Diagram of DownloadDaemon](https://lh3.googleusercontent.com/B7y2BhXrlmfH25T7CJi-XlKXusLE1HK0NHZNBkPgz_M=w292-h207-p-no)  
 **Block Diagram of DownloadDaemon**
+
+The daemon uses [H2 Database](http://www.h2database.com) to store its data, including cache and download request details. We use H2 db because of its compact size and the fact that it is embeddable into our daemon.
+
+The daemon consists of several parts working together in the background:
+* HTTP Daemon
+* XMPP Monitor
+* Cache Monitor
+* Download Monitor
