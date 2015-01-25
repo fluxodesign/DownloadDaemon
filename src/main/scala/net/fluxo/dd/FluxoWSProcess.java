@@ -21,6 +21,7 @@
 package net.fluxo.dd;
 
 import net.fluxo.dd.dbo.Task;
+import net.fluxo.plugins.kas.TrKas;
 import net.fluxo.plugins.tpb.TrTPB;
 import net.xeoh.plugins.base.PluginManager;
 import org.apache.commons.codec.net.URLCodec;
@@ -349,6 +350,76 @@ public class FluxoWSProcess {
 			return Response.status(400).entity(e.getMessage()).build();
 		}
 		return Response.status(400).entity("Unable to process TPB Details request").build();
+	}
+
+	/**
+	 * Return a JSON object containing the list of search results from a certain notorius torrent site.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/kas/[search-term]/[page]/[categories]</p>
+	 *
+	 * @param searchTerm the search term
+	 * @param page       page number to page number to serve (starts from 0)
+	 * @param cat       list of category number, separated by commas
+	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object with search results from a notorious
+	 * torrents site
+	 */
+	@GET
+	@Path("/kas/{st}/{page}/{cat}")
+	@Produces("application/json")
+	public Response getKickAssSearchResult(@DefaultValue("") @PathParam("st") String searchTerm, @DefaultValue("0") @PathParam("page") int page,
+	                                       @DefaultValue("0") @PathParam("cat") String cat) {
+		PluginManager pm = OPlugin.getPluginManager();
+		TrKas trKas = pm.getPlugin(TrKas.class);
+		if (trKas == null) {
+			return Response.status(500).entity("Plugin not found!").build();
+		}
+		try {
+			// Build the String array of "chat" commands...
+			String[] arrTerm = new String[5];
+			arrTerm[0] = "DD";
+			arrTerm[1] = "KAST";
+			arrTerm[2] = "ST=\"" + searchTerm + "\"";
+			arrTerm[3] = "PG=" + page;
+			arrTerm[4] = "CAT=" + cat;
+			String response = trKas.process(arrTerm);
+			return Response.status(200).entity(response).build();
+		} catch (Exception e) {
+			return Response.status(400).entity(e.getMessage()).build();
+		}
+	}
+
+	/**
+	 * Return the description of a particular torrent object from a certain notorious torrent site.
+	 * <p>URL to reach this method: http://[address-or-ip]:[port]/comm/rs/ws/kasdetails/[url-to-torrent]</p>
+	 *
+	 * @param url the url a particular torrent
+	 * @return a {@link javax.ws.rs.core.Response} object containing a JSON object with details of a particular torrent
+	 * from a notorious torrent site
+	 */
+	@GET
+	@Path("/kasdetails/{url}")
+	@Produces("application/json")
+	public Response getKickAssDetails(@DefaultValue("") @PathParam("url") String url) {
+		PluginManager pm = OPlugin.getPluginManager();
+		TrKas trKas = pm.getPlugin(TrKas.class);
+		if (trKas == null) {
+			return Response.status(500).entity("Plugin not found!").build();
+		}
+		try {
+			if (url.length() > 0) {
+				String[] arrTerm = new String[3];
+				arrTerm[0] = "DD";
+				arrTerm[1] = "KASTDETAILS";
+				arrTerm[2] = url;
+				String decodedURL = URLDecoder.decode(url, "UTF-8");
+				if (decodedURL.startsWith("https://kickass.so/")) {
+					String response = trKas.process(arrTerm);
+					return Response.status(200).entity(response).build();
+				}
+			}
+		} catch (Exception e) {
+			return Response.status(400).entity(e.getMessage()).build();
+		}
+		return Response.status(400).entity("Unable to process KAST Details request").build();
 	}
 
 }
