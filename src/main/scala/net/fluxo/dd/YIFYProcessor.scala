@@ -20,13 +20,14 @@
  */
 package net.fluxo.dd
 
-import java.net.URL
 import java.io.File
-import org.json.simple.{JSONObject, JSONValue, JSONArray}
-import org.apache.commons.io.FilenameUtils
+import java.net.URL
+
 import net.fluxo.dd.dbo.{YIFYCache, YIFYSearchResult}
+import org.apache.commons.io.FilenameUtils
 import org.apache.log4j.Level
 import org.json.simple.parser.JSONParser
+import org.json.simple.{JSONArray, JSONObject, JSONValue}
 
 /**
  * This class deals with YIFY's web service, particularly with listing, acquiring and caching movie details, including
@@ -50,15 +51,15 @@ class YIFYProcessor {
 	 * @return the list of movies on a particular page from YIFY site, with all cover image URLs re-addressed to our site
 	 */
 	def procListMovie(page: Int, quality:Int, rating: Int, externalIP: String, port: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=15")
+		val request: StringBuilder = new StringBuilder("http://yts.re/api/v2/list_movies.json?limit=15")
 		if (quality <= 3 && quality >= 0) request append "&quality=" append(quality  match {
 			case 0 => "ALL"
 			case 1 => "720p"
 			case 2 => "1080p"
 			case 3 => "3D"
 		})
-		if (page > 0) request append("&set=" + page)
-		if (rating >= 0 && rating <= 9) request append("&rating=" + rating)
+		if (page > 0) request append("&page=" + page)
+		if (rating >= 0 && rating <= 9) request append("&minimum_rating=" + rating)
 		// send the request...
 		val response = OUtils crawlServer (request toString())
 		checkEntryWithYIFYCache(response)
@@ -75,7 +76,8 @@ class YIFYProcessor {
 	 * @return details of a movie from YIFY site, with screenshot images re-addressed to our site
 	 */
 	def procMovieDetails(id: Int, externalIP:String, port: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/movie.json?id=") append id
+		val request: StringBuilder = new StringBuilder("http://yts.re/api/v2/movie_details.json?movie_id=") append id
+		request append "&with_images=true&with_cast=true"
 		val response = OUtils crawlServer (request toString())
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
 		processScreenshotImages(response, externalIP, port)
@@ -87,8 +89,8 @@ class YIFYProcessor {
 	 * @return response from YIFY site
 	 */
 	def procYIFYCache(page: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=50")
-		if (page > 1) request append "&set=" append page
+		val request: StringBuilder = new StringBuilder("http://yts.re/api/v2/list_movies.json?limit=50")
+		if (page > 1) request append "&page=" append page
 		val response = OUtils crawlServer (request toString())
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return  "ERR NO LIST"
 		response
@@ -110,7 +112,8 @@ class YIFYProcessor {
 			val request = new StringBuilder
 			for (x <- searchResult) {
 				request setLength 0
-				request append "http://yts.re/api/movie.json?id=" append x.MovieID
+				request append "http://yts.re/api/v2/movie_details.json?movie_id=" append x.MovieID
+				request append "&with_images=true"
 				val response = OUtils crawlServer (request toString())
 				yifySearchResult AddToMovieList (OUtils stringToMovieObject response)
 			}
