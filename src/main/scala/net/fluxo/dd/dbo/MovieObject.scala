@@ -43,10 +43,15 @@ class MovieObject {
 	def MovieUrl: Option[String] = _movieUrl
 	def MovieUrl_=(value: String) { _movieUrl = Some(value) }
 
-	private var _movieTitleClean: Option[String] = None
+	private var _movieTitle: Option[String] = None
 
-	def MovieTitleClean: Option[String] = _movieTitleClean
-	def MovieTitleClean_=(value: String) = { _movieTitleClean = Some(value) }
+	def MovieTitle: Option[String] = _movieTitle
+	def MovieTitle_=(value: String) { _movieTitle = Some(value) }
+
+	private var _movieTitleLong: Option[String] = None
+
+	def MovieTitleLong: Option[String] = _movieTitleLong
+	def MovieTitleLong_=(value: String) = { _movieTitleLong = Some(value) }
 
 	private var _movieYear: Int = 0
 
@@ -80,8 +85,12 @@ class MovieObject {
 
 	private var _imdbLink: Option[String] = None
 
-	def ImdbLink: Option[String] = _imdbLink
-	def ImdbLink_=(value: String) { _imdbLink = Some(value) }
+	def ImdbLink: Option[String] = {
+		if (_imdbCode.isDefined) {
+			_imdbLink = Some("http://www.imdb.com/title/" + _imdbCode + "/")
+		}
+		_imdbLink
+	}
 
 	private var _size: Option[String] = None
 
@@ -98,15 +107,25 @@ class MovieObject {
 	def MovieRating: Option[String] = _movieRating
 	def MovieRating_=(value: String) { _movieRating = Some(value) }
 
+	private var _movieRuntime: Int = 0
+
+	def MovieRuntime: Int = _movieRuntime
+	def MovieRutime_=(value: Int) { _movieRuntime = value }
+
+	private var _mpaRating: Option[String] = None
+
+	def MpaRating: Option[String] = _mpaRating
+	def MpaRating_=(value: String) { _mpaRating = Some(value) }
+
+	private var _language: Option[String] = None
+
+	def Language: Option[String] = _language
+	def Language_=(value: String) { _language = Some(value) }
+
 	private var _genre: Option[String] = None
 
 	def Genre: Option[String] = _genre
 	def Genre_=(value: String) { _genre = Some(value) }
-
-	private var _uploader: Option[String] = None
-
-	def Uploader: Option[String] = _uploader
-	def Uploader_=(value: String) { _uploader = Some(value) }
 
 	private var _uploaderUid: Option[String] = None
 

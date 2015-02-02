@@ -20,24 +20,26 @@
  */
 package net.fluxo.dd
 
-import net.fluxo.dd.dbo.{YIFYSearchResult, MovieObject, Config}
-import java.util.{Random, Properties}
 import java.io._
-import org.apache.log4j.Level
 import java.net._
-import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
-import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
-import org.xml.sax.{ContentHandler, SAXException}
-import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcController}
-import java.util
-import org.apache.xmlrpc.XmlRpcException
-import scala.util.control.Breaks._
-import org.apache.http.impl.client.HttpClientBuilder
-import org.apache.http.client.methods.HttpGet
-import org.json.simple.{JSONArray, JSONValue, JSONObject}
-import org.apache.commons.io.FileUtils
 import java.security.MessageDigest
+import java.util
+import java.util.{Properties, Random}
+
+import net.fluxo.dd.dbo.{Config, MovieObject, YIFYSearchResult}
+import org.apache.commons.io.FileUtils
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.log4j.Level
+import org.apache.xmlrpc.XmlRpcException
+import org.apache.xmlrpc.client.{XmlRpcClient, XmlRpcClientConfigImpl}
+import org.apache.xmlrpc.common.{TypeFactoryImpl, XmlRpcController, XmlRpcStreamConfig}
+import org.apache.xmlrpc.serializer.{StringSerializer, TypeSerializer}
 import org.json.simple.parser.JSONParser
+import org.json.simple.{JSONArray, JSONObject, JSONValue}
+import org.xml.sax.{ContentHandler, SAXException}
+
+import scala.util.control.Breaks._
 
 /**
  * This class contains methods that can be called from anywhere in the application.
@@ -265,31 +267,49 @@ class Utils {
 		val movie = new MovieObject
 		try {
 			val json = JSONValue.parseWithException(raw).asInstanceOf[JSONObject]
-			movie.MovieID_=((json get "MovieID").asInstanceOf[String])
-			movie.MovieUrl_=((json get "MovieUrl").asInstanceOf[String])
-			movie.MovieTitleClean_=((json get "MovieTitleClean").asInstanceOf[String])
-			movie.MovieYear_=((json get "MovieYear").asInstanceOf[String].toInt)
-			movie.DateUploaded_=((json get "DateUploaded").asInstanceOf[String])
-			movie.DateUploadedEpoch_=((json get "DateUploadedEpoch").asInstanceOf[Long])
-			movie.Quality_=((json get "Quality").asInstanceOf[String])
-			movie.CoverImage_=((json get "MediumCover").asInstanceOf[String])
-			movie.ImdbCode_=((json get "ImdbCode").asInstanceOf[String])
-			movie.ImdbLink_=((json get "ImdbLink").asInstanceOf[String])
-			movie.Size_=((json get "Size").asInstanceOf[String])
-			movie.SizeByte_=((json get "SizeByte").asInstanceOf[String].toLong)
-			movie.MovieRating_=((json get "MovieRating").asInstanceOf[String])
-			var genre = json get "Genre1"
-			if ((json get "Genre2") != null && (json get "Genre2").asInstanceOf[String].length > 0) {
-				if (!(json get "Genre2").equals("null")) genre += "|" + (json get "Genre2")
+			movie.MovieID_=((json get "id").asInstanceOf[String])
+			movie.MovieUrl_=((json get "url").asInstanceOf[String])
+			movie.MovieTitleLong_=((json get "title_long").asInstanceOf[String])
+			movie.MovieTitle_=((json get "title").asInstanceOf[String])
+			movie.MovieYear_=((json get "year").asInstanceOf[String].toInt)
+			movie.MovieRating_=((json get "rating").asInstanceOf[String])
+			movie.MpaRating_=((json get "mpa_rating").asInstanceOf[String])
+			movie.Language_=((json get "language").asInstanceOf[String])
+			movie.MovieRutime_=((json get "runtime").asInstanceOf[String].toInt)
+			movie.DateUploaded_=((json get "date_uploaded").asInstanceOf[String])
+			movie.DateUploadedEpoch_=((json get "date_uploaded_unix").asInstanceOf[Long])
+			movie.CoverImage_=((json get "medium_cover_image").asInstanceOf[String])
+			movie.ImdbCode_=((json get "imdb_code").asInstanceOf[String])
+
+			val jTorrentObjects = (json get "torrents").asInstanceOf[JSONArray]
+			val jTorrentIterator = jTorrentObjects.iterator
+			breakable {
+				// just use the first one
+				var finished = false
+				while (jTorrentIterator.hasNext) {
+					if (finished) break()
+					val jTorrentObject = jTorrentIterator.next.asInstanceOf[JSONObject]
+					movie.TorrentUrl_=((jTorrentObject get "url").asInstanceOf[String])
+					movie.TorrentHash_=((jTorrentObject get "hash").asInstanceOf[String])
+					movie.Quality_=((jTorrentObject get "quality").asInstanceOf[String])
+					movie.TorrentSeeds_=((jTorrentObject get "seeds").asInstanceOf[String].toInt)
+					movie.TorrentPeers_=((jTorrentObject get "peers").asInstanceOf[String].toInt)
+					movie.Size_=((jTorrentObject get "size").asInstanceOf[String])
+					movie.SizeByte_=((jTorrentObject get "size_bytes").asInstanceOf[String].toLong)
+					finished = true
+				}
 			}
-			movie.Genre_=(genre.asInstanceOf[String])
-			movie.Uploader_=((json get "Uploader").asInstanceOf[String])
-			movie.Downloaded_=((json get "Downloaded").asInstanceOf[String].toInt)
-			movie.TorrentSeeds_=((json get "TorrentSeeds").asInstanceOf[String].toInt)
-			movie.TorrentPeers_=((json get "TorrentPeers").asInstanceOf[String].toInt)
-			movie.TorrentUrl_=((json get "TorrentUrl").asInstanceOf[String])
-			movie.TorrentHash_=((json get "TorrentHash").asInstanceOf[String])
-			movie.TorrentMagnetUrl_=((json get "TorrentMagnetUrl").asInstanceOf[String])
+
+			val genres = (json get "genres").asInstanceOf[JSONArray]
+			val genre: String = {
+				val sb = new StringBuilder
+				while (genres.iterator.hasNext) {
+					if (sb.length > 0) sb append " | "
+					sb append genres.iterator.next
+				}
+				sb toString()
+			}
+			movie.Genre_=(genre)
 		}
 		movie
 	}
@@ -312,20 +332,22 @@ class Utils {
 			movieObject put("MovieID", (x MovieID) getOrElse "")
 			movieObject put("State", (x State) getOrElse "")
 			movieObject put("MovieUrl", (x MovieUrl) getOrElse "")
-			movieObject put("MovieTitleClean", (x MovieTitleClean) getOrElse "")
+			movieObject put("MovieTitleLong", (x MovieTitleLong) getOrElse "")
+			movieObject put("MovieTitle", (x MovieTitle) getOrElse "")
 			movieObject put("MovieYear", (x MovieYear).toString)
+			movieObject put("MovieRating", (x MovieRating) getOrElse "")
+			movieObject put("MpaRating", (x MpaRating) getOrElse "")
+			movieObject put("Language", (x Language) getOrElse "")
+			movieObject put("Runtime", (x MovieRuntime).toString)
 			movieObject put("DateUploaded", (x DateUploaded) getOrElse "")
 			movieObject put("DateUploadedEpoch", (x DateUploadedEpoch).toString)
-			movieObject put("Quality", (x Quality) getOrElse "")
 			movieObject put("CoverImage", (x CoverImage) getOrElse "")
+			movieObject put("Quality", (x Quality) getOrElse "")
 			movieObject put("ImdbCode", (x ImdbCode) getOrElse "")
 			movieObject put("ImdbLink", (x ImdbLink) getOrElse "")
 			movieObject put("Size", (x Size) getOrElse "")
 			movieObject put("SizeByte", (x SizeByte).toString)
-			movieObject put("MovieRating", (x MovieRating) getOrElse "")
 			movieObject put("Genre", (x Genre) getOrElse "")
-			movieObject put("Uploader", (x Uploader) getOrElse "")
-			movieObject put("Downloaded", (x Downloaded).toString)
 			movieObject put("TorrentSeeds", (x TorrentSeeds).toString)
 			movieObject put("TorrentPeers", (x TorrentPeers).toString)
 			movieObject put("TorrentUrl", (x TorrentUrl) getOrElse "")
