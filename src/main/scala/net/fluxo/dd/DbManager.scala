@@ -20,10 +20,12 @@
  */
 package net.fluxo.dd
 
-import java.sql.{Timestamp, DriverManager, Connection}
+import java.sql.{Connection, DriverManager, Timestamp}
+
+import net.fluxo.dd.dbo.{CountPackage, Task, YIFYCache}
 import org.apache.log4j.Level
-import net.fluxo.dd.dbo.{YIFYCache, CountPackage, Task}
 import org.joda.time.DateTime
+
 import scala.collection.mutable
 
 /**
@@ -677,12 +679,12 @@ class DbManager {
 	 * @param movieID movie ID to query
 	 * @return true if a movie is found; false otherwise
 	 */
-	def ycQueryMovieID(movieID: Int): Boolean = {
+	def ycQueryMovieID(movieID: Long): Boolean = {
 		var status = false
 		val queryStatement = """SELECT COUNT(*) AS count FROM YIFY_CACHE WHERE movie_id = ?"""
 		try {
 			val ps = _conn prepareStatement queryStatement
-			ps setInt(1, movieID)
+			ps setLong (1, movieID)
 			val result = ps executeQuery()
 			if (result next()) {
 				if ((result getInt "count") > 0) status = true
@@ -709,7 +711,7 @@ class DbManager {
 		var response: Boolean = true
 		try {
 			val ps = _conn prepareStatement insertStatement
-			ps setInt(1, obj.MovieID)
+			ps setLong(1, obj.MovieID)
 			ps setString(2, obj.MovieTitle.getOrElse(""))
 			ps setString(3, obj.MovieYear.getOrElse(""))
 			ps setString(4, obj.MovieQuality.getOrElse(""))

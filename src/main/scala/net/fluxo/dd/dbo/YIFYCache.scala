@@ -28,10 +28,10 @@ package net.fluxo.dd.dbo
  */
 class YIFYCache {
 
-	private var _movieID: Int = 0
+	private var _movieID: Long = 0L
 
-	def MovieID: Int = _movieID
-	def MovieID_:(value: Int) { _movieID = value }
+	def MovieID: Long = _movieID
+	def MovieID_:(value: Long) { _movieID = value }
 
 	private var _title: Option[String] = None
 
