@@ -258,6 +258,41 @@ class Utils {
 	}
 
 	/**
+	 * Contact a web server and request its resouce (a file).
+	 *
+	 * @param request URL of resource
+	 * @param savePath where to save the resource on the local system
+	 */
+	def crawlServerObject(request: String, savePath: String) {
+		try {
+			val htClient = HttpClientBuilder.create().build()
+			val htGet = new HttpGet(request)
+			htGet addHeader("Content-Type", "application/x-bittorrent")
+			htGet addHeader("User-Agent", "FluxoAgent/0.1")
+			val htResponse = htClient execute htGet
+			val htEntity = htResponse.getEntity
+			if (htEntity != null) {
+				val is = htEntity getContent
+				val bufferedInputStream = new BufferedInputStream(is)
+				val bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(new File(savePath)))
+				var inByte: Int = bufferedInputStream.read
+				while (inByte != -1) {
+					bufferedOutputStream write inByte
+					inByte = bufferedInputStream.read
+				}
+				bufferedInputStream close()
+				bufferedOutputStream close()
+				is close()
+			}
+			htClient close()
+		} catch {
+			case ioe: IOException =>
+				LogWriter writeLog("CrawlServerObject Exception: " + ioe.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ioe, Level.ERROR)
+		}
+	}
+
+	/**
 	 * Convert a JSON response into <code>net.fluxo.dd.dbo.MovieObject</code>.
 	 *
 	 * @param raw JSON string response
