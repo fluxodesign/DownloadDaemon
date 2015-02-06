@@ -20,12 +20,13 @@
  */
 package net.fluxo.dd
 
-import org.quartz.{JobExecutionException, JobExecutionContext, Job}
-import org.apache.log4j.Level
-import java.util.concurrent.{TimeUnit, Future, Callable, Executors}
-import org.json.simple.{JSONArray, JSONObject}
-import org.json.simple.parser.JSONParser
+import java.util.concurrent.{Callable, Executors, Future, TimeUnit}
+
 import net.fluxo.dd.dbo.YIFYCache
+import org.apache.log4j.Level
+import org.json.simple.parser.JSONParser
+import org.json.simple.{JSONArray, JSONObject}
+import org.quartz.{Job, JobExecutionContext, JobExecutionException}
 
 /**
  * This class represents a <code>Job</code> that processes and updates the YIFY cache. This class is being
@@ -33,6 +34,7 @@ import net.fluxo.dd.dbo.YIFYCache
  *
  * @author Ronald Kurniawan (viper)
  * @version 0.4.5, 3/04/14
+ * @version 0.5.0, 6/02/15
  * @see org.quartz.Job
  */
 class YIFYCacheJob extends Job {
@@ -100,7 +102,9 @@ class YCache extends Callable[String] {
 				try {
 					val obj = (jsonParser parse response).asInstanceOf[JSONObject]
 					if (_totalPageNo == 0) {
-						val movieCount = (obj get "MovieCount").asInstanceOf[Long]
+                        // API v2 - new way of doing things...
+                        val data = (obj get "data").asInstanceOf[JSONObject]
+						val movieCount = (data get "movie_count").asInstanceOf[Long]
 						totalItemsReported = movieCount
 						_totalPageNo = (movieCount / 50).asInstanceOf[Int]
 						if (movieCount % 50 > 0) _totalPageNo += 1
@@ -135,7 +139,8 @@ class YCache extends Callable[String] {
 		try {
 			val jsonParser = new JSONParser
 			val obj = (jsonParser parse response).asInstanceOf[JSONObject]
-			val movieCount = (obj get "MovieCount").asInstanceOf[Long]
+            val data = (obj get "data").asInstanceOf[JSONObject]
+			val movieCount = (data get "movie_count").asInstanceOf[Long]
 			_totalPageNo = (movieCount / 50).asInstanceOf[Int]
 			if (movieCount % 50 > 0) _totalPageNo += 1
 			// and then start populating the DB backwards (from last set)
@@ -164,16 +169,21 @@ class YCache extends Callable[String] {
 		var status = true
 		try {
 			val obj = (jsonParser parse raw).asInstanceOf[JSONObject]
-			val iterator = (obj get "MovieList").asInstanceOf[JSONArray] iterator()
+            val data = (obj get "data").asInstanceOf[JSONObject]
+			val iterator = (data get "movies").asInstanceOf[JSONArray] iterator()
 			while (iterator.hasNext) {
 				val o = (iterator next()).asInstanceOf[JSONObject]
 				val yifyCache = new YIFYCache
-				yifyCache.MovieID_:((o get "MovieID").asInstanceOf[String].toInt)
-				yifyCache.MovieTitle_:((o get "MovieTitleClean").asInstanceOf[String])
-				yifyCache.MovieYear_:((o get "MovieYear").asInstanceOf[String])
-				yifyCache.MovieQuality_:((o get "Quality").asInstanceOf[String])
-				yifyCache.MovieSize_:((o get "Size").asInstanceOf[String])
-				yifyCache.MovieCoverImage_:((o get "CoverImage").asInstanceOf[String])
+				yifyCache.MovieID_:((o get "id").asInstanceOf[String].toInt)
+				yifyCache.MovieTitle_:((o get "title").asInstanceOf[String])
+				yifyCache.MovieYear_:((o get "year").asInstanceOf[String])
+                yifyCache.MovieCoverImage_:((o get "medium_cover_image").asInstanceOf[String])
+                val torrentInfo = (o get "torrents").asInstanceOf[JSONArray] iterator()
+                if (torrentInfo hasNext) {
+                    val torInfo = (torrentInfo next()).asInstanceOf[JSONObject]
+                    yifyCache.MovieQuality_:((o get "quality").asInstanceOf[String])
+                    yifyCache.MovieSize_:((o get "size").asInstanceOf[String])
+                }
 
 				if (!(DbControl ycQueryMovieID(yifyCache MovieID))) {
 					status = DbControl ycInsertNewData yifyCache
