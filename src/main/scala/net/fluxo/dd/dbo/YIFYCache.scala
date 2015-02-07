@@ -38,10 +38,10 @@ class YIFYCache {
 	def MovieTitle: Option[String] = _title
 	def MovieTitle_:(value: String) { _title = Some(value) }
 
-	private var _year: Option[String] = None
+	private var _year: Long = 0L
 
-	def MovieYear: Option[String] = _year
-	def MovieYear_:(value: String) { _year = Some(value) }
+	def MovieYear: Long = _year
+	def MovieYear_:(value: Long) { _year = value }
 
 	private var _quality: Option[String] = None
 

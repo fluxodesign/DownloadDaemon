@@ -302,12 +302,12 @@ class Utils {
 		val movie = new MovieObject
 		try {
 			val json = JSONValue.parseWithException(raw).asInstanceOf[JSONObject]
-			movie.MovieID_=((json get "id").asInstanceOf[String])
+			movie.MovieID_=((json get "id").asInstanceOf[Long])
 			movie.MovieUrl_=((json get "url").asInstanceOf[String])
 			movie.MovieTitleLong_=((json get "title_long").asInstanceOf[String])
 			movie.MovieTitle_=((json get "title").asInstanceOf[String])
-			movie.MovieYear_=((json get "year").asInstanceOf[String].toInt)
-			movie.MovieRating_=((json get "rating").asInstanceOf[String])
+			movie.MovieYear_=((json get "year").asInstanceOf[Long])
+			movie.MovieRating_=((json get "rating").asInstanceOf[Double])
 			movie.MpaRating_=((json get "mpa_rating").asInstanceOf[String])
 			movie.Language_=((json get "language").asInstanceOf[String])
 			movie.MovieRutime_=((json get "runtime").asInstanceOf[String].toInt)
@@ -364,13 +364,13 @@ class Utils {
 		while (movieIterator.hasNext) {
 			val x = movieIterator next()
 			val movieObject = (new JSONObject).asInstanceOf[util.HashMap[String, String]]
-			movieObject put("MovieID", (x MovieID) getOrElse "")
+			movieObject put("MovieID", (x MovieID).toString)
 			movieObject put("State", (x State) getOrElse "")
 			movieObject put("MovieUrl", (x MovieUrl) getOrElse "")
 			movieObject put("MovieTitleLong", (x MovieTitleLong) getOrElse "")
 			movieObject put("MovieTitle", (x MovieTitle) getOrElse "")
 			movieObject put("MovieYear", (x MovieYear).toString)
-			movieObject put("MovieRating", (x MovieRating) getOrElse "")
+			movieObject put("MovieRating", (x MovieRating).toString)
 			movieObject put("MpaRating", (x MpaRating) getOrElse "")
 			movieObject put("Language", (x Language) getOrElse "")
 			movieObject put("Runtime", (x MovieRuntime).toString)

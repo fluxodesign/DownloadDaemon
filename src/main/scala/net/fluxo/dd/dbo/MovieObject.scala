@@ -28,10 +28,10 @@ package net.fluxo.dd.dbo
  */
 class MovieObject {
 
-	private var _movieID: Option[String] = None
+	private var _movieID: Long = 0L
 
-	def MovieID: Option[String] = _movieID
-	def MovieID_=(value: String) { _movieID = Some(value) }
+	def MovieID: Long = _movieID
+	def MovieID_=(value: Long) { _movieID = value }
 
 	private var _movieState: Option[String] = None
 
@@ -53,17 +53,17 @@ class MovieObject {
 	def MovieTitleLong: Option[String] = _movieTitleLong
 	def MovieTitleLong_=(value: String) = { _movieTitleLong = Some(value) }
 
-	private var _movieYear: Int = 0
+	private var _movieYear: Long = 0
 
-	def MovieYear:Int = _movieYear
-	def MovieYear_=(value: Int) { _movieYear = value }
+	def MovieYear:Long = _movieYear
+	def MovieYear_=(value: Long) { _movieYear = value }
 
 	private var _dateUploaded: Option[String] = None
 
 	def DateUploaded: Option[String] = _dateUploaded
 	def DateUploaded_=(value: String) { _dateUploaded = Some(value) }
 
-	private var _dateUploadedEpoch: Long = 0
+	private var _dateUploadedEpoch: Long = 0L
 
 	def DateUploadedEpoch: Long = _dateUploadedEpoch
 	def DateUploadedEpoch_=(value: Long) { _dateUploadedEpoch = value }
@@ -97,20 +97,20 @@ class MovieObject {
 	def Size: Option[String] = _size
 	def Size_=(value: String) { _size = Some(value) }
 
-	private var _sizeByte: Long = 0
+	private var _sizeByte: Long = 0L
 
 	def SizeByte: Long = _sizeByte
 	def SizeByte_=(value: Long) { _sizeByte = value }
 
-	private var _movieRating: Option[String] = None
+	private var _movieRating: Double = 0.0D
 
-	def MovieRating: Option[String] = _movieRating
-	def MovieRating_=(value: String) { _movieRating = Some(value) }
+	def MovieRating: Double = _movieRating
+	def MovieRating_=(value: Double) { _movieRating = value }
 
-	private var _movieRuntime: Int = 0
+	private var _movieRuntime: Long = 0L
 
-	def MovieRuntime: Int = _movieRuntime
-	def MovieRutime_=(value: Int) { _movieRuntime = value }
+	def MovieRuntime: Long = _movieRuntime
+	def MovieRutime_=(value: Long) { _movieRuntime = value }
 
 	private var _mpaRating: Option[String] = None
 
@@ -132,17 +132,17 @@ class MovieObject {
 	def UploaderUID: Option[String] = _uploaderUid
 	def UploaderUID_=(value: String) { _uploaderUid = Some(value) }
 
-	private var _torrentSeeds: Long = 0
+	private var _torrentSeeds: Long = 0L
 
 	def TorrentSeeds: Long = _torrentSeeds
 	def TorrentSeeds_=(value: Long) { _torrentSeeds = value }
 
-	private var _downloaded: Long = 0
+	private var _downloaded: Long = 0L
 
 	def Downloaded: Long = _downloaded
 	def Downloaded_=(value: Long) { _downloaded = value }
 
-	private var _torrentPeers: Long = 0
+	private var _torrentPeers: Long = 0L
 
 	def TorrentPeers: Long = _torrentPeers
 	def TorrentPeers_=(value: Long) { _torrentPeers = value }

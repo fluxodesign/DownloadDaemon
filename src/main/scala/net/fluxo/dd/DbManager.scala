@@ -713,7 +713,7 @@ class DbManager {
 			val ps = _conn prepareStatement insertStatement
 			ps setLong(1, obj.MovieID)
 			ps setString(2, obj.MovieTitle.getOrElse(""))
-			ps setString(3, obj.MovieYear.getOrElse(""))
+			ps setLong(3, obj.MovieYear)
 			ps setString(4, obj.MovieQuality.getOrElse(""))
 			ps setString(5, obj.MovieSize.getOrElse(""))
 			ps setString(6, obj.MovieCoverImage.getOrElse(""))
@@ -754,7 +754,7 @@ class DbManager {
 				mlist.+=(new YIFYCache {
 					MovieID_:(rs getInt "movie_id")
 					MovieTitle_:(rs getString "title")
-					MovieYear_:(rs getString "year")
+					MovieYear_:(rs getLong "year")
 					MovieQuality_:(rs getString "quality")
 					MovieSize_:(rs getString "size")
 					MovieCoverImage_:(rs getString "cover_image")

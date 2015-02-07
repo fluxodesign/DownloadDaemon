@@ -208,7 +208,7 @@ class YIFYProcessor {
 				val yifyCache = new YIFYCache
 				yifyCache.MovieID_:((o get "MovieID").asInstanceOf[Long])
 				yifyCache.MovieTitle_:((o get "MovieTitleClean").asInstanceOf[String])
-				yifyCache.MovieYear_:((o get "MovieYear").asInstanceOf[String])
+				yifyCache.MovieYear_:((o get "MovieYear").asInstanceOf[Long])
 				yifyCache.MovieQuality_:((o get "Quality").asInstanceOf[String])
 				yifyCache.MovieSize_:((o get "Size").asInstanceOf[String])
 				yifyCache.MovieCoverImage_:((o get "CoverImage").asInstanceOf[String])

@@ -176,7 +176,7 @@ class YCache extends Callable[String] {
 				val yifyCache = new YIFYCache
 				yifyCache.MovieID_:((o get "id").asInstanceOf[Long])
 				yifyCache.MovieTitle_:((o get "title").asInstanceOf[String])
-				yifyCache.MovieYear_:((o get "year").asInstanceOf[String])
+				yifyCache.MovieYear_:((o get "year").asInstanceOf[Long])
                 yifyCache.MovieCoverImage_:((o get "medium_cover_image").asInstanceOf[String])
                 val torrentInfo = (o get "torrents").asInstanceOf[JSONArray] iterator()
                 if (torrentInfo hasNext) {
