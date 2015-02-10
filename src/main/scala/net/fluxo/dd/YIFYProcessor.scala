@@ -206,12 +206,16 @@ class YIFYProcessor {
 			while (iterator.hasNext) {
 				val o = (iterator next()).asInstanceOf[JSONObject]
 				val yifyCache = new YIFYCache
-				yifyCache.MovieID_:((o get "MovieID").asInstanceOf[Long])
-				yifyCache.MovieTitle_:((o get "MovieTitleClean").asInstanceOf[String])
-				yifyCache.MovieYear_:((o get "MovieYear").asInstanceOf[Long])
-				yifyCache.MovieQuality_:((o get "Quality").asInstanceOf[String])
-				yifyCache.MovieSize_:((o get "Size").asInstanceOf[String])
-				yifyCache.MovieCoverImage_:((o get "CoverImage").asInstanceOf[String])
+				yifyCache.MovieID_:((o get "id").asInstanceOf[Long])
+				yifyCache.MovieTitle_:((o get "title").asInstanceOf[String])
+				yifyCache.MovieYear_:((o get "year").asInstanceOf[Long])
+				yifyCache.MovieCoverImage_:((o get "medium_cover_image").asInstanceOf[String])
+				val torrentInfo = (o get "torrents").asInstanceOf[JSONArray] iterator()
+				if (torrentInfo hasNext) {
+					val torInfo = (torrentInfo next()).asInstanceOf[JSONObject]
+					yifyCache.MovieQuality_:((torInfo get "quality").asInstanceOf[String])
+					yifyCache.MovieSize_:((torInfo get "size").asInstanceOf[String])
+				}
 
 				if (!(DbControl ycQueryMovieID(yifyCache MovieID))) {
 					DbControl ycInsertNewData yifyCache

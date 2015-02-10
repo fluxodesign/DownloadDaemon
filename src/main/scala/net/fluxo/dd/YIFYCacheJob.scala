@@ -181,8 +181,8 @@ class YCache extends Callable[String] {
                 val torrentInfo = (o get "torrents").asInstanceOf[JSONArray] iterator()
                 if (torrentInfo hasNext) {
                     val torInfo = (torrentInfo next()).asInstanceOf[JSONObject]
-                    yifyCache.MovieQuality_:((o get "quality").asInstanceOf[String])
-                    yifyCache.MovieSize_:((o get "size").asInstanceOf[String])
+                    yifyCache.MovieQuality_:((torInfo get "quality").asInstanceOf[String])
+                    yifyCache.MovieSize_:((torInfo get "size").asInstanceOf[String])
                 }
 
 				if (!(DbControl ycQueryMovieID(yifyCache MovieID))) {
