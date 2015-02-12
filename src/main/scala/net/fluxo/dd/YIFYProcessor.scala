@@ -65,6 +65,7 @@ class YIFYProcessor {
 		// DEBUG
 		LogWriter writeLog("procListMovie: " + response, Level.DEBUG)
 		checkEntryWithYIFYCache(response)
+        LogWriter writeLog("checkEntryWithYIFYCache went OK", Level.DEBUG)
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR NO LIST"
 		processImages(response, externalIP, port)
 	}
@@ -228,6 +229,7 @@ class YIFYProcessor {
 
 				if (!(DbControl ycQueryMovieID(yifyCache MovieID))) {
 					DbControl ycInsertNewData yifyCache
+                    LogWriter writeLog("Inserting " + (yifyCache MovieID) + " to DB", Level.DEBUG)
 				}
 			}
 		} catch {
