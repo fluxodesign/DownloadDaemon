@@ -201,10 +201,8 @@ class YIFYProcessor {
 	private def checkEntryWithYIFYCache(raw: String) {
 		val jsonParser = new JSONParser
 		try {
-            // DEBUG
-            LogWriter writeLog ("YIFY-DEBUG:" + raw, Level.DEBUG);
 			val obj = (jsonParser parse raw).asInstanceOf[JSONObject]
-			val iterator = (obj get "MovieList").asInstanceOf[JSONArray] iterator()
+			val iterator = (obj get "movies").asInstanceOf[JSONArray] iterator()
 			while (iterator.hasNext) {
 				val o = (iterator next()).asInstanceOf[JSONObject]
 				val yifyCache = new YIFYCache
