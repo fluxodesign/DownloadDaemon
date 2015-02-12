@@ -62,6 +62,8 @@ class YIFYProcessor {
 		if (rating >= 0 && rating <= 9) request append("&minimum_rating=" + rating)
 		// send the request...
 		val response = OUtils crawlServer (request toString())
+		// DEBUG
+		LogWriter writeLog("procListMovie: " + response, Level.DEBUG)
 		checkEntryWithYIFYCache(response)
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR NO LIST"
 		processImages(response, externalIP, port)
@@ -130,7 +132,7 @@ class YIFYProcessor {
 	 */
 	private def processScreenshotImages(content: String, externalIP: String, port: Int): String = {
 		var newContent = content
-		val jsObj = (JSONValue parseWithException content).asInstanceOf[org.json.simple.JSONObject]
+		val jsObj = (JSONValue parseWithException content).asInstanceOf[JSONObject]
 		val arrKeys = Array("MediumCover", "MediumScreenshot1", "MediumScreenshot2", "MediumScreenshot3")
 
 		for (x <- arrKeys) {
@@ -162,11 +164,11 @@ class YIFYProcessor {
 	 */
 	private def processImages(content: String, externalIP: String, port: Int): String = {
 		var newContent = content
-		val jsObj = JSONValue.parseWithException(content).asInstanceOf[org.json.simple.JSONObject]
+		val jsObj = JSONValue.parseWithException(content).asInstanceOf[JSONObject]
 		val jsArray = jsObj.get("MovieList").asInstanceOf[JSONArray]
 		val iterator = jsArray.iterator()
 		while (iterator.hasNext) {
-			val coverImage = iterator.next().asInstanceOf[org.json.simple.JSONObject].get("CoverImage").toString
+			val coverImage = iterator.next().asInstanceOf[JSONObject].get("CoverImage").toString
 			// now we get our "raw" image url; we need to decode json forward slash to simple forward slash
 			var newCoverImage = coverImage.replaceAllLiterally("\\/", "/")
 			// now we need to analyse the url, create directory related to this url in our directory
