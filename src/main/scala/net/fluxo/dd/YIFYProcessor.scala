@@ -193,6 +193,8 @@ class YIFYProcessor {
 				if (newContent.indexOf(oldcoverImage) > -1) newContent = newContent replace(oldcoverImage, newCoverImage)
 			}
 		}
+        // DEBUG
+        LogWriter writeLog ("SURVIVES!!!!!", Level.DEBUG)
 		newContent
 	}
 
