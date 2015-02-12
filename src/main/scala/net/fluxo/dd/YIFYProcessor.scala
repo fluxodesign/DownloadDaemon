@@ -202,7 +202,8 @@ class YIFYProcessor {
 		val jsonParser = new JSONParser
 		try {
 			val obj = (jsonParser parse raw).asInstanceOf[JSONObject]
-			val iterator = (obj get "movies").asInstanceOf[JSONArray] iterator()
+            val data = (obj get "data").asInstanceOf[JSONObject]
+			val iterator = (data get "movies").asInstanceOf[JSONArray] iterator()
 			while (iterator.hasNext) {
 				val o = (iterator next()).asInstanceOf[JSONObject]
 				val yifyCache = new YIFYCache
