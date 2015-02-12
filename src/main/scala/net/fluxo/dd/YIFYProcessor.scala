@@ -166,10 +166,11 @@ class YIFYProcessor {
 	private def processImages(content: String, externalIP: String, port: Int): String = {
 		var newContent = content
 		val jsObj = JSONValue.parseWithException(content).asInstanceOf[JSONObject]
-		val jsArray = jsObj.get("MovieList").asInstanceOf[JSONArray]
+        val jsData = (jsObj get "data").asInstanceOf[JSONObject]
+		val jsArray = (jsData get "movies").asInstanceOf[JSONArray]
 		val iterator = jsArray.iterator()
 		while (iterator.hasNext) {
-			val coverImage = iterator.next().asInstanceOf[JSONObject].get("CoverImage").toString
+			val coverImage = iterator.next().asInstanceOf[JSONObject].get("medium_cover_image").toString
 			// now we get our "raw" image url; we need to decode json forward slash to simple forward slash
 			var newCoverImage = coverImage.replaceAllLiterally("\\/", "/")
 			// now we need to analyse the url, create directory related to this url in our directory
