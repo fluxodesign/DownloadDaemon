@@ -83,7 +83,8 @@ class YIFYProcessor {
 		request append "&with_images=true&with_cast=true"
 		val response = OUtils crawlServer (request toString())
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
-		processScreenshotImages(response, externalIP, port)
+        val coverURL = DbControl getCoverImageUrl id
+		processScreenshotImages(coverURL, response, externalIP, port)
 	}
 
 	/**
@@ -126,17 +127,38 @@ class YIFYProcessor {
 
 	/**
 	 * Process results returned from YIFY site by changing the URLs of screenshot images to point to our site.
-	 * @param content original string returned by YIFY site
+	 * @param coverURL cover image URL for this movie
+     * @param response original string returned by YIFY site
 	 * @param externalIP the local system's external IP address
 	 * @param port port number where the embedded Jetty server is bound to
 	 * @return response from YIFY site, with all screenshot image URLs re-addressed to point to our site
 	 */
-	private def processScreenshotImages(content: String, externalIP: String, port: Int): String = {
-		var newContent = content
-		val jsObj = (JSONValue parseWithException content).asInstanceOf[JSONObject]
-		val arrKeys = Array("MediumCover", "MediumScreenshot1", "MediumScreenshot2", "MediumScreenshot3")
+	private def processScreenshotImages(coverURL: String, response: String, externalIP: String, port: Int): String = {
+        // for API v2, there is a new way to acquire screenshots, basically the site hosts the screenshots in the same folder
+        // as the cover image; for e.g.: http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/small-cover.jpg
+        // then the screenshots would be: http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/medium-screenshot2.jpg,
+        // http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/medium-screenshot3.jpg and
+        // http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/large-screenshot2.jpg and
+        // http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/large-screenshot3.jpg
+        // Since there is no way of getting this information, we need to "dip" into cache db to get this information
+        val path = coverURL.substring(0, coverURL.lastIndexOf('/'))
+        LogWriter writeLog("::path = " + path, Level.DEBUG)
+        val dirname = "." + (FilenameUtils getFullPath coverURL)
+        LogWriter writeLog("::dirname = " + dirname, Level.DEBUG)
+        val dir = new File(dirname)
+        if (!(dir exists())) dir mkdirs()
+        val sc2 = path + "medium-screenshot2.jpg"
+        LogWriter writeLog("::sc2 = " + sc2, Level.DEBUG)
+        val sc3 = path + "medium-screenshot3.jpg"
+        LogWriter writeLog("::sc3 = " + sc3, Level.DEBUG)
+        var localFile = new File(dirname + (FilenameUtils getName sc2))
+        LogWriter writeLog("::localFile2 = " + localFile, Level.DEBUG)
+        if (!(localFile exists())) new Thread(new WgetImage(sc2, dirname)) start()
+        localFile = new File(dirname + (FilenameUtils getName sc3))
+        LogWriter writeLog("::localFile3 = " + localFile, Level.DEBUG)
+        if (!(localFile exists())) new Thread(new WgetImage(sc3, dirname)) start()
 
-		for (x <- arrKeys) {
+		/*for (x <- arrKeys) {
 			val sc = (jsObj get x).toString
 			var newSc = sc replaceAllLiterally("\\/", "/")
 			val path = new URL(newSc).getPath
@@ -152,8 +174,8 @@ class YIFYProcessor {
 				val oldSc = sc replaceAllLiterally("/", "\\/")
 				if ((newContent indexOf oldSc) > -1) newContent = newContent replace(oldSc, newSc)
 			}
-		}
-		newContent
+		}*/
+		response
 	}
 
 	/**
@@ -194,8 +216,6 @@ class YIFYProcessor {
 				if (newContent.indexOf(oldcoverImage) > -1) newContent = newContent replace(oldcoverImage, newCoverImage)
 			}
 		}
-        // DEBUG
-        LogWriter writeLog ("SURVIVES!!!!!", Level.DEBUG)
 		newContent
 	}
 
@@ -214,25 +234,18 @@ class YIFYProcessor {
 				val o = (iterator next()).asInstanceOf[JSONObject]
 				val yifyCache = new YIFYCache
 				yifyCache.MovieID_:((o get "id").asInstanceOf[Long])
-                LogWriter writeLog ("--:id = " + yifyCache.MovieID, Level.DEBUG)
 				yifyCache.MovieTitle_:((o get "title").asInstanceOf[String])
-                LogWriter writeLog ("--:title = " + yifyCache.MovieTitle, Level.DEBUG)
 				yifyCache.MovieYear_:((o get "year").asInstanceOf[Long])
-                LogWriter writeLog ("--:year = " + yifyCache.MovieYear, Level.DEBUG)
 				yifyCache.MovieCoverImage_:((o get "medium_cover_image").asInstanceOf[String])
-                LogWriter writeLog("--:cover = " + yifyCache.MovieCoverImage, Level.DEBUG)
 				val torrentInfo = (o get "torrents").asInstanceOf[JSONArray] iterator()
 				if (torrentInfo hasNext) {
 					val torInfo = (torrentInfo next()).asInstanceOf[JSONObject]
 					yifyCache.MovieQuality_:((torInfo get "quality").asInstanceOf[String])
-                    LogWriter writeLog ("--:quality = " + yifyCache.MovieQuality, Level.DEBUG)
 					yifyCache.MovieSize_:((torInfo get "size").asInstanceOf[String])
-                    LogWriter writeLog("--:size = " + yifyCache.MovieSize, Level.DEBUG)
 				}
 
 				if (!(DbControl ycQueryMovieID(yifyCache MovieID))) {
 					DbControl ycInsertNewData yifyCache
-                    LogWriter writeLog("Inserting " + (yifyCache MovieID) + " to DB", Level.DEBUG)
 				}
 			}
 		} catch {

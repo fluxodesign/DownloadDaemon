@@ -806,6 +806,32 @@ class DbManager {
 		status
 	}
 
+    /**
+     * Returns the cover image URL from database
+     * @param id Movie ID to check
+     * @return Cover Image URL
+     */
+    def getCoverImageUrl(id: Int): String = {
+        val queryStatement = """SELECT * FROM YIFY_CACHE WHERE MOVIE_ID = ?"""
+        var response = ""
+        try {
+            val ps = _conn prepareStatement queryStatement
+            ps setLong(1, id)
+            val rs = ps executeQuery()
+            if (rs.next) {
+                response = rs getString "cover_image"
+            }
+            rs close()
+            ps close()
+        } catch {
+            case ex: Exception =>
+                LogWriter writeLog("Error getting movie cover image URL", Level.ERROR)
+                LogWriter writeLog(ex.getMessage, Level.ERROR)
+                LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+        }
+        response
+    }
+
 	/**
 	 * Close the connection to the database.
 	 */
