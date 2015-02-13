@@ -141,40 +141,31 @@ class YIFYProcessor {
         // http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/large-screenshot2.jpg and
         // http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/large-screenshot3.jpg
         // Since there is no way of getting this information, we need to "dip" into cache db to get this information
-        val path = coverURL.substring(0, coverURL.lastIndexOf('/'))
-        LogWriter writeLog("::path = " + path, Level.DEBUG)
-        val dirname = "." + (FilenameUtils getFullPath coverURL)
-        LogWriter writeLog("::dirname = " + dirname, Level.DEBUG)
-        val dir = new File(dirname)
-        if (!(dir exists())) dir mkdirs()
-        val sc2 = path + "medium-screenshot2.jpg"
-        LogWriter writeLog("::sc2 = " + sc2, Level.DEBUG)
-        val sc3 = path + "medium-screenshot3.jpg"
-        LogWriter writeLog("::sc3 = " + sc3, Level.DEBUG)
-        var localFile = new File(dirname + (FilenameUtils getName sc2))
-        LogWriter writeLog("::localFile2 = " + localFile, Level.DEBUG)
-        if (!(localFile exists())) new Thread(new WgetImage(sc2, dirname)) start()
-        localFile = new File(dirname + (FilenameUtils getName sc3))
-        LogWriter writeLog("::localFile3 = " + localFile, Level.DEBUG)
-        if (!(localFile exists())) new Thread(new WgetImage(sc3, dirname)) start()
+        // or detect the existence of "images" field...
+        val jsObj = (JSONValue parseWithException response).asInstanceOf[JSONObject]
+        val jsData = (jsObj get "data").asInstanceOf[JSONObject]
+        val jsImages = (jsData get "images").asInstanceOf[JSONObject]
 
-		/*for (x <- arrKeys) {
-			val sc = (jsObj get x).toString
-			var newSc = sc replaceAllLiterally("\\/", "/")
-			val path = new URL(newSc).getPath
-			val dirname = "." + (FilenameUtils getFullPath path)
-			val dir = new File(dirname)
-			if (!(dir exists())) dir mkdirs()
-			val localFile = new File(dirname + (FilenameUtils getName path))
-			if (!(localFile exists())) new Thread(new WgetImage(newSc, dirname)) start()
-			if (!externalIP.equals("127.0.0.1")) {
-				val oldServer = new URL(newSc).getAuthority
-				newSc = newSc replace(oldServer, externalIP + ":" + port)
-				newSc = newSc replaceAllLiterally("/", "\\/")
-				val oldSc = sc replaceAllLiterally("/", "\\/")
-				if ((newContent indexOf oldSc) > -1) newContent = newContent replace(oldSc, newSc)
-			}
-		}*/
+        if (jsImages == null) {
+            LogWriter writeLog("::no Images Data!", Level.DEBUG)
+        } else {
+            val path = coverURL.substring(0, coverURL.lastIndexOf('/') + 1)
+            LogWriter writeLog("::path = " + path, Level.DEBUG)
+            val dirname = "." + (FilenameUtils getFullPath coverURL)
+            LogWriter writeLog("::dirname = " + dirname, Level.DEBUG)
+            val dir = new File(dirname)
+            if (!(dir exists())) dir mkdirs()
+            val sc2 = path + "medium-screenshot2.jpg"
+            LogWriter writeLog("::sc2 = " + sc2, Level.DEBUG)
+            val sc3 = path + "medium-screenshot3.jpg"
+            LogWriter writeLog("::sc3 = " + sc3, Level.DEBUG)
+            var localFile = new File(dirname + (FilenameUtils getName sc2))
+            LogWriter writeLog("::localFile2 = " + localFile, Level.DEBUG)
+            if (!(localFile exists())) new Thread(new WgetImage(sc2, dirname)) start()
+            localFile = new File(dirname + (FilenameUtils getName sc3))
+            LogWriter writeLog("::localFile3 = " + localFile, Level.DEBUG)
+            if (!(localFile exists())) new Thread(new WgetImage(sc3, dirname)) start()
+        }
 		response
 	}
 
