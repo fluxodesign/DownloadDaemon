@@ -27,6 +27,7 @@ import org.apache.log4j.Level
  *
  * @author Ronald Kurniawan (viper)
  * @version 0.4.5, 3/03/14
+ * @version 0.5.0, 4/02/15
  */
 object FluxoDownloadDaemon {
 
@@ -40,7 +41,7 @@ object FluxoDownloadDaemon {
 	 * @param args string parameters
 	 */
 	def main(args: Array[String]) {
-		System.out.println("DownloadDaemon version 0.4.5\n")
+		System.out.println("DownloadDaemon version 0.5.0\n")
 		attachShutdownHook()
 		_dt start()
 	}

@@ -28,10 +28,10 @@ package net.fluxo.dd.dbo
  */
 class MovieObject {
 
-	private var _movieID: Option[String] = None
+	private var _movieID: Long = 0L
 
-	def MovieID: Option[String] = _movieID
-	def MovieID_=(value: String) { _movieID = Some(value) }
+	def MovieID: Long = _movieID
+	def MovieID_=(value: Long) { _movieID = value }
 
 	private var _movieState: Option[String] = None
 
@@ -43,22 +43,27 @@ class MovieObject {
 	def MovieUrl: Option[String] = _movieUrl
 	def MovieUrl_=(value: String) { _movieUrl = Some(value) }
 
-	private var _movieTitleClean: Option[String] = None
+	private var _movieTitle: Option[String] = None
 
-	def MovieTitleClean: Option[String] = _movieTitleClean
-	def MovieTitleClean_=(value: String) = { _movieTitleClean = Some(value) }
+	def MovieTitle: Option[String] = _movieTitle
+	def MovieTitle_=(value: String) { _movieTitle = Some(value) }
 
-	private var _movieYear: Int = 0
+	private var _movieTitleLong: Option[String] = None
 
-	def MovieYear:Int = _movieYear
-	def MovieYear_=(value: Int) { _movieYear = value }
+	def MovieTitleLong: Option[String] = _movieTitleLong
+	def MovieTitleLong_=(value: String) = { _movieTitleLong = Some(value) }
+
+	private var _movieYear: Long = 0
+
+	def MovieYear:Long = _movieYear
+	def MovieYear_=(value: Long) { _movieYear = value }
 
 	private var _dateUploaded: Option[String] = None
 
 	def DateUploaded: Option[String] = _dateUploaded
 	def DateUploaded_=(value: String) { _dateUploaded = Some(value) }
 
-	private var _dateUploadedEpoch: Long = 0
+	private var _dateUploadedEpoch: Long = 0L
 
 	def DateUploadedEpoch: Long = _dateUploadedEpoch
 	def DateUploadedEpoch_=(value: Long) { _dateUploadedEpoch = value }
@@ -80,50 +85,64 @@ class MovieObject {
 
 	private var _imdbLink: Option[String] = None
 
-	def ImdbLink: Option[String] = _imdbLink
-	def ImdbLink_=(value: String) { _imdbLink = Some(value) }
+	def ImdbLink: Option[String] = {
+		if (_imdbCode.isDefined) {
+			_imdbLink = Some("http://www.imdb.com/title/" + _imdbCode + "/")
+		}
+		_imdbLink
+	}
 
 	private var _size: Option[String] = None
 
 	def Size: Option[String] = _size
 	def Size_=(value: String) { _size = Some(value) }
 
-	private var _sizeByte: Long = 0
+	private var _sizeByte: Long = 0L
 
 	def SizeByte: Long = _sizeByte
 	def SizeByte_=(value: Long) { _sizeByte = value }
 
-	private var _movieRating: Option[String] = None
+	private var _movieRating: Double = 0.0D
 
-	def MovieRating: Option[String] = _movieRating
-	def MovieRating_=(value: String) { _movieRating = Some(value) }
+	def MovieRating: Double = _movieRating
+	def MovieRating_=(value: Double) { _movieRating = value }
+
+	private var _movieRuntime: Long = 0L
+
+	def MovieRuntime: Long = _movieRuntime
+	def MovieRutime_=(value: Long) { _movieRuntime = value }
+
+	private var _mpaRating: Option[String] = None
+
+	def MpaRating: Option[String] = _mpaRating
+	def MpaRating_=(value: String) { _mpaRating = Some(value) }
+
+	private var _language: Option[String] = None
+
+	def Language: Option[String] = _language
+	def Language_=(value: String) { _language = Some(value) }
 
 	private var _genre: Option[String] = None
 
 	def Genre: Option[String] = _genre
 	def Genre_=(value: String) { _genre = Some(value) }
 
-	private var _uploader: Option[String] = None
-
-	def Uploader: Option[String] = _uploader
-	def Uploader_=(value: String) { _uploader = Some(value) }
-
 	private var _uploaderUid: Option[String] = None
 
 	def UploaderUID: Option[String] = _uploaderUid
 	def UploaderUID_=(value: String) { _uploaderUid = Some(value) }
 
-	private var _torrentSeeds: Long = 0
+	private var _torrentSeeds: Long = 0L
 
 	def TorrentSeeds: Long = _torrentSeeds
 	def TorrentSeeds_=(value: Long) { _torrentSeeds = value }
 
-	private var _downloaded: Long = 0
+	private var _downloaded: Long = 0L
 
 	def Downloaded: Long = _downloaded
 	def Downloaded_=(value: Long) { _downloaded = value }
 
-	private var _torrentPeers: Long = 0
+	private var _torrentPeers: Long = 0L
 
 	def TorrentPeers: Long = _torrentPeers
 	def TorrentPeers_=(value: Long) { _torrentPeers = value }

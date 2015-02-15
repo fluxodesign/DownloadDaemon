@@ -20,14 +20,16 @@
  */
 package net.fluxo.dd
 
-import net.fluxo.dd.dbo.{Task, AriaProcess}
 import java.util
-import scala.util.control.Breaks._
-import org.joda.time.DateTime
-import org.apache.log4j.Level
 import java.util.concurrent.TimeUnit
-import org.apache.commons.io.FilenameUtils
+
+import net.fluxo.dd.dbo.{AriaProcess, Task}
 import org.apache.commons.exec._
+import org.apache.commons.io.FilenameUtils
+import org.apache.log4j.Level
+import org.joda.time.DateTime
+
+import scala.util.control.Breaks._
 
 /**
  * AriaProcessor process commands that deal with "aria2c". It also monitors the currently running download. Whenever a
@@ -229,7 +231,7 @@ class AriaProcessor {
 	/**
 	 * AriaThread processes a new download process by calling aria2 through <code>DefaultExecutor</code>.
 	 * @param port port number where aria2 process is bound to
-	 * @param uri URL to download
+	 * @param uri Torrent file URL to download
 	 * @param gid ID for the download
 	 * @param isHttp is this a HTTP download?
 	 * @see java.lang.Runnable
@@ -264,7 +266,11 @@ class AriaProcessor {
 		 * Starts the download by constructing the command line first and then starts the <code>DefaultExecutor</code>.
 		 */
 		override def run() {
-			OUtils createUriFile (gid, uri)
+			// API v2 does not give the magnet URL easily, so we will download the .torrent file
+			// and store it in the /uridir directory...
+			//OUtils createUriFile (gid, uri)
+			val torrentPath = "uridir/" + gid + ".torrent"
+			OUtils crawlServerObject (uri, torrentPath)
 			// DEBUG
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
 			val sb = new StringBuilder
@@ -274,7 +280,9 @@ class AriaProcessor {
 			} else if (!isHttp) {
 				sb append " --seed-time=0" append " --max-overall-upload-limit=1" append " --follow-torrent=mem" append " --seed-ratio=1"
 			}
-			sb append " --input-file=" append "uridir/" append gid append ".txt"
+			// API v2 forces us to use --torent-file parameter
+			//sb append " --input-file=" append "uridir/" append gid append ".txt"
+			sb append " --torrent-file=" append torrentPath
 			// DEBUG
 			LogWriter writeLog("command line: " + sb.toString(), Level.DEBUG)
 			val cmdLine = CommandLine parse sb.toString()

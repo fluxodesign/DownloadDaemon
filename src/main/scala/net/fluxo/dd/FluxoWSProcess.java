@@ -74,6 +74,7 @@ public class FluxoWSProcess {
 			String response = YIFYP.procListMovie(page, quality, rating, OUtils.ExternalIP(), OUtils.readConfig().HTTPPort());
 			return Response.status(200).entity(response).build();
 		} catch (Exception e) {
+			System.out.println("--> ERROR: " + e.getMessage());
 			return Response.status(400).entity(e.getMessage()).build();
 		}
 	}
