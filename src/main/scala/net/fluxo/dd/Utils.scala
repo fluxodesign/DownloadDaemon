@@ -559,6 +559,8 @@ class Utils {
 	def sendAriaTellActive(client: XmlRpcClient): Array[Object] = {
 		val params = Array[Object]()
 		val returned = client.execute("aria2.tellActive", params)
+		// DEBUG
+		LogWriter writeLog ("--> aria2.tellActive: " + returned, Level.DEBUG)
 		// Returned XML-RPC is an Array Java HashMap...
 		returned.asInstanceOf[Array[Object]]
 	}
