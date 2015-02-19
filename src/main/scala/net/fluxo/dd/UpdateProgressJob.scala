@@ -101,7 +101,7 @@ class UpdateProgressJob extends Job {
                             val jMapIterator = (jMap keySet()) iterator()
                             while (jMapIterator.hasNext) {
                                 val key = jMapIterator.next
-                                LogWriter writeLog("--> activeTask: [" + key + "]: " + (jMap get key).toString, Level.DEBUG);
+                                LogWriter writeLog("--> activeTask: [" + key + "]: " + (jMap get key).toString, Level.DEBUG)
                             }
 							if (jMap != null) {
 								val tailGID = (OUtils extractValueFromHashMap(jMap, "gid")).toString
@@ -163,6 +163,12 @@ class UpdateProgressJob extends Job {
 								}
 								hm
 							}
+                            // DEBUG
+                            val jMapIterator = (jMap keySet()) iterator()
+                            while (jMapIterator hasNext) {
+                                val key = jMapIterator.next
+                                LogWriter writeLog("--> finished task: [" + key + "]: " + (jMap get key).toString, Level.DEBUG)
+                            }
 							if (jMap != null) {
 								val status = OUtils.extractValueFromHashMap(jMap, "status").toString
 								val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
