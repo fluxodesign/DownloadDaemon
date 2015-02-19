@@ -99,31 +99,17 @@ class UpdateProgressJob extends Job {
 								}
 								hm
 							}
-                            // DEBUG
-                            val jMapIterator = (jMap keySet()) iterator()
-                            while (jMapIterator.hasNext) {
-                                val key = jMapIterator.next
-                                LogWriter writeLog("--> activeTask: [" + key + "]: " + (jMap get key).toString, Level.DEBUG)
-                            }
 							if (jMap != null) {
 								val tailGID = (OUtils extractValueFromHashMap(jMap, "gid")).toString
-                                // DEBUG
-                                LogWriter writeLog("---> gid: " + tailGID, Level.DEBUG)
 								val task = {
 									if (tailGID.length > 0) DbControl queryTaskTailGID tailGID else null
 								}
 								task.TaskTailGID_=(tailGID)
 								val cl = (OUtils extractValueFromHashMap(jMap, "completedLength")).toString.toLong
-                                // DEBUG
-                                LogWriter writeLog ("---> completedLength: " + cl, Level.DEBUG)
 								task.TaskCompletedLength_=(cl)
 								val tl = (OUtils extractValueFromHashMap(jMap, "totalLength")).toString.toLong
-                                // DEBUG
-                                LogWriter writeLog ("---> totalLength: " + tl, Level.DEBUG)
 								task.TaskTotalLength_=(tl)
 								task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
-                                // DEBUG
-                                LogWriter writeLog ("---> status: " + Some(task.TaskStatus), Level.DEBUG)
 								task.TaskInfoHash_=({
 									if (task.TaskIsHttp) "noinfohash"
 									else (OUtils extractValueFromHashMap(jMap, "infoHash")).toString
@@ -146,8 +132,6 @@ class UpdateProgressJob extends Job {
 									}
 									if (infoMap != null) {
 										task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
-                                        // DEBUG
-                                        LogWriter writeLog("---> package: " + Some(task.TaskPackage), Level.DEBUG)
 									}
 								}
 								if (task.TaskGID.getOrElse("").length > 0) DbControl.updateTask(task)
@@ -166,12 +150,6 @@ class UpdateProgressJob extends Job {
 								}
 								hm
 							}
-                            // DEBUG
-                            val jMapIterator = (jMap keySet()) iterator()
-                            while (jMapIterator hasNext) {
-                                val key = jMapIterator.next
-                                LogWriter writeLog("--> finished task: [" + key + "]: " + (jMap get key).toString, Level.DEBUG)
-                            }
 							if (jMap != null) {
 								val status = OUtils.extractValueFromHashMap(jMap, "status").toString
 								val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
