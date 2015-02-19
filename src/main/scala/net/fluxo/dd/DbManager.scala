@@ -583,13 +583,14 @@ class DbManager {
 	 * @return a <code>net.fluxo.dd.dbo.Task</code> object
 	 */
 	def queryTaskTailGID(tailGid: String): Task = {
-		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ? AND process = ?"""
+		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? OR gid = ? AND completed = ? AND process = ?"""
 		val t = new Task
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, tailGid)
-			ps setBoolean(2, false)
-			ps setString(3, "aria2c")
+			ps setString(2, tailGid)
+			ps setBoolean(3, false)
+			ps setString(4, "aria2c")
 			val rs = ps.executeQuery()
 			while (rs.next()) {
 				t.TaskGID_=(rs getString "gid")

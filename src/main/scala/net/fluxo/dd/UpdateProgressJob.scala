@@ -110,6 +110,7 @@ class UpdateProgressJob extends Job {
 								val task = {
 									if (tailGID.length > 0) DbControl queryTaskTailGID tailGID else null
 								}
+								task.TaskTailGID_=(tailGID)
 								val cl = (OUtils extractValueFromHashMap(jMap, "completedLength")).toString.toLong
                                 // DEBUG
                                 LogWriter writeLog ("---> completedLength: " + cl, Level.DEBUG)
@@ -179,6 +180,8 @@ class UpdateProgressJob extends Job {
 								}
 								val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 								val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
+								// The old approach is to query for a count of object(s) in the DB with 'GID',
+								// 'infoHash' and 'totalLength' matching this particular torrent...
 								val qf = DbControl queryFinishTask(gid, infoHash, tl)
 								if (qf.CPCount > 0) {
 									DbControl finishTask(status, cl, gid, infoHash, tl)
