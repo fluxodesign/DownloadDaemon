@@ -20,12 +20,14 @@
  */
 package net.fluxo.dd
 
-import org.quartz.{Job, JobExecutionContext, JobExecutionException}
-import org.apache.log4j.Level
 import java.io._
 import java.util
+
 import org.apache.commons.io.FileUtils
+import org.apache.log4j.Level
 import org.apache.xmlrpc.XmlRpcException
+import org.quartz.{Job, JobExecutionContext, JobExecutionException}
+
 import scala.util.control.Breaks._
 
 /**
@@ -95,6 +97,12 @@ class UpdateProgressJob extends Job {
 								}
 								hm
 							}
+                            // DEBUG
+                            val jMapIterator = (jMap keySet()) iterator()
+                            while (jMapIterator.hasNext) {
+                                val key = jMapIterator.next
+                                LogWriter writeLog("--> activeTask: [" + key + "]: " + (jMap get key).toString, Level.DEBUG);
+                            }
 							if (jMap != null) {
 								val tailGID = (OUtils extractValueFromHashMap(jMap, "gid")).toString
 								val task = {
