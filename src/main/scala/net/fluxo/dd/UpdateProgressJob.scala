@@ -81,6 +81,8 @@ class UpdateProgressJob extends Job {
 								}
 								if (tg != null && tg.length > 0 && tg(0) != null) {
 									DbControl updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
+								} else {
+									DbControl updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tasks(0).TaskGID.getOrElse(""))
 								}
 							}
 						}
