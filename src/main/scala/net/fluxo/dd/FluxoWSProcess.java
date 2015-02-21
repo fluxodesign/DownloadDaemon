@@ -182,8 +182,6 @@ public class FluxoWSProcess {
 			if (uri.length() > 0 && owner.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
 				String response = OAria.processRequest(decodedURL, owner, false, "", "");
-				// DEBUG
-				System.out.println("---> ADD_TORRENT RESPONSE: " + response);
 				return Response.status(200).entity(response).build();
 			}
 		} catch (UnsupportedEncodingException uee) {

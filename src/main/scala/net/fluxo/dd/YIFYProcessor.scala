@@ -62,10 +62,8 @@ class YIFYProcessor {
 		if (rating >= 0 && rating <= 9) request append("&minimum_rating=" + rating)
 		// send the request...
 		val response = OUtils crawlServer (request toString())
-		// DEBUG
-		LogWriter writeLog("procListMovie: " + response, Level.DEBUG)
 		checkEntryWithYIFYCache(response)
-        LogWriter writeLog("checkEntryWithYIFYCache went OK", Level.DEBUG)
+		LogWriter writeLog("checkEntryWithYIFYCache went OK", Level.DEBUG)
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR NO LIST"
 		processImages(response, externalIP, port)
 	}

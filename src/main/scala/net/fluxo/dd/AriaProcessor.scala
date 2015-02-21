@@ -106,7 +106,7 @@ class AriaProcessor {
 		breakable {
 			while (iterator.hasNext) {
 				val e = iterator.next
-				if ((e AriaPort) == port) {
+				if (e.AriaPort == port) {
 					e killAriaProcess()
 					break()
 				}
@@ -287,7 +287,7 @@ class AriaProcessor {
 			LogWriter writeLog("command line: " + sb.toString(), Level.DEBUG)
 			val cmdLine = CommandLine parse sb.toString()
 
-			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
+			val watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
 			_executor = Some(executor)
