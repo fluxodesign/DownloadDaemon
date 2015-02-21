@@ -172,7 +172,7 @@ public class FluxoWSProcess {
 	@Path("/addtorrent/{owner}/{uri}")
 	@Produces("text/plain")
 	public Response getTorrentUrl(@Context HttpServletRequest htRequest, @DefaultValue("") @PathParam("uri") String uri,
-	                              @DefaultValue("") @PathParam("owner") String owner) {
+	    @DefaultValue("") @PathParam("owner") String owner) {
 		String username = htRequest.getHeader("DDUSER");
 		String password = htRequest.getHeader("DDPWD");
 		if (username == null || password == null || !DbControl.authCredentials(username, password)) {
@@ -181,7 +181,29 @@ public class FluxoWSProcess {
 		try {
 			if (uri.length() > 0 && owner.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
-				String response = OAria.processRequest(decodedURL, owner, false, "", "");
+				String response = OAria.processRequest(decodedURL, owner, false, "", "", false);
+				return Response.status(200).entity(response).build();
+			}
+		} catch (UnsupportedEncodingException uee) {
+			return Response.status(500).entity(uee.getMessage()).build();
+		}
+		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
+	}
+
+	@GET
+	@Path("/addgzippedtorrent/{owner}/{uri}")
+	@Produces("text/plain")
+	public Response getGZippedTorrentUrl(@Context HttpServletRequest htRequest, @DefaultValue("") @PathParam("uri") String uri,
+		@DefaultValue("") @PathParam("owner") String owner) {
+		String username = htRequest.getHeader("DDUSER");
+		String password = htRequest.getHeader("DDPWD");
+		if (username == null || password == null || !DbControl.authCredentials(username, password)) {
+			return Response.status(400).entity("NOT-AUTHORIZED").build();
+		}
+		try {
+			if (uri.length() > 0 && owner.length() > 0) {
+				String decodedURL = URLDecoder.decode(uri, "UTF-8");
+				String response = OAria.processRequest(decodedURL, owner, false, "", "", true);
 				return Response.status(200).entity(response).build();
 			}
 		} catch (UnsupportedEncodingException uee) {
@@ -240,7 +262,7 @@ public class FluxoWSProcess {
 		try {
 			if (uri.length() > 0 && owner.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
-				String response = OAria.processRequest(decodedURL, owner, true, "", "");
+				String response = OAria.processRequest(decodedURL, owner, true, "", "", false);
 				return Response.status(200).entity(response).build();
 			}
 		} catch (UnsupportedEncodingException uee) {
@@ -274,7 +296,7 @@ public class FluxoWSProcess {
 		try {
 			if (uri.length() > 0 && owner.length() > 0 && username.length() > 0 && password.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
-				String response = OAria.processRequest(decodedURL, owner, true, username, password);
+				String response = OAria.processRequest(decodedURL, owner, true, username, password, false);
 				return Response.status(200).entity(response).build();
 			}
 		} catch (UnsupportedEncodingException uee) {

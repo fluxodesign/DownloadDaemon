@@ -63,7 +63,8 @@ class AriaProcessor {
 	 * @param httpPassword password for HTTP authentication (supply an empty string if not required)
 	 * @return status string of the request; "OK" followed by download ID or error messages
 	 */
-	def processRequest(uri: String, owner: String, isHttp: Boolean, httpUsername: String, httpPassword: String): String = {
+	def processRequest(uri: String, owner: String, isHttp: Boolean, httpUsername: String, httpPassword: String,
+		gzipped: Boolean = false): String = {
 		if (!isHttp) {
 			// the uri should always starts with "magnet:" or ends with ".torrent"
 			if (!(uri startsWith "magnet:") && !(uri endsWith ".torrent")) {
@@ -88,6 +89,7 @@ class AriaProcessor {
 		var newGid = OUtils generateGID()
 		while (DbControl isTaskGIDUsed newGid) newGid = OUtils generateGID()
 		val ariaThread = new AriaThread(rpcPort, uri, newGid, isHttp)
+		if (gzipped) ariaThread setFromKickass true
 		if (httpUsername.length > 0 && httpPassword.length > 0) {
 			ariaThread setCredentials(httpUsername, httpPassword)
 		}
@@ -239,6 +241,9 @@ class AriaProcessor {
 	class AriaThread(port: Int, uri: String, gid: String, isHttp: Boolean) extends Runnable {
 		private var _httpUsername: Option[String] = None
 		private var _httpPassword: Option[String] = None
+		private var _kickAss: Boolean = false
+
+		def setFromKickass(value: Boolean) = { _kickAss = value }
 
 		/**
 		 * Set the username and password for HTTP authentication.
@@ -270,7 +275,7 @@ class AriaProcessor {
 			// and store it in the /uridir directory...
 			//OUtils createUriFile (gid, uri)
 			val torrentPath = "uridir/" + gid + ".torrent"
-			OUtils crawlServerObject (uri, torrentPath)
+			OUtils crawlServerObject (uri, torrentPath, _kickAss)
 			// DEBUG
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
 			val sb = new StringBuilder

@@ -467,13 +467,16 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 			words(1) match {
 				case "ADD_TORRENT" =>
 					if (words.length < 4) "ERR LENGTH"
-					else OAria processRequest(words(3), words(2), isHttp = false, "", "")
+					else OAria processRequest(words(3), words(2), isHttp = false, "", "", false)
+				case "ADD_GZIPPED_TORRENT" =>
+					if (words.length < 4) "ERR LENGTH"
+					else OAria processRequest(words(3), words(2), isHttp = false, "", "", true)
 				case "ADD_URI" =>
 					if (words.length < 4) "ERR LENGTH"
-					else OAria processRequest(words(3), words(2), isHttp = true, "", "")
+					else OAria processRequest(words(3), words(2), isHttp = true, "", "", false)
 				case "ADD_URI_C" =>
 					if (words.length < 6) "ERR LENGTH"
-					else OAria processRequest(words(3), words(2), isHttp = true, words(4), words(5))
+					else OAria processRequest(words(3), words(2), isHttp = true, words(4), words(5), false)
 				case "STATUS" =>
 					if (words.length < 3) "ERR LENGTH"
 					else {
