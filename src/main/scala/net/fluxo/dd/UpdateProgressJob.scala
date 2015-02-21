@@ -20,12 +20,14 @@
  */
 package net.fluxo.dd
 
-import org.quartz.{Job, JobExecutionContext, JobExecutionException}
-import org.apache.log4j.Level
 import java.io._
 import java.util
+
 import org.apache.commons.io.FileUtils
+import org.apache.log4j.Level
 import org.apache.xmlrpc.XmlRpcException
+import org.quartz.{Job, JobExecutionContext, JobExecutionException}
+
 import scala.util.control.Breaks._
 
 /**
@@ -79,6 +81,8 @@ class UpdateProgressJob extends Job {
 								}
 								if (tg != null && tg.length > 0 && tg(0) != null) {
 									DbControl updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
+								} else {
+									DbControl updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tasks(0).TaskGID.getOrElse(""))
 								}
 							}
 						}
@@ -100,6 +104,7 @@ class UpdateProgressJob extends Job {
 								val task = {
 									if (tailGID.length > 0) DbControl queryTaskTailGID tailGID else null
 								}
+								task.TaskTailGID_=(tailGID)
 								val cl = (OUtils extractValueFromHashMap(jMap, "completedLength")).toString.toLong
 								task.TaskCompletedLength_=(cl)
 								val tl = (OUtils extractValueFromHashMap(jMap, "totalLength")).toString.toLong
@@ -155,6 +160,8 @@ class UpdateProgressJob extends Job {
 								}
 								val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
 								val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
+								// The old approach is to query for a count of object(s) in the DB with 'GID',
+								// 'infoHash' and 'totalLength' matching this particular torrent...
 								val qf = DbControl queryFinishTask(gid, infoHash, tl)
 								if (qf.CPCount > 0) {
 									DbControl finishTask(status, cl, gid, infoHash, tl)

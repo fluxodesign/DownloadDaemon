@@ -138,7 +138,8 @@ class DbManager {
 	 */
 	def updateTask(task: Task): Boolean = {
 		var response: Boolean = true
-		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
+		//val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
+		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND owner = ?"""
 		try {
 			val ps = _conn prepareStatement updateStatement
 			ps setString(1, task.TaskPackage.orNull)
@@ -147,8 +148,8 @@ class DbManager {
 			ps setLong(4, task.TaskTotalLength)
 			ps setString(5, task.TaskInfoHash.getOrElse("XXX"))
 			ps setString(6, task.TaskGID.orNull)
-			ps setString(7, task.TaskTailGID.orNull)
-			ps setString(8, task.TaskOwner.orNull)
+			//ps setString(7, task.TaskTailGID.orNull)
+			ps setString(7, task.TaskOwner.orNull)
 			val updated = ps executeUpdate()
 			if (updated == 0) {
 				LogWriter writeLog("Failed to update task with GID " + task.TaskGID.orNull, Level.ERROR)
@@ -583,13 +584,14 @@ class DbManager {
 	 * @return a <code>net.fluxo.dd.dbo.Task</code> object
 	 */
 	def queryTaskTailGID(tailGid: String): Task = {
-		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ? AND process = ?"""
+		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? OR gid = ? AND completed = ? AND process = ?"""
 		val t = new Task
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, tailGid)
-			ps setBoolean(2, false)
-			ps setString(3, "aria2c")
+			ps setString(2, tailGid)
+			ps setBoolean(3, false)
+			ps setString(4, "aria2c")
 			val rs = ps.executeQuery()
 			while (rs.next()) {
 				t.TaskGID_=(rs getString "gid")

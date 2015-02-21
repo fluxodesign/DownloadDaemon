@@ -24,6 +24,7 @@ import java.io._
 import java.net._
 import java.security.MessageDigest
 import java.util
+import java.util.zip.GZIPInputStream
 import java.util.{Properties, Random}
 
 import net.fluxo.dd.dbo.{Config, MovieObject, YIFYSearchResult}
@@ -263,18 +264,22 @@ class Utils {
 	 * @param request URL of resource
 	 * @param savePath where to save the resource on the local system
 	 */
-	def crawlServerObject(request: String, savePath: String) {
+	def crawlServerObject(request: String, savePath: String, gzipped: Boolean) {
 		try {
 			val htClient = HttpClientBuilder.create().build()
 			val htGet = new HttpGet(request)
 			htGet addHeader("Content-Type", "application/x-bittorrent")
 			htGet addHeader("User-Agent", "FluxoAgent/0.1")
+			if (gzipped) htGet addHeader("Content-Encoding", "gzip")
 			val htResponse = htClient execute htGet
 			val htEntity = htResponse.getEntity
 			if (htEntity != null) {
-				val is = htEntity getContent
+				val is = htEntity.getContent
 				val bufferedInputStream = new BufferedInputStream(is)
-				val bufferedOutputStream = new BufferedOutputStream(new FileOutputStream(new File(savePath)))
+				val bufferedOutputStream = {
+					if (gzipped) new BufferedOutputStream(new FileOutputStream(new File(savePath + ".gz")))
+					else new BufferedOutputStream(new FileOutputStream(new File(savePath)))
+				}
 				var inByte: Int = bufferedInputStream.read
 				while (inByte != -1) {
 					bufferedOutputStream write inByte
@@ -285,6 +290,10 @@ class Utils {
 				is close()
 			}
 			htClient close()
+			// if this is a gzipped file, we need to extract it
+			if (gzipped) {
+				gunzip(savePath + ".gz", savePath)
+			}
 		} catch {
 			case ioe: IOException =>
 				LogWriter writeLog("CrawlServerObject Exception: " + ioe.getMessage, Level.ERROR)
@@ -521,7 +530,7 @@ class Utils {
 			val sb = new StringBuilder
 			for (b <- digestedBytes) {
 				val strHex = Integer toHexString (0xff & b)
-				if ((strHex length) == 1) sb append '0'
+				if ((strHex.length) == 1) sb append '0'
 				sb append strHex
 			}
 			retVal = sb toString()
@@ -586,6 +595,31 @@ class Utils {
 	 */
 	def sendAriaTellShutdown(client: XmlRpcClient) {
 		client.execute("aria2.shutdown", Array[Object]())
+	}
+
+	/**
+	 * Uncompress a gzipped file.
+	 *
+	 * @param inputFile A Gzipped file
+	 * @param outputFile An uncompressed file
+	 */
+	def gunzip(inputFile: String, outputFile: String) {
+		val buffer = new Array[Byte](1024)
+		try {
+			val gzi = new GZIPInputStream(new FileInputStream(inputFile))
+			val gzo = new FileOutputStream(outputFile)
+			var length = gzi read buffer
+			while (length > 0) {
+				gzo write(buffer, 0, length)
+				length = gzi read buffer
+			}
+			gzi.close()
+			gzo.close()
+		} catch {
+			case ioe: IOException =>
+				LogWriter writeLog("Error unzipping file " + inputFile + ": " + ioe.getMessage, Level.DEBUG)
+				LogWriter stackTraceToString ioe
+		}
 	}
 
 	/**
