@@ -81,7 +81,7 @@ class HttpDaemon(port: Int, sslPort: Int) extends Runnable {
 		sslContextFactory setKeyStorePassword (OUtils readConfig).SSLKeystorePassword.getOrElse("")
 		sslContextFactory setKeyManagerPassword (OUtils readConfig).SSLKeymanagerPassword.getOrElse("")
 		sslContextFactory addExcludeProtocols "SSLv3"
-		sslContextFactory addExcludeProtocols "SSLv2"
+		sslContextFactory addExcludeProtocols "SSLv2Hello"
 		val httpsConfig = new HttpConfiguration()
 		httpsConfig setSecureScheme "https"
 		httpsConfig setSecurePort sslPort
