@@ -20,13 +20,13 @@
  */
 package net.fluxo.dd
 
+import org.apache.log4j.Level
 import org.eclipse.jetty.server._
 import org.eclipse.jetty.server.handler.{DefaultHandler, HandlerCollection}
-import org.apache.log4j.Level
-import org.eclipse.jetty.webapp.WebAppContext
-import org.eclipse.jetty.servlet.{ServletHolder, ServletContextHandler}
-import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
+import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.util.ssl.SslContextFactory
+import org.eclipse.jetty.webapp.WebAppContext
+import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
 
 /**
  * HttpDaemon is one of the daemon processes managed by `DaemonThread` class.
@@ -80,6 +80,8 @@ class HttpDaemon(port: Int, sslPort: Int) extends Runnable {
 		val sslContextFactory = new SslContextFactory((OUtils readConfig).SSLKeystore.getOrElse(""))
 		sslContextFactory setKeyStorePassword (OUtils readConfig).SSLKeystorePassword.getOrElse("")
 		sslContextFactory setKeyManagerPassword (OUtils readConfig).SSLKeymanagerPassword.getOrElse("")
+		sslContextFactory addExcludeProtocols "SSLv3"
+		sslContextFactory addExcludeProtocols "SSLv2"
 		val httpsConfig = new HttpConfiguration()
 		httpsConfig setSecureScheme "https"
 		httpsConfig setSecurePort sslPort
