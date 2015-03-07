@@ -113,7 +113,7 @@ class YCache extends Callable[String] {
 					case jse: Exception =>
 						LogWriter writeLog("Error parsing JSON from YIFY movie list", Level.ERROR)
 						LogWriter writeLog(jse.getMessage, Level.ERROR)
-						LogWriter stackTraceToString jse
+						LogWriter writeLog(LogWriter stackTraceToString jse, Level.ERROR)
 				}
 			}
 			var statusTrueCount = 0
@@ -194,7 +194,7 @@ class YCache extends Callable[String] {
 			case jse: Exception =>
 				LogWriter writeLog("Error parsing JSON from YIFY movie list", Level.ERROR)
 				LogWriter writeLog(jse.getMessage, Level.ERROR)
-				LogWriter stackTraceToString jse
+				LogWriter writeLog(LogWriter stackTraceToString jse , Level.ERROR)
 		}
 		status
 	}
