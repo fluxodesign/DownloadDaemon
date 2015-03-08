@@ -82,7 +82,7 @@ class HttpDaemon(port: Int, sslPort: Int) extends Runnable {
 		sslContextFactory setKeyManagerPassword (OUtils readConfig).SSLKeymanagerPassword.getOrElse("")
 		sslContextFactory addExcludeProtocols "SSLv3"
 		sslContextFactory addExcludeProtocols "SSLv2Hello"
-		sslContextFactory setIncludeProtocols("TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
+		sslContextFactory setIncludeCipherSuites("TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
 			"SSL_DHE_RSA_WITH_3DES_EDE_CBC_SHA",
 			"TLS_RSA_WITH_AES_128_CBC_SHA",
 			"SSL_RSA_WITH_3DES_EDE_CBC_SHA",
