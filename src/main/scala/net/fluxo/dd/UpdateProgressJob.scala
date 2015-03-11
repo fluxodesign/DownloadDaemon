@@ -198,10 +198,11 @@ class UpdateProgressJob extends Job {
 
 					} catch {
 						case xe: XmlRpcException =>
-							LogWriter writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.ERROR)
+							LogWriter writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.DEBUG)
 							// if a download is hanging or call to XML-RPC server returns an error,
 							// we need to shut down the offending thread and restart the download...
-							LogWriter writeLog("Shutting down the offending thread...", Level.INFO)
+							LogWriter writeLog("Shutting down the offending thread...", Level.DEBUG)
+                            LogWriter writeLog(LogWriter stackTraceToString xe, Level.DEBUG)
 							OAria killProcess _currentPort
 					}
 
