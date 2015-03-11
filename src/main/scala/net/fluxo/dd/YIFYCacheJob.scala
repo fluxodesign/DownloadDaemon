@@ -113,6 +113,7 @@ class YCache extends Callable[String] {
 					case jse: Exception =>
 						LogWriter writeLog("Error parsing JSON from YIFY movie list", Level.ERROR)
 						LogWriter writeLog(jse.getMessage, Level.ERROR)
+						LogWriter writeLog(LogWriter stackTraceToString jse, Level.ERROR)
 				}
 			}
 			var statusTrueCount = 0
@@ -178,12 +179,14 @@ class YCache extends Callable[String] {
 				yifyCache.MovieTitle_:((o get "title").asInstanceOf[String])
 				yifyCache.MovieYear_:((o get "year").asInstanceOf[Long])
                 yifyCache.MovieCoverImage_:((o get "medium_cover_image").asInstanceOf[String])
-                val torrentInfo = (o get "torrents").asInstanceOf[JSONArray] iterator()
-                if (torrentInfo hasNext) {
-                    val torInfo = (torrentInfo next()).asInstanceOf[JSONObject]
-                    yifyCache.MovieQuality_:((torInfo get "quality").asInstanceOf[String])
-                    yifyCache.MovieSize_:((torInfo get "size").asInstanceOf[String])
-                }
+				if ((o get "torrents") != null) {
+					val torrentInfo = (o get "torrents").asInstanceOf[JSONArray] iterator()
+					if (torrentInfo hasNext) {
+						val torInfo = (torrentInfo next()).asInstanceOf[JSONObject]
+						yifyCache.MovieQuality_:((torInfo get "quality").asInstanceOf[String])
+						yifyCache.MovieSize_:((torInfo get "size").asInstanceOf[String])
+					}
+				}
 
 				if (!(DbControl ycQueryMovieID(yifyCache MovieID))) {
 					status = DbControl ycInsertNewData yifyCache
@@ -193,6 +196,7 @@ class YCache extends Callable[String] {
 			case jse: Exception =>
 				LogWriter writeLog("Error parsing JSON from YIFY movie list", Level.ERROR)
 				LogWriter writeLog(jse.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString jse , Level.ERROR)
 		}
 		status
 	}
