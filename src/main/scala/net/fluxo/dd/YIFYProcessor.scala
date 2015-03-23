@@ -51,7 +51,7 @@ class YIFYProcessor {
 	 * @return the list of movies on a particular page from YIFY site, with all cover image URLs re-addressed to our site
 	 */
 	def procListMovie(page: Int, quality:Int, rating: Int, externalIP: String, port: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/v2/list_movies.json?limit=15")
+		val request: StringBuilder = new StringBuilder("https://yts.to/api/v2/list_movies.json?limit=15")
 		if (quality <= 3 && quality >= 0) request append "&quality=" append(quality  match {
 			case 0 => "ALL"
 			case 1 => "720p"
@@ -77,7 +77,7 @@ class YIFYProcessor {
 	 * @return details of a movie from YIFY site, with screenshot images re-addressed to our site
 	 */
 	def procMovieDetails(id: Int, externalIP:String, port: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/v2/movie_details.json?movie_id=") append id
+		val request: StringBuilder = new StringBuilder("https://yts.to/api/v2/movie_details.json?movie_id=") append id
 		request append "&with_images=true&with_cast=true"
 		val response = OUtils crawlServer (request toString())
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
@@ -91,7 +91,7 @@ class YIFYProcessor {
 	 * @return response from YIFY site
 	 */
 	def procYIFYCache(page: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/v2/list_movies.json?limit=50")
+		val request: StringBuilder = new StringBuilder("https://yts.to/api/v2/list_movies.json?limit=50")
 		if (page > 1) request append "&page=" append page
 		val response = OUtils crawlServer (request toString())
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return  "ERR NO LIST"
@@ -114,7 +114,7 @@ class YIFYProcessor {
 			val request = new StringBuilder
 			for (x <- searchResult) {
 				request setLength 0
-				request append "http://yts.re/api/v2/movie_details.json?movie_id=" append x.MovieID
+				request append "https://yts.to/api/v2/movie_details.json?movie_id=" append x.MovieID
 				request append "&with_images=true"
 				val response = OUtils crawlServer (request toString())
 				yifySearchResult AddToMovieList (OUtils stringToMovieObject response)
