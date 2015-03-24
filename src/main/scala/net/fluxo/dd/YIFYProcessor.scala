@@ -158,6 +158,7 @@ class YIFYProcessor {
                 if (!(localFile exists())) new Thread(new WgetImage(newSc, dirName)) start()
                 if (!(externalIP equals "127.0.0.1")) {
                     val oldServer = new URL(newSc).getAuthority
+	                if (newSc startsWith "https") newSc = newSc replace ("https", "http")
                     newSc = newSc replace(oldServer, externalIP + ":" + port)
                     newSc = newSc replaceAllLiterally("/", "\\/")
                     val oldSc = sc replaceAllLiterally("/", "\\/")
@@ -198,6 +199,7 @@ class YIFYProcessor {
 			// remodel our image url into http://<our-outside-ip>/.....
 			if (!externalIP.equals("127.0.0.1")) {
 				val oldServer = new URL(newCoverImage).getAuthority
+				if (newCoverImage startsWith "https") newCoverImage = newCoverImage replace ("https", "http")
 				newCoverImage = newCoverImage replace(oldServer, externalIP + ":" + port)
 				// and re-encode the forward slash to json forward slash
 				newCoverImage = newCoverImage replaceAllLiterally("/", "\\/")
