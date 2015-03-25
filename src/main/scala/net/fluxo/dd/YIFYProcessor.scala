@@ -117,6 +117,7 @@ class YIFYProcessor {
 				request append "https://yts.to/api/v2/movie_details.json?movie_id=" append x.MovieID
 				request append "&with_images=true"
 				val response = OUtils crawlServer (request toString())
+				LogWriter writeLog ("-->procYIFYSearch: " + response, Level.DEBUG)
 				yifySearchResult AddToMovieList (OUtils stringToMovieObject response)
 			}
 		}
