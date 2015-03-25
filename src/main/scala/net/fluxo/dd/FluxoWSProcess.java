@@ -118,6 +118,7 @@ public class FluxoWSProcess {
 				return Response.status(200).entity(response).build();
 			}
 		} catch (Exception e) {
+			LogWriter.writeLog("SEARCH ERROR: " + e.getMessage(), Level.DEBUG);
 			return Response.status(400).entity(e.getMessage()).build();
 		}
 		return Response.status(400).entity("NO-SEARCH-TERM").build();
