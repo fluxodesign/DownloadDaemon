@@ -365,6 +365,7 @@ class Utils {
 	 * @return JSON string
 	 */
 	def YIFYSearchResultToJSON(obj: YIFYSearchResult): String = {
+		LogWriter writeLog("-->YIFY2JSON STARTING!", Level.DEBUG)
 		val json = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
 		json put("SearchResult", "YIFY")
 		json put("MovieCount", obj.MovieCount)
