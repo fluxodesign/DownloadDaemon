@@ -400,7 +400,9 @@ class Utils {
 			jsArray.add(movieObject)
 		}
 		json put("MovieList", jsArray)
-		json.toString
+		val result = json.toString
+		LogWriter writeLog("-->YIFY2JSON: " + result, Level.DEBUG)
+		result
 	}
 
 	/**
