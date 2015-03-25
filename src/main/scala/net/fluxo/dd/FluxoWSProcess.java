@@ -25,6 +25,7 @@ import net.fluxo.plugins.kas.TrKas;
 import net.fluxo.plugins.tpb.TrTPB;
 import net.xeoh.plugins.base.PluginManager;
 import org.apache.commons.codec.net.URLCodec;
+import org.apache.log4j.Level;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
@@ -113,6 +114,7 @@ public class FluxoWSProcess {
 			if (search.length() > 0) {
 				String decodedTerm = (new URLCodec()).decode(search);
 				String response = YIFYP.procYIFYSearch(decodedTerm);
+				LogWriter.writeLog("YSEARCH RESULT: " + response, Level.DEBUG);
 				return Response.status(200).entity(response).build();
 			}
 		} catch (Exception e) {
