@@ -39,6 +39,6 @@ class YIFYSearchResult {
 
 	def MovieList: Option[util.List[MovieObject]] = _movieList
 	def AddToMovieList(value: MovieObject) {
-		_movieList getOrElse null add value
+		_movieList.orNull add value
 	}
 }
