@@ -40,6 +40,7 @@ import org.json.simple.parser.JSONParser
 import org.json.simple.{JSONArray, JSONObject, JSONValue}
 import org.xml.sax.{ContentHandler, SAXException}
 
+import scala.collection.JavaConversions._
 import scala.util.control.Breaks._
 
 /**
@@ -365,44 +366,58 @@ class Utils {
 	 * @return JSON string
 	 */
 	def YIFYSearchResultToJSON(obj: YIFYSearchResult): String = {
-		LogWriter writeLog("-->YIFY2JSON STARTING!", Level.DEBUG)
 		val json = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
 		json put("SearchResult", "YIFY")
-		json put("MovieCount", obj.MovieCount)
-		val jsArray = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, String]]]
+		json put("status", "ok")
+		json put("status_message", "Query was successful")
+
+		val jsData = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+		jsData put("movie_count", obj.MovieCount)
+
+		val jsArray = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, Any]]]
 		val movieIterator = obj.MovieList.orNull iterator()
 		while (movieIterator.hasNext) {
 			val x = movieIterator next()
-			val movieObject = (new JSONObject).asInstanceOf[util.HashMap[String, String]]
-			movieObject put("MovieID", (x MovieID).toString)
-			movieObject put("State", (x State) getOrElse "")
-			movieObject put("MovieUrl", (x MovieUrl) getOrElse "")
-			movieObject put("MovieTitleLong", (x MovieTitleLong) getOrElse "")
-			movieObject put("MovieTitle", (x MovieTitle) getOrElse "")
-			movieObject put("MovieYear", (x MovieYear).toString)
-			movieObject put("MovieRating", (x MovieRating).toString)
-			movieObject put("MpaRating", (x MpaRating) getOrElse "")
-			movieObject put("Language", (x Language) getOrElse "")
-			movieObject put("Runtime", (x MovieRuntime).toString)
-			movieObject put("DateUploaded", (x DateUploaded) getOrElse "")
-			movieObject put("DateUploadedEpoch", (x DateUploadedEpoch).toString)
-			movieObject put("CoverImage", (x CoverImage) getOrElse "")
-			movieObject put("Quality", (x Quality) getOrElse "")
-			movieObject put("ImdbCode", (x ImdbCode) getOrElse "")
-			movieObject put("ImdbLink", (x ImdbLink) getOrElse "")
-			movieObject put("Size", (x Size) getOrElse "")
-			movieObject put("SizeByte", (x SizeByte).toString)
-			movieObject put("Genre", (x Genre) getOrElse "")
-			movieObject put("TorrentSeeds", (x TorrentSeeds).toString)
-			movieObject put("TorrentPeers", (x TorrentPeers).toString)
-			movieObject put("TorrentUrl", (x TorrentUrl) getOrElse "")
-			movieObject put("TorrentHash", (x TorrentHash) getOrElse "")
-			movieObject put("TorrentMagnetUrl", (x TorrentMagnetUrl) getOrElse "")
+			val movieObject = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+			movieObject put("id", (x MovieID).toString)
+			movieObject put("state", (x State) getOrElse "")
+			movieObject put("url", (x MovieUrl) getOrElse "")
+			movieObject put("title_long", (x MovieTitleLong) getOrElse "")
+			movieObject put("title", (x MovieTitle) getOrElse "")
+			movieObject put("year", (x MovieYear).toString)
+			movieObject put("rating", (x MovieRating).toString)
+			movieObject put("mpa_rating", (x MpaRating) getOrElse "")
+			movieObject put("language", (x Language) getOrElse "")
+			movieObject put("runtime", (x MovieRuntime).toString)
+			movieObject put("date_uploaded", (x DateUploaded) getOrElse "")
+			movieObject put("date_uploaded_unix", (x DateUploadedEpoch).toString)
+			movieObject put("medium_cover_image", (x CoverImage) getOrElse "")
+			movieObject put("imdb_code", (x ImdbCode) getOrElse "")
+			val movieGenres = (new JSONArray).asInstanceOf[util.List[String]]
+			if (((x Genre) getOrElse "").length > 0) {
+				val gens = ((x Genre) getOrElse "") split "|"
+				for (g <- gens) {
+					movieGenres.append(g)
+				}
+			}
+			movieObject put("genres", movieGenres)
+			val torrents = (new JSONArray).asInstanceOf[util.HashMap[String, Any]]
+			torrents put("url", (x TorrentUrl) getOrElse "")
+			torrents put("hash", (x TorrentHash) getOrElse "")
+			torrents put("quality", (x Quality) getOrElse "")
+			torrents put("seeds", x TorrentSeeds)
+			torrents put("peers", x TorrentPeers)
+			torrents put("size", (x Size) getOrElse "")
+			torrents put("size_bytes", x SizeByte)
+			movieObject put("torrents", torrents)
+
 			jsArray.add(movieObject)
 		}
-		json put("MovieList", jsArray)
+
+		jsData put ("movies", jsArray)
+		// put "data" into json
+		json put("data", jsData)
 		val result = json.toString
-		LogWriter writeLog("-->YIFY2JSON: " + result, Level.DEBUG)
 		result
 	}
 

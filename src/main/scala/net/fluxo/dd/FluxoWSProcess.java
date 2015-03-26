@@ -114,7 +114,6 @@ public class FluxoWSProcess {
 			if (search.length() > 0) {
 				String decodedTerm = (new URLCodec()).decode(search);
 				String response = YIFYP.procYIFYSearch(decodedTerm);
-				LogWriter.writeLog("YSEARCH RESULT: " + response, Level.DEBUG);
 				return Response.status(200).entity(response).build();
 			}
 		} catch (Exception e) {
