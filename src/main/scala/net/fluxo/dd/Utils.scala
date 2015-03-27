@@ -327,6 +327,8 @@ class Utils {
 			movie.CoverImage_=((json get "medium_cover_image").asInstanceOf[String])
 			movie.ImdbCode_=((json get "imdb_code").asInstanceOf[String])
 
+			LogWriter writeLog("-->middle 1", Level.DEBUG)
+
 			val jTorrentObjects = (json get "torrents").asInstanceOf[JSONArray]
 			val jTorrentIterator = jTorrentObjects.iterator
 			breakable {
