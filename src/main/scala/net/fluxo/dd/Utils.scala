@@ -332,19 +332,48 @@ class Utils {
 			val jTorrentObjects = (json get "torrents").asInstanceOf[JSONArray]
 			val jTorrentIterator = jTorrentObjects.iterator
 			breakable {
-				// just use the first one
-				var finished = false
 				while (jTorrentIterator.hasNext) {
-					if (finished) break()
 					val jTorrentObject = jTorrentIterator.next.asInstanceOf[JSONObject]
-					movie.TorrentUrl_=((jTorrentObject get "url").asInstanceOf[String])
-					movie.TorrentHash_=((jTorrentObject get "hash").asInstanceOf[String])
-					movie.Quality_=((jTorrentObject get "quality").asInstanceOf[String])
-					movie.TorrentSeeds_=((jTorrentObject get "seeds").asInstanceOf[String].toInt)
-					movie.TorrentPeers_=((jTorrentObject get "peers").asInstanceOf[String].toInt)
-					movie.Size_=((jTorrentObject get "size").asInstanceOf[String])
-					movie.SizeByte_=((jTorrentObject get "size_bytes").asInstanceOf[String].toLong)
-					finished = true
+					if ((jTorrentObject get "quality") equals "720p") {
+						movie.TorrentUrl720p_=((jTorrentObject get "url").asInstanceOf[String])
+						movie.TorrentHash720p_=((jTorrentObject get "hash").asInstanceOf[String])
+						movie.Downloaded720p_=((jTorrentObject get "download_count").asInstanceOf[Long])
+						movie.Resolution720p_=((jTorrentObject get "resolution").asInstanceOf[String])
+						movie.FrameRate720p_=((jTorrentObject get "framerate").asInstanceOf[Double])
+						movie.Quality720p_=((jTorrentObject get "quality").asInstanceOf[String])
+						movie.TorrentSeeds720p_=((jTorrentObject get "seeds").asInstanceOf[Int])
+						movie.TorrentPeers720p_=((jTorrentObject get "peers").asInstanceOf[Int])
+						movie.Size720p_=((jTorrentObject get "size").asInstanceOf[String])
+						movie.SizeByte720p_=((jTorrentObject get "size_bytes").asInstanceOf[Long])
+						movie.DateUploaded720p_=((jTorrentObject get "date_uploaded").asInstanceOf[String])
+						movie.DateUploadedEpoch720p_=((jTorrentObject get "date_uploaded_unix").asInstanceOf[Long])
+					} else if ((jTorrentObject get "quality") equals "1080p") {
+						movie.TorrentUrl1080p_=((jTorrentObject get "url").asInstanceOf[String])
+						movie.TorrentHash1080p_=((jTorrentObject get "hash").asInstanceOf[String])
+						movie.Downloaded1080p_=((jTorrentObject get "download_count").asInstanceOf[Long])
+						movie.Resolution1080p_=((jTorrentObject get "resolution").asInstanceOf[String])
+						movie.FrameRate1080p_=((jTorrentObject get "framerate").asInstanceOf[Double])
+						movie.Quality1080p_=((jTorrentObject get "quality").asInstanceOf[String])
+						movie.TorrentSeeds1080p_=((jTorrentObject get "seeds").asInstanceOf[Int])
+						movie.TorrentPeers1080p_=((jTorrentObject get "peers").asInstanceOf[Int])
+						movie.Size1080p_=((jTorrentObject get "size").asInstanceOf[String])
+						movie.SizeByte1080p_=((jTorrentObject get "size_bytes").asInstanceOf[Long])
+						movie.DateUploaded1080p_=((jTorrentObject get "date_uploaded").asInstanceOf[String])
+						movie.DateUploadedEpoch1080p_=((jTorrentObject get "date_uploaded_unix").asInstanceOf[Long])
+					} else if ((jTorrentObject get "quality") equals "3D") {
+						movie.TorrentUrl3D_=((jTorrentObject get "url").asInstanceOf[String])
+						movie.TorrentHash3D_=((jTorrentObject get "hash").asInstanceOf[String])
+						movie.Downloaded3D_=((jTorrentObject get "download_count").asInstanceOf[Long])
+						movie.Resolution3D_=((jTorrentObject get "resolution").asInstanceOf[String])
+						movie.FrameRate3D_=((jTorrentObject get "framerate").asInstanceOf[Double])
+						movie.Quality3D_=((jTorrentObject get "quality").asInstanceOf[String])
+						movie.TorrentSeeds3D_=((jTorrentObject get "seeds").asInstanceOf[Int])
+						movie.TorrentPeers3D_=((jTorrentObject get "peers").asInstanceOf[Int])
+						movie.Size3D_=((jTorrentObject get "size").asInstanceOf[String])
+						movie.SizeByte3D_=((jTorrentObject get "size_bytes").asInstanceOf[Long])
+						movie.DateUploaded3D_=((jTorrentObject get "date_uploaded").asInstanceOf[String])
+						movie.DateUploadedEpoch3D_=((jTorrentObject get "date_uploaded_unix").asInstanceOf[Long])
+					}
 				}
 			}
 
@@ -407,13 +436,14 @@ class Utils {
 			}
 			movieObject put("genres", movieGenres)
 			val torrents = (new JSONArray).asInstanceOf[util.HashMap[String, Any]]
-			torrents put("url", (x TorrentUrl) getOrElse "")
-			torrents put("hash", (x TorrentHash) getOrElse "")
-			torrents put("quality", (x Quality) getOrElse "")
-			torrents put("seeds", x TorrentSeeds)
-			torrents put("peers", x TorrentPeers)
-			torrents put("size", (x Size) getOrElse "")
-			torrents put("size_bytes", x SizeByte)
+			val torObj
+			torrents put("url", x.TorrentUrl720p getOrElse "")
+			torrents put("hash", x.TorrentHash720p getOrElse "")
+			torrents put("quality", x.Quality720p getOrElse "")
+			torrents put("seeds", x.TorrentSeeds720p)
+			torrents put("peers", x.TorrentPeers720p)
+			torrents put("size", x.Size720p getOrElse "")
+			torrents put("size_bytes", x.SizeByte720p)
 			movieObject put("torrents", torrents)
 
 			jsArray.add(movieObject)
