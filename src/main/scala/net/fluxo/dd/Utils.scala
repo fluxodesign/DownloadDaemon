@@ -396,6 +396,7 @@ class Utils {
 			movieObject put("date_uploaded", (x DateUploaded) getOrElse "")
 			movieObject put("date_uploaded_unix", (x DateUploadedEpoch).toString)
 			movieObject put("medium_cover_image", (x CoverImage) getOrElse "")
+			movieObject put("download_count", x DownloadCount)
 			movieObject put("imdb_code", (x ImdbCode) getOrElse "")
 			val movieGenres = (new JSONArray).asInstanceOf[util.List[String]]
 			if (((x Genre) getOrElse "").length > 0) {
