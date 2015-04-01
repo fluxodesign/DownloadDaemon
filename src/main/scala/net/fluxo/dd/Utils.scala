@@ -340,6 +340,7 @@ class Utils {
 			LogWriter writeLog("-->middle 1", Level.DEBUG)
 
 			val jTorrentObjects = (json get "torrents").asInstanceOf[JSONArray]
+			LogWriter writeLog("-->middle 2", Level.DEBUG)
 			val jTorrentIterator = jTorrentObjects.iterator
 			breakable {
 				while (jTorrentIterator.hasNext) {
