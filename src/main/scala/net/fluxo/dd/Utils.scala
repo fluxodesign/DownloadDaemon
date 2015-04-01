@@ -435,15 +435,55 @@ class Utils {
 				}
 			}
 			movieObject put("genres", movieGenres)
-			val torrents = (new JSONArray).asInstanceOf[util.HashMap[String, Any]]
-			val torObj
-			torrents put("url", x.TorrentUrl720p getOrElse "")
-			torrents put("hash", x.TorrentHash720p getOrElse "")
-			torrents put("quality", x.Quality720p getOrElse "")
-			torrents put("seeds", x.TorrentSeeds720p)
-			torrents put("peers", x.TorrentPeers720p)
-			torrents put("size", x.Size720p getOrElse "")
-			torrents put("size_bytes", x.SizeByte720p)
+			val torrents = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, Any]]]
+			if ((x.TorrentUrl720p getOrElse "").length > 0) {
+				val tObject = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+				tObject put("url", x.TorrentUrl720p getOrElse "")
+				tObject put("hash", x.TorrentHash720p getOrElse "")
+				tObject put("quality", x.Quality720p getOrElse "")
+				tObject put("seeds", x.TorrentSeeds720p)
+				tObject put("peers", x.TorrentPeers720p)
+				tObject put("size", x.Size720p getOrElse "")
+				tObject put("size_bytes", x.SizeByte720p)
+				tObject put("download_count", x.Downloaded720p)
+				tObject put("resolution", x.Resolution720p getOrElse "")
+				tObject put("framerate", x.FrameRate720p)
+				tObject put("date_uploaded", x.DateUploaded720p getOrElse "")
+				tObject put("date_uploaded_unix", x.DateUploadedEpoch720p)
+				torrents add tObject
+			}
+			if ((x.TorrentUrl1080p getOrElse "").length > 0) {
+				val tObject = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+				tObject put("url", x.TorrentUrl1080p getOrElse "")
+				tObject put("hash", x.TorrentHash1080p getOrElse "")
+				tObject put("quality", x.Quality1080p getOrElse "")
+				tObject put("seeds", x.TorrentSeeds1080p)
+				tObject put("peers", x.TorrentPeers1080p)
+				tObject put("size", x.Size1080p getOrElse "")
+				tObject put("size_bytes", x.SizeByte1080p)
+				tObject put("download_count", x.Downloaded1080p)
+				tObject put("resolution", x.Resolution1080p getOrElse "")
+				tObject put("framerate", x.FrameRate1080p)
+				tObject put("date_uploaded", x.DateUploaded1080p getOrElse "")
+				tObject put("date_uploaded_unix", x.DateUploadedEpoch1080p)
+				torrents add tObject
+			}
+			if ((x.TorrentUrl3D getOrElse "").length > 0) {
+				val tObject = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+				tObject put("url", x.TorrentUrl3D getOrElse "")
+				tObject put("hash", x.TorrentHash3D getOrElse "")
+				tObject put("quality", x.Quality3D getOrElse "")
+				tObject put("seeds", x.TorrentSeeds3D)
+				tObject put("peers", x.TorrentPeers3D)
+				tObject put("size", x.Size3D getOrElse "")
+				tObject put("size_bytes", x.SizeByte3D)
+				tObject put("download_count", x.Downloaded3D)
+				tObject put("resolution", x.Resolution3D getOrElse "")
+				tObject put("framerate", x.FrameRate3D)
+				tObject put("date_uploaded", x.DateUploaded3D getOrElse "")
+				tObject put("date_uploaded_unix", x.DateUploadedEpoch3D)
+				torrents add tObject
+			}
 			movieObject put("torrents", torrents)
 
 			jsArray.add(movieObject)
@@ -583,7 +623,7 @@ class Utils {
 			val sb = new StringBuilder
 			for (b <- digestedBytes) {
 				val strHex = Integer toHexString (0xff & b)
-				if ((strHex.length) == 1) sb append '0'
+				if (strHex.length == 1) sb append '0'
 				sb append strHex
 			}
 			retVal = sb toString()
