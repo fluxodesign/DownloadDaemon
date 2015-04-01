@@ -326,6 +326,9 @@ class Utils {
 			movie.Language_=((json get "language").asInstanceOf[String])
 			movie.MovieRutime_=((json get "runtime").asInstanceOf[String].toInt)
 			movie.DateUploaded_=((json get "date_uploaded").asInstanceOf[String])
+
+			LogWriter writeLog("--> get to here 2", Level.DEBUG)
+
 			movie.DateUploadedEpoch_=((json get "date_uploaded_unix").asInstanceOf[Long])
 			movie.CoverImage_=((json get "medium_cover_image").asInstanceOf[String])
 			movie.ImdbCode_=((json get "imdb_code").asInstanceOf[String])
