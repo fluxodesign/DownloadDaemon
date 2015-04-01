@@ -318,6 +318,9 @@ class Utils {
 			movie.MovieTitleLong_=((json get "title_long").asInstanceOf[String])
 			movie.MovieTitle_=((json get "title").asInstanceOf[String])
 			movie.MovieYear_=((json get "year").asInstanceOf[Long])
+
+			LogWriter writeLog("--> get to here", Level.DEBUG)
+
 			movie.MovieRating_=((json get "rating").asInstanceOf[Double])
 			movie.MpaRating_=((json get "mpa_rating").asInstanceOf[String])
 			movie.Language_=((json get "language").asInstanceOf[String])
