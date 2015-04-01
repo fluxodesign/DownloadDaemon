@@ -357,6 +357,7 @@ class Utils {
 						movie.SizeByte720p_=((jTorrentObject get "size_bytes").asInstanceOf[Long])
 						movie.DateUploaded720p_=((jTorrentObject get "date_uploaded").asInstanceOf[String])
 						movie.DateUploadedEpoch720p_=((jTorrentObject get "date_uploaded_unix").asInstanceOf[Long])
+						LogWriter writeLog("--> get to here: 720p", Level.DEBUG)
 					} else if ((jTorrentObject get "quality") equals "1080p") {
 						movie.TorrentUrl1080p_=((jTorrentObject get "url").asInstanceOf[String])
 						movie.TorrentHash1080p_=((jTorrentObject get "hash").asInstanceOf[String])
@@ -370,6 +371,7 @@ class Utils {
 						movie.SizeByte1080p_=((jTorrentObject get "size_bytes").asInstanceOf[Long])
 						movie.DateUploaded1080p_=((jTorrentObject get "date_uploaded").asInstanceOf[String])
 						movie.DateUploadedEpoch1080p_=((jTorrentObject get "date_uploaded_unix").asInstanceOf[Long])
+						LogWriter writeLog("--> get to here: 1080p", Level.DEBUG)
 					} else if ((jTorrentObject get "quality") equals "3D") {
 						movie.TorrentUrl3D_=((jTorrentObject get "url").asInstanceOf[String])
 						movie.TorrentHash3D_=((jTorrentObject get "hash").asInstanceOf[String])
@@ -383,6 +385,7 @@ class Utils {
 						movie.SizeByte3D_=((jTorrentObject get "size_bytes").asInstanceOf[Long])
 						movie.DateUploaded3D_=((jTorrentObject get "date_uploaded").asInstanceOf[String])
 						movie.DateUploadedEpoch3D_=((jTorrentObject get "date_uploaded_unix").asInstanceOf[Long])
+						LogWriter writeLog("--> get to here: 3D", Level.DEBUG)
 					}
 				}
 			}
@@ -396,7 +399,9 @@ class Utils {
 				}
 				sb toString()
 			}
+			LogWriter writeLog("--> get to here: genre", Level.DEBUG)
 			movie.Genre_=(genre)
+			LogWriter writeLog("--> get to here: after genre", Level.DEBUG)
 		}
 		LogWriter writeLog ("-->end stringToMovieObject", Level.DEBUG)
 		movie
