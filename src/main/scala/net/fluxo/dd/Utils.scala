@@ -324,7 +324,7 @@ class Utils {
 			movie.MovieRating_=((json get "rating").asInstanceOf[Double])
 			movie.MpaRating_=((json get "mpa_rating").asInstanceOf[String])
 			movie.Language_=((json get "language").asInstanceOf[String])
-			movie.MovieRutime_=((json get "runtime").asInstanceOf[String].toInt)
+			movie.MovieRutime_=((json get "runtime").asInstanceOf[Int])
 			movie.DateUploaded_=((json get "date_uploaded").asInstanceOf[String])
 
 			LogWriter writeLog("--> get to here 2", Level.DEBUG)
