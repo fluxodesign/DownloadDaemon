@@ -322,12 +322,16 @@ class Utils {
 			LogWriter writeLog("--> get to here", Level.DEBUG)
 
 			movie.MovieRating_=((json get "rating").asInstanceOf[Double])
+			LogWriter writeLog("--> get to here 2", Level.DEBUG)
 			movie.MpaRating_=((json get "mpa_rating").asInstanceOf[String])
+			LogWriter writeLog("--> get to here 3", Level.DEBUG)
 			movie.Language_=((json get "language").asInstanceOf[String])
+			LogWriter writeLog("--> get to here 4", Level.DEBUG)
 			movie.MovieRutime_=((json get "runtime").asInstanceOf[Int])
+			LogWriter writeLog("--> get to here 5", Level.DEBUG)
 			movie.DateUploaded_=((json get "date_uploaded").asInstanceOf[String])
 
-			LogWriter writeLog("--> get to here 2", Level.DEBUG)
+			LogWriter writeLog("--> get to here 6", Level.DEBUG)
 
 			movie.DateUploadedEpoch_=((json get "date_uploaded_unix").asInstanceOf[Long])
 			movie.CoverImage_=((json get "medium_cover_image").asInstanceOf[String])
