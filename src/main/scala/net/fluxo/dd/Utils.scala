@@ -340,8 +340,8 @@ class Utils {
 			LogWriter writeLog("-->middle 1", Level.DEBUG)
 
 			val jTorrentObjects = (json get "torrents").asInstanceOf[JSONArray]
-			val jTorrentObjects2 = jTorrentObjects.
-			LogWriter writeLog("-->middle 2", Level.DEBUG)
+
+			LogWriter writeLog("-->middle 2: torrents size: " + jTorrentObjects.size(), Level.DEBUG)
 			for (x <- jTorrentObjects) {
 				val jTorrentObject = x.asInstanceOf[JSONObject]
 				LogWriter writeLog("--> jTorrent iterator", Level.DEBUG)
