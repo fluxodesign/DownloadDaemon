@@ -118,7 +118,6 @@ class YIFYProcessor {
 				request append "&with_images=true"
 				val response = OUtils crawlServer (request toString())
 				yifySearchResult AddToMovieList (OUtils stringToMovieObject response)
-				LogWriter writeLog("-->SHOUlD BE HERE!", Level.DEBUG)
 			}
 		}
 		OUtils YIFYSearchResultToJSON yifySearchResult

@@ -384,7 +384,6 @@ class Utils {
 			}
 			movie.Genre_=(genre)
 		}
-		LogWriter writeLog ("-->end stringToMovieObject", Level.DEBUG)
 		movie
 	}
 
