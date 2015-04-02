@@ -313,7 +313,8 @@ class Utils {
 		val movie = new MovieObject
 		try {
 			LogWriter writeLog("-->start stringToMovieObject", Level.DEBUG)
-			val json = JSONValue.parseWithException(raw).asInstanceOf[JSONObject]
+			val rawVals = JSONValue.parseWithException(raw).asInstanceOf[JSONObject]
+			val json = (rawVals get "data").asInstanceOf[JSONObject]
 			movie.MovieID_=((json get "id").asInstanceOf[Long])
 			movie.MovieUrl_=((json get "url").asInstanceOf[String])
 			movie.MovieTitleLong_=((json get "title_long").asInstanceOf[String])
