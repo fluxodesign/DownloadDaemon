@@ -309,10 +309,8 @@ class Utils {
 	 * @return a <code>net.fluxo.dd.dbo.MovieObject</code> object
 	 */
 	def stringToMovieObject(raw: String):MovieObject = {
-		LogWriter writeLog("--> raw input: " + raw, Level.DEBUG)
 		val movie = new MovieObject
 		try {
-			LogWriter writeLog("-->start stringToMovieObject", Level.DEBUG)
 			val rawVals = JSONValue.parseWithException(raw).asInstanceOf[JSONObject]
 			val json = (rawVals get "data").asInstanceOf[JSONObject]
 			movie.MovieID_=((json get "id").asInstanceOf[Long])
@@ -320,32 +318,18 @@ class Utils {
 			movie.MovieTitleLong_=((json get "title_long").asInstanceOf[String])
 			movie.MovieTitle_=((json get "title").asInstanceOf[String])
 			movie.MovieYear_=((json get "year").asInstanceOf[Long])
-
-			LogWriter writeLog("--> get to here", Level.DEBUG)
-
 			movie.MovieRating_=((json get "rating").asInstanceOf[Long].toDouble)
-			LogWriter writeLog("--> get to here 2", Level.DEBUG)
 			movie.MpaRating_=((json get "mpa_rating").asInstanceOf[String])
-			LogWriter writeLog("--> get to here 3", Level.DEBUG)
 			movie.Language_=((json get "language").asInstanceOf[String])
-			LogWriter writeLog("--> get to here 4", Level.DEBUG)
 			movie.MovieRutime_=((json get "runtime").asInstanceOf[Long].toInt)
-			LogWriter writeLog("--> get to here 5", Level.DEBUG)
 			movie.DateUploaded_=((json get "date_uploaded").asInstanceOf[String])
-
-			LogWriter writeLog("--> get to here 6", Level.DEBUG)
-
 			movie.DateUploadedEpoch_=((json get "date_uploaded_unix").asInstanceOf[Long])
 			movie.CoverImage_=((json get "medium_cover_image").asInstanceOf[String])
 			movie.ImdbCode_=((json get "imdb_code").asInstanceOf[String])
-
-			LogWriter writeLog("-->middle 1", Level.DEBUG)
-
 			val jTorrentObjects = (json get "torrents").asInstanceOf[JSONArray]
-
-			LogWriter writeLog("-->middle 2: torrents size: " + jTorrentObjects.size(), Level.DEBUG)
-			/*for (x <- jTorrentObjects) {
-				val jTorrentObject = x.asInstanceOf[JSONObject]
+			val jTorrentIterator = jTorrentObjects.iterator()
+			while (jTorrentIterator hasNext) {
+				val jTorrentObject = jTorrentIterator.next().asInstanceOf[JSONObject]
 				LogWriter writeLog("--> jTorrent iterator", Level.DEBUG)
 				if ((jTorrentObject get "quality") equals "720p") {
 					LogWriter writeLog("--> 720p 1", Level.DEBUG)
@@ -429,7 +413,7 @@ class Utils {
 					LogWriter writeLog("--> 3D 13", Level.DEBUG)
 					LogWriter writeLog("--> get to here: 3D", Level.DEBUG)
 				}
-			}*/
+			}
 
 			val genres = (json get "genres").asInstanceOf[JSONArray]
 			val genre: String = {
