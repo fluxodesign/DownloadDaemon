@@ -20,13 +20,14 @@
  */
 package net.fluxo.dd
 
-import java.net.URL
 import java.io.File
-import org.json.simple.{JSONObject, JSONValue, JSONArray}
-import org.apache.commons.io.FilenameUtils
+import java.net.URL
+
 import net.fluxo.dd.dbo.{YIFYCache, YIFYSearchResult}
+import org.apache.commons.io.FilenameUtils
 import org.apache.log4j.Level
 import org.json.simple.parser.JSONParser
+import org.json.simple.{JSONArray, JSONObject, JSONValue}
 
 /**
  * This class deals with YIFY's web service, particularly with listing, acquiring and caching movie details, including
@@ -50,18 +51,19 @@ class YIFYProcessor {
 	 * @return the list of movies on a particular page from YIFY site, with all cover image URLs re-addressed to our site
 	 */
 	def procListMovie(page: Int, quality:Int, rating: Int, externalIP: String, port: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=15")
+		val request: StringBuilder = new StringBuilder("https://yts.to/api/v2/list_movies.json?limit=15")
 		if (quality <= 3 && quality >= 0) request append "&quality=" append(quality  match {
 			case 0 => "ALL"
 			case 1 => "720p"
 			case 2 => "1080p"
 			case 3 => "3D"
 		})
-		if (page > 0) request append("&set=" + page)
-		if (rating >= 0 && rating <= 9) request append("&rating=" + rating)
+		if (page > 0) request append("&page=" + page)
+		if (rating >= 0 && rating <= 9) request append("&minimum_rating=" + rating)
 		// send the request...
 		val response = OUtils crawlServer (request toString())
 		checkEntryWithYIFYCache(response)
+		LogWriter writeLog("checkEntryWithYIFYCache went OK", Level.DEBUG)
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR NO LIST"
 		processImages(response, externalIP, port)
 	}
@@ -75,10 +77,12 @@ class YIFYProcessor {
 	 * @return details of a movie from YIFY site, with screenshot images re-addressed to our site
 	 */
 	def procMovieDetails(id: Int, externalIP:String, port: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/movie.json?id=") append id
+		val request: StringBuilder = new StringBuilder("https://yts.to/api/v2/movie_details.json?movie_id=") append id
+		request append "&with_images=true&with_cast=true"
 		val response = OUtils crawlServer (request toString())
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
-		processScreenshotImages(response, externalIP, port)
+        val coverURL = DbControl getCoverImageUrl id
+		processScreenshotImages(coverURL, response, externalIP, port)
 	}
 
 	/**
@@ -87,8 +91,8 @@ class YIFYProcessor {
 	 * @return response from YIFY site
 	 */
 	def procYIFYCache(page: Int): String = {
-		val request: StringBuilder = new StringBuilder("http://yts.re/api/list.json?limit=50")
-		if (page > 1) request append "&set=" append page
+		val request: StringBuilder = new StringBuilder("https://yts.to/api/v2/list_movies.json?limit=50")
+		if (page > 1) request append "&page=" append page
 		val response = OUtils crawlServer (request toString())
 		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return  "ERR NO LIST"
 		response
@@ -110,9 +114,11 @@ class YIFYProcessor {
 			val request = new StringBuilder
 			for (x <- searchResult) {
 				request setLength 0
-				request append "http://yts.re/api/movie.json?id=" append x.MovieID
+				request append "https://yts.to/api/v2/movie_details.json?movie_id=" append x.MovieID
+				request append "&with_images=true"
 				val response = OUtils crawlServer (request toString())
 				yifySearchResult AddToMovieList (OUtils stringToMovieObject response)
+				LogWriter writeLog("-->SHOUlD BE HERE!", Level.DEBUG)
 			}
 		}
 		OUtils YIFYSearchResultToJSON yifySearchResult
@@ -120,34 +126,48 @@ class YIFYProcessor {
 
 	/**
 	 * Process results returned from YIFY site by changing the URLs of screenshot images to point to our site.
-	 * @param content original string returned by YIFY site
+	 * @param coverURL cover image URL for this movie
+     * @param response original string returned by YIFY site
 	 * @param externalIP the local system's external IP address
 	 * @param port port number where the embedded Jetty server is bound to
 	 * @return response from YIFY site, with all screenshot image URLs re-addressed to point to our site
 	 */
-	private def processScreenshotImages(content: String, externalIP: String, port: Int): String = {
-		var newContent = content
-		val jsObj = (JSONValue parseWithException content).asInstanceOf[org.json.simple.JSONObject]
-		val arrKeys = Array("MediumCover", "MediumScreenshot1", "MediumScreenshot2", "MediumScreenshot3")
+	private def processScreenshotImages(coverURL: String, response: String, externalIP: String, port: Int): String = {
+        // for API v2, there is a new way to acquire screenshots, basically the site hosts the screenshots in the same folder
+        // as the cover image; for e.g.: http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/small-cover.jpg
+        // then the screenshots would be: http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/medium-screenshot2.jpg,
+        // http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/medium-screenshot3.jpg and
+        // http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/large-screenshot2.jpg and
+        // http://s.ynet.io/assets/images/movies/horrible_bosses_2_2014/large-screenshot3.jpg
+        // Since there is no way of getting this information, we need to "dip" into cache db to get this information
+        // or detect the existence of "images" field...
+        var newContent = response
+        val arrKeys = Array("medium_cover_image", "medium_screenshot_image1", "medium_screenshot_image2", "medium_screenshot_image3")
+        val jsObj = (JSONValue parseWithException response).asInstanceOf[JSONObject]
+        val jsData = (jsObj get "data").asInstanceOf[JSONObject]
+        val jsImages = (jsData get "images").asInstanceOf[JSONObject]
 
-		for (x <- arrKeys) {
-			val sc = (jsObj get x).toString
-			var newSc = sc replaceAllLiterally("\\/", "/")
-			val path = new URL(newSc).getPath
-			val dirname = "." + (FilenameUtils getFullPath path)
-			val dir = new File(dirname)
-			if (!(dir exists())) dir mkdirs()
-			val localFile = new File(dirname + (FilenameUtils getName path))
-			if (!(localFile exists())) new Thread(new WgetImage(newSc, dirname)) start()
-			if (!externalIP.equals("127.0.0.1")) {
-				val oldServer = new URL(newSc).getAuthority
-				newSc = newSc replace(oldServer, externalIP + ":" + port)
-				newSc = newSc replaceAllLiterally("/", "\\/")
-				val oldSc = sc replaceAllLiterally("/", "\\/")
-				if ((newContent indexOf oldSc) > -1) newContent = newContent replace(oldSc, newSc)
-			}
-		}
-		newContent
+        if (jsImages != null) {
+            for (x <- arrKeys) {
+                val sc = (jsImages get x).asInstanceOf[String]
+                var newSc = sc replaceAllLiterally("\\/", "/")
+                val path = new URL(newSc).getPath
+                val dirName = "." + (FilenameUtils getFullPath path)
+                val dir = new File(dirName)
+                if (!(dir exists())) dir mkdirs()
+                val localFile = new File(dirName + (FilenameUtils getName path))
+                if (!(localFile exists())) new Thread(new WgetImage(newSc, dirName)) start()
+                if (!(externalIP equals "127.0.0.1")) {
+                    val oldServer = new URL(newSc).getAuthority
+	                if (newSc startsWith "https") newSc = newSc replace ("https", "http")
+                    newSc = newSc replace(oldServer, externalIP + ":" + port)
+                    newSc = newSc replaceAllLiterally("/", "\\/")
+                    val oldSc = sc replaceAllLiterally("/", "\\/")
+                    if ((newContent indexOf oldSc) > -1) newContent = newContent replace(oldSc, newSc)
+                }
+            }
+        }
+        newContent
 	}
 
 	/**
@@ -159,11 +179,12 @@ class YIFYProcessor {
 	 */
 	private def processImages(content: String, externalIP: String, port: Int): String = {
 		var newContent = content
-		val jsObj = JSONValue.parseWithException(content).asInstanceOf[org.json.simple.JSONObject]
-		val jsArray = jsObj.get("MovieList").asInstanceOf[JSONArray]
+		val jsObj = JSONValue.parseWithException(content).asInstanceOf[JSONObject]
+        val jsData = (jsObj get "data").asInstanceOf[JSONObject]
+		val jsArray = (jsData get "movies").asInstanceOf[JSONArray]
 		val iterator = jsArray.iterator()
 		while (iterator.hasNext) {
-			val coverImage = iterator.next().asInstanceOf[org.json.simple.JSONObject].get("CoverImage").toString
+			val coverImage = iterator.next().asInstanceOf[JSONObject].get("medium_cover_image").toString
 			// now we get our "raw" image url; we need to decode json forward slash to simple forward slash
 			var newCoverImage = coverImage.replaceAllLiterally("\\/", "/")
 			// now we need to analyse the url, create directory related to this url in our directory
@@ -179,6 +200,7 @@ class YIFYProcessor {
 			// remodel our image url into http://<our-outside-ip>/.....
 			if (!externalIP.equals("127.0.0.1")) {
 				val oldServer = new URL(newCoverImage).getAuthority
+				if (newCoverImage startsWith "https") newCoverImage = newCoverImage replace ("https", "http")
 				newCoverImage = newCoverImage replace(oldServer, externalIP + ":" + port)
 				// and re-encode the forward slash to json forward slash
 				newCoverImage = newCoverImage replaceAllLiterally("/", "\\/")
@@ -199,16 +221,21 @@ class YIFYProcessor {
 		val jsonParser = new JSONParser
 		try {
 			val obj = (jsonParser parse raw).asInstanceOf[JSONObject]
-			val iterator = (obj get "MovieList").asInstanceOf[JSONArray] iterator()
+            val data = (obj get "data").asInstanceOf[JSONObject]
+			val iterator = (data get "movies").asInstanceOf[JSONArray] iterator()
 			while (iterator.hasNext) {
 				val o = (iterator next()).asInstanceOf[JSONObject]
 				val yifyCache = new YIFYCache
-				yifyCache.MovieID_:((o get "MovieID").asInstanceOf[String].toInt)
-				yifyCache.MovieTitle_:((o get "MovieTitleClean").asInstanceOf[String])
-				yifyCache.MovieYear_:((o get "MovieYear").asInstanceOf[String])
-				yifyCache.MovieQuality_:((o get "Quality").asInstanceOf[String])
-				yifyCache.MovieSize_:((o get "Size").asInstanceOf[String])
-				yifyCache.MovieCoverImage_:((o get "CoverImage").asInstanceOf[String])
+				yifyCache.MovieID_:((o get "id").asInstanceOf[Long])
+				yifyCache.MovieTitle_:((o get "title").asInstanceOf[String])
+				yifyCache.MovieYear_:((o get "year").asInstanceOf[Long])
+				yifyCache.MovieCoverImage_:((o get "medium_cover_image").asInstanceOf[String])
+				val torrentInfo = (o get "torrents").asInstanceOf[JSONArray] iterator()
+				if (torrentInfo hasNext) {
+					val torInfo = (torrentInfo next()).asInstanceOf[JSONObject]
+					yifyCache.MovieQuality_:((torInfo get "quality").asInstanceOf[String])
+					yifyCache.MovieSize_:((torInfo get "size").asInstanceOf[String])
+				}
 
 				if (!(DbControl ycQueryMovieID(yifyCache MovieID))) {
 					DbControl ycInsertNewData yifyCache

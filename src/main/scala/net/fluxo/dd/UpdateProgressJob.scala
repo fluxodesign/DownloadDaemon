@@ -20,12 +20,14 @@
  */
 package net.fluxo.dd
 
-import org.quartz.{Job, JobExecutionContext, JobExecutionException}
-import org.apache.log4j.Level
 import java.io._
 import java.util
+
 import org.apache.commons.io.FileUtils
+import org.apache.log4j.Level
 import org.apache.xmlrpc.XmlRpcException
+import org.quartz.{Job, JobExecutionContext, JobExecutionException}
+
 import scala.util.control.Breaks._
 
 /**
@@ -79,6 +81,60 @@ class UpdateProgressJob extends Job {
 								}
 								if (tg != null && tg.length > 0 && tg(0) != null) {
 									DbControl updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tg(0).asInstanceOf[String])
+								} else {
+									DbControl updateTaskTailGID(tasks(0).TaskGID.getOrElse(""), tasks(0).TaskGID.getOrElse(""))
+								}
+							}
+						}
+
+						val finishedTasks = OUtils sendAriaTellStopped client
+						for (o <- finishedTasks) {
+							val jMap = {
+								var hm: util.HashMap[String, Object] = null
+								try {
+									hm = o.asInstanceOf[util.HashMap[String, Object]]
+								} catch {
+									case e: Exception =>
+										LogWriter writeLog("Port " + _currentPort + "/FinishedTask: " + e.getMessage, Level.INFO)
+								}
+								hm
+							}
+							if (jMap != null) {
+								val status = OUtils.extractValueFromHashMap(jMap, "status").toString
+								val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
+								val infoHash = {
+									val tasks = DbControl.queryTask(gid)
+									if (tasks.length > 0 && tasks(0).TaskIsHttp) "noinfohash"
+									else OUtils.extractValueFromHashMap(jMap, "infoHash").toString
+								}
+								val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
+								val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
+								// The old approach is to query for a count of object(s) in the DB with 'GID',
+								// 'infoHash' and 'totalLength' matching this particular torrent...
+								val qf = DbControl queryFinishTask(gid, infoHash, tl)
+								if (qf.CPCount > 0) {
+									DbControl finishTask(status, cl, gid, infoHash, tl)
+									flagCompleted = true
+									// move the package to a directory specified in config...
+									if (OUtils.readConfig.DownloadDir.orNull.length > 0) {
+										if (a.AriaHttpDownload) {
+											// HTTP downloads usually are just for 1 file...
+											val packageFile = new File(qf.CPPackage.orNull)
+											val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse(""))
+											if (packageFile.isFile && packageFile.exists() && destDir.isDirectory && destDir.exists()) {
+												FileUtils moveFileToDirectory(packageFile, destDir, false)
+											} else LogWriter writeLog("Failed to move file " + qf.CPPackage.getOrElse("{empty file}") +
+												" to " + OUtils.readConfig.DownloadDir.getOrElse("{empty target dir}"), Level.INFO)
+										} else {
+											val packageDir = new File(qf.CPPackage.orNull)
+											val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
+											if (packageDir.isDirectory && packageDir.exists && !destDir.exists) {
+												FileUtils moveDirectory(packageDir, destDir)
+											} else if (packageDir.isFile && packageDir.exists && !destDir.exists) {
+												FileUtils moveFile(packageDir, destDir)
+											} else LogWriter writeLog("directory " + destDir.getAbsolutePath + " exist!", Level.INFO)
+										}
+									}
 								}
 							}
 						}
@@ -100,6 +156,7 @@ class UpdateProgressJob extends Job {
 								val task = {
 									if (tailGID.length > 0) DbControl queryTaskTailGID tailGID else null
 								}
+								task.TaskTailGID_=(tailGID)
 								val cl = (OUtils extractValueFromHashMap(jMap, "completedLength")).toString.toLong
 								task.TaskCompletedLength_=(cl)
 								val tl = (OUtils extractValueFromHashMap(jMap, "totalLength")).toString.toLong
@@ -133,56 +190,6 @@ class UpdateProgressJob extends Job {
 							}
 						}
 
-						val finishedTasks = OUtils sendAriaTellStopped client
-						for (o <- finishedTasks) {
-							val jMap = {
-								var hm: util.HashMap[String, Object] = null
-								try {
-									hm = o.asInstanceOf[util.HashMap[String, Object]]
-								} catch {
-									case e: Exception =>
-										LogWriter writeLog("Port " + _currentPort + "/FinishedTask: " + e.getMessage, Level.INFO)
-								}
-								hm
-							}
-							if (jMap != null) {
-								val status = OUtils.extractValueFromHashMap(jMap, "status").toString
-								val gid = OUtils.extractValueFromHashMap(jMap, "gid").toString
-								val infoHash = {
-									val tasks = DbControl.queryTask(gid)
-									if (tasks.length > 0 && tasks(0).TaskIsHttp) "noinfohash"
-									else OUtils.extractValueFromHashMap(jMap, "infoHash").toString
-								}
-								val cl = OUtils.extractValueFromHashMap(jMap, "completedLength").toString.toLong
-								val tl = OUtils.extractValueFromHashMap(jMap, "totalLength").toString.toLong
-								val qf = DbControl queryFinishTask(gid, infoHash, tl)
-								if (qf.CPCount > 0) {
-									DbControl finishTask(status, cl, gid, infoHash, tl)
-									flagCompleted = true
-									// move the package to a directory specified in config...
-									if (OUtils.readConfig.DownloadDir.orNull.length > 0) {
-										if (a.AriaHttpDownload) {
-											// HTTP downloads usually are just for 1 file...
-											val packageFile = new File(qf.CPPackage.orNull)
-											val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse(""))
-											if (packageFile.isFile && packageFile.exists() && destDir.isDirectory && destDir.exists()) {
-												FileUtils moveFileToDirectory(packageFile, destDir, false)
-											} else LogWriter writeLog("Failed to move file " + qf.CPPackage.getOrElse("{empty file}") +
-													" to " + OUtils.readConfig.DownloadDir.getOrElse("{empty target dir}"), Level.INFO)
-										} else {
-											val packageDir = new File(qf.CPPackage.orNull)
-											val destDir = new File(OUtils.readConfig.DownloadDir.getOrElse("") + "/" + qf.CPPackage.getOrElse(""))
-											if (packageDir.isDirectory && packageDir.exists && !destDir.exists) {
-												FileUtils moveDirectory(packageDir, destDir)
-											} else if (packageDir.isFile && packageDir.exists && !destDir.exists) {
-												FileUtils moveFile(packageDir, destDir)
-											} else LogWriter writeLog("directory " + destDir.getAbsolutePath + " exist!", Level.INFO)
-										}
-									}
-								}
-							}
-						}
-
 						// shutdown this aria2 process when it's update is finished...
 						if (activeTasks.length == 0 && flagCompleted) {
 							OUtils sendAriaTellShutdown client
@@ -191,7 +198,7 @@ class UpdateProgressJob extends Job {
 
 					} catch {
 						case xe: XmlRpcException =>
-							LogWriter writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.ERROR)
+							LogWriter writeLog("Port " + _currentPort + ": " + xe.getMessage, Level.DEBUG)
 							// if a download is hanging or call to XML-RPC server returns an error,
 							// we need to shut down the offending thread and restart the download...
 							LogWriter writeLog("Shutting down the offending thread...", Level.INFO)

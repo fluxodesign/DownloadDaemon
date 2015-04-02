@@ -20,24 +20,28 @@
  */
 package net.fluxo.dd
 
-import net.fluxo.dd.dbo.{YIFYSearchResult, MovieObject, Config}
-import java.util.{Random, Properties}
 import java.io._
-import org.apache.log4j.Level
 import java.net._
-import org.apache.xmlrpc.client.{XmlRpcClientConfigImpl, XmlRpcClient}
-import org.apache.xmlrpc.serializer.{TypeSerializer, StringSerializer}
-import org.xml.sax.{ContentHandler, SAXException}
-import org.apache.xmlrpc.common.{XmlRpcStreamConfig, TypeFactoryImpl, XmlRpcController}
-import java.util
-import org.apache.xmlrpc.XmlRpcException
-import scala.util.control.Breaks._
-import org.apache.http.impl.client.HttpClientBuilder
-import org.apache.http.client.methods.HttpGet
-import org.json.simple.{JSONArray, JSONValue, JSONObject}
-import org.apache.commons.io.FileUtils
 import java.security.MessageDigest
+import java.util
+import java.util.zip.GZIPInputStream
+import java.util.{Properties, Random}
+
+import net.fluxo.dd.dbo.{Config, MovieObject, YIFYSearchResult}
+import org.apache.commons.io.FileUtils
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.impl.client.HttpClientBuilder
+import org.apache.log4j.Level
+import org.apache.xmlrpc.XmlRpcException
+import org.apache.xmlrpc.client.{XmlRpcClient, XmlRpcClientConfigImpl}
+import org.apache.xmlrpc.common.{TypeFactoryImpl, XmlRpcController, XmlRpcStreamConfig}
+import org.apache.xmlrpc.serializer.{StringSerializer, TypeSerializer}
 import org.json.simple.parser.JSONParser
+import org.json.simple.{JSONArray, JSONObject, JSONValue}
+import org.xml.sax.{ContentHandler, SAXException}
+
+import scala.collection.JavaConversions._
+import scala.util.control.Breaks._
 
 /**
  * This class contains methods that can be called from anywhere in the application.
@@ -256,41 +260,190 @@ class Utils {
 	}
 
 	/**
+	 * Contact a web server and request its resouce (a file).
+	 *
+	 * @param request URL of resource
+	 * @param savePath where to save the resource on the local system
+	 */
+	def crawlServerObject(request: String, savePath: String, gzipped: Boolean) {
+		try {
+			val htClient = HttpClientBuilder.create().build()
+			val htGet = new HttpGet(request)
+			htGet addHeader("Content-Type", "application/x-bittorrent")
+			htGet addHeader("User-Agent", "FluxoAgent/0.1")
+			if (gzipped) htGet addHeader("Content-Encoding", "gzip")
+			val htResponse = htClient execute htGet
+			val htEntity = htResponse.getEntity
+			if (htEntity != null) {
+				val is = htEntity.getContent
+				val bufferedInputStream = new BufferedInputStream(is)
+				val bufferedOutputStream = {
+					if (gzipped) new BufferedOutputStream(new FileOutputStream(new File(savePath + ".gz")))
+					else new BufferedOutputStream(new FileOutputStream(new File(savePath)))
+				}
+				var inByte: Int = bufferedInputStream.read
+				while (inByte != -1) {
+					bufferedOutputStream write inByte
+					inByte = bufferedInputStream.read
+				}
+				bufferedInputStream close()
+				bufferedOutputStream close()
+				is close()
+			}
+			htClient close()
+			// if this is a gzipped file, we need to extract it
+			if (gzipped) {
+				gunzip(savePath + ".gz", savePath)
+			}
+		} catch {
+			case ioe: IOException =>
+				LogWriter writeLog("CrawlServerObject Exception: " + ioe.getMessage, Level.ERROR)
+				LogWriter writeLog(LogWriter stackTraceToString ioe, Level.ERROR)
+		}
+	}
+
+	/**
 	 * Convert a JSON response into <code>net.fluxo.dd.dbo.MovieObject</code>.
 	 *
 	 * @param raw JSON string response
 	 * @return a <code>net.fluxo.dd.dbo.MovieObject</code> object
 	 */
 	def stringToMovieObject(raw: String):MovieObject = {
+		LogWriter writeLog("--> raw input: " + raw, Level.DEBUG)
 		val movie = new MovieObject
 		try {
+			LogWriter writeLog("-->start stringToMovieObject", Level.DEBUG)
 			val json = JSONValue.parseWithException(raw).asInstanceOf[JSONObject]
-			movie.MovieID_=((json get "MovieID").asInstanceOf[String])
-			movie.MovieUrl_=((json get "MovieUrl").asInstanceOf[String])
-			movie.MovieTitleClean_=((json get "MovieTitleClean").asInstanceOf[String])
-			movie.MovieYear_=((json get "MovieYear").asInstanceOf[String].toInt)
-			movie.DateUploaded_=((json get "DateUploaded").asInstanceOf[String])
-			movie.DateUploadedEpoch_=((json get "DateUploadedEpoch").asInstanceOf[Long])
-			movie.Quality_=((json get "Quality").asInstanceOf[String])
-			movie.CoverImage_=((json get "MediumCover").asInstanceOf[String])
-			movie.ImdbCode_=((json get "ImdbCode").asInstanceOf[String])
-			movie.ImdbLink_=((json get "ImdbLink").asInstanceOf[String])
-			movie.Size_=((json get "Size").asInstanceOf[String])
-			movie.SizeByte_=((json get "SizeByte").asInstanceOf[String].toLong)
-			movie.MovieRating_=((json get "MovieRating").asInstanceOf[String])
-			var genre = json get "Genre1"
-			if ((json get "Genre2") != null && (json get "Genre2").asInstanceOf[String].length > 0) {
-				if (!(json get "Genre2").equals("null")) genre += "|" + (json get "Genre2")
+			movie.MovieID_=((json get "id").asInstanceOf[Long])
+			movie.MovieUrl_=((json get "url").asInstanceOf[String])
+			movie.MovieTitleLong_=((json get "title_long").asInstanceOf[String])
+			movie.MovieTitle_=((json get "title").asInstanceOf[String])
+			movie.MovieYear_=((json get "year").asInstanceOf[Long])
+
+			LogWriter writeLog("--> get to here", Level.DEBUG)
+
+			movie.MovieRating_=((json get "rating").asInstanceOf[Double])
+			LogWriter writeLog("--> get to here 2", Level.DEBUG)
+			movie.MpaRating_=((json get "mpa_rating").asInstanceOf[String])
+			LogWriter writeLog("--> get to here 3", Level.DEBUG)
+			movie.Language_=((json get "language").asInstanceOf[String])
+			LogWriter writeLog("--> get to here 4", Level.DEBUG)
+			movie.MovieRutime_=((json get "runtime").asInstanceOf[Int])
+			LogWriter writeLog("--> get to here 5", Level.DEBUG)
+			movie.DateUploaded_=((json get "date_uploaded").asInstanceOf[String])
+
+			LogWriter writeLog("--> get to here 6", Level.DEBUG)
+
+			movie.DateUploadedEpoch_=((json get "date_uploaded_unix").asInstanceOf[Long])
+			movie.CoverImage_=((json get "medium_cover_image").asInstanceOf[String])
+			movie.ImdbCode_=((json get "imdb_code").asInstanceOf[String])
+
+			LogWriter writeLog("-->middle 1", Level.DEBUG)
+
+			val jTorrentObjects = (json get "torrents").asInstanceOf[JSONArray]
+
+			LogWriter writeLog("-->middle 2: torrents size: " + jTorrentObjects.size(), Level.DEBUG)
+			/*for (x <- jTorrentObjects) {
+				val jTorrentObject = x.asInstanceOf[JSONObject]
+				LogWriter writeLog("--> jTorrent iterator", Level.DEBUG)
+				if ((jTorrentObject get "quality") equals "720p") {
+					LogWriter writeLog("--> 720p 1", Level.DEBUG)
+					movie.TorrentUrl720p_=((jTorrentObject get "url").asInstanceOf[String])
+					LogWriter writeLog("--> 720p 2", Level.DEBUG)
+					movie.TorrentHash720p_=((jTorrentObject get "hash").asInstanceOf[String])
+					LogWriter writeLog("--> 720p 3", Level.DEBUG)
+					movie.Downloaded720p_=((jTorrentObject get "download_count").asInstanceOf[Long])
+					LogWriter writeLog("--> 720p 4", Level.DEBUG)
+					movie.Resolution720p_=((jTorrentObject get "resolution").asInstanceOf[String])
+					LogWriter writeLog("--> 720p 5", Level.DEBUG)
+					movie.FrameRate720p_=((jTorrentObject get "framerate").asInstanceOf[Double])
+					LogWriter writeLog("--> 720p 6", Level.DEBUG)
+					movie.Quality720p_=((jTorrentObject get "quality").asInstanceOf[String])
+					LogWriter writeLog("--> 720p 7", Level.DEBUG)
+					movie.TorrentSeeds720p_=((jTorrentObject get "seeds").asInstanceOf[Int])
+					LogWriter writeLog("--> 720p 8", Level.DEBUG)
+					movie.TorrentPeers720p_=((jTorrentObject get "peers").asInstanceOf[Int])
+					LogWriter writeLog("--> 720p 9", Level.DEBUG)
+					movie.Size720p_=((jTorrentObject get "size").asInstanceOf[String])
+					LogWriter writeLog("--> 720p 10", Level.DEBUG)
+					movie.SizeByte720p_=((jTorrentObject get "size_bytes").asInstanceOf[Long])
+					LogWriter writeLog("--> 720p 11", Level.DEBUG)
+					movie.DateUploaded720p_=((jTorrentObject get "date_uploaded").asInstanceOf[String])
+					LogWriter writeLog("--> 720p 12", Level.DEBUG)
+					movie.DateUploadedEpoch720p_=((jTorrentObject get "date_uploaded_unix").asInstanceOf[Long])
+					LogWriter writeLog("--> 720p 13", Level.DEBUG)
+					LogWriter writeLog("--> get to here: 720p", Level.DEBUG)
+				} else if ((jTorrentObject get "quality") equals "1080p") {
+					LogWriter writeLog("--> 1080p 1", Level.DEBUG)
+					movie.TorrentUrl1080p_=((jTorrentObject get "url").asInstanceOf[String])
+					LogWriter writeLog("--> 1080p 2", Level.DEBUG)
+					movie.TorrentHash1080p_=((jTorrentObject get "hash").asInstanceOf[String])
+					LogWriter writeLog("--> 1080p 3", Level.DEBUG)
+					movie.Downloaded1080p_=((jTorrentObject get "download_count").asInstanceOf[Long])
+					LogWriter writeLog("--> 1080p 4", Level.DEBUG)
+					movie.Resolution1080p_=((jTorrentObject get "resolution").asInstanceOf[String])
+					LogWriter writeLog("--> 1080p 5", Level.DEBUG)
+					movie.FrameRate1080p_=((jTorrentObject get "framerate").asInstanceOf[Double])
+					LogWriter writeLog("--> 1080p 6", Level.DEBUG)
+					movie.Quality1080p_=((jTorrentObject get "quality").asInstanceOf[String])
+					LogWriter writeLog("--> 1080p 7", Level.DEBUG)
+					movie.TorrentSeeds1080p_=((jTorrentObject get "seeds").asInstanceOf[Int])
+					LogWriter writeLog("--> 1080p 8", Level.DEBUG)
+					movie.TorrentPeers1080p_=((jTorrentObject get "peers").asInstanceOf[Int])
+					LogWriter writeLog("--> 1080p 9", Level.DEBUG)
+					movie.Size1080p_=((jTorrentObject get "size").asInstanceOf[String])
+					LogWriter writeLog("--> 1080p 10", Level.DEBUG)
+					movie.SizeByte1080p_=((jTorrentObject get "size_bytes").asInstanceOf[Long])
+					LogWriter writeLog("--> 1080p 11", Level.DEBUG)
+					movie.DateUploaded1080p_=((jTorrentObject get "date_uploaded").asInstanceOf[String])
+					LogWriter writeLog("--> 1080p 12", Level.DEBUG)
+					movie.DateUploadedEpoch1080p_=((jTorrentObject get "date_uploaded_unix").asInstanceOf[Long])
+					LogWriter writeLog("--> 1080p 13", Level.DEBUG)
+					LogWriter writeLog("--> get to here: 1080p", Level.DEBUG)
+				} else if ((jTorrentObject get "quality") equals "3D") {
+					LogWriter writeLog("--> 3D 1", Level.DEBUG)
+					movie.TorrentUrl3D_=((jTorrentObject get "url").asInstanceOf[String])
+					LogWriter writeLog("--> 3D 2", Level.DEBUG)
+					movie.TorrentHash3D_=((jTorrentObject get "hash").asInstanceOf[String])
+					LogWriter writeLog("--> 3D 3", Level.DEBUG)
+					movie.Downloaded3D_=((jTorrentObject get "download_count").asInstanceOf[Long])
+					LogWriter writeLog("--> 3D 4", Level.DEBUG)
+					movie.Resolution3D_=((jTorrentObject get "resolution").asInstanceOf[String])
+					LogWriter writeLog("--> 3D 5", Level.DEBUG)
+					movie.FrameRate3D_=((jTorrentObject get "framerate").asInstanceOf[Double])
+					LogWriter writeLog("--> 3D 6", Level.DEBUG)
+					movie.Quality3D_=((jTorrentObject get "quality").asInstanceOf[String])
+					LogWriter writeLog("--> 3D 7", Level.DEBUG)
+					movie.TorrentSeeds3D_=((jTorrentObject get "seeds").asInstanceOf[Int])
+					LogWriter writeLog("--> 3D 8", Level.DEBUG)
+					movie.TorrentPeers3D_=((jTorrentObject get "peers").asInstanceOf[Int])
+					LogWriter writeLog("--> 3D 9", Level.DEBUG)
+					movie.Size3D_=((jTorrentObject get "size").asInstanceOf[String])
+					LogWriter writeLog("--> 3D 10", Level.DEBUG)
+					movie.SizeByte3D_=((jTorrentObject get "size_bytes").asInstanceOf[Long])
+					LogWriter writeLog("--> 3D 11", Level.DEBUG)
+					movie.DateUploaded3D_=((jTorrentObject get "date_uploaded").asInstanceOf[String])
+					LogWriter writeLog("--> 3D 12", Level.DEBUG)
+					movie.DateUploadedEpoch3D_=((jTorrentObject get "date_uploaded_unix").asInstanceOf[Long])
+					LogWriter writeLog("--> 3D 13", Level.DEBUG)
+					LogWriter writeLog("--> get to here: 3D", Level.DEBUG)
+				}
+			}*/
+
+			val genres = (json get "genres").asInstanceOf[JSONArray]
+			val genre: String = {
+				val sb = new StringBuilder
+				while (genres.iterator.hasNext) {
+					if (sb.length > 0) sb append " | "
+					sb append genres.iterator.next
+				}
+				sb toString()
 			}
-			movie.Genre_=(genre.asInstanceOf[String])
-			movie.Uploader_=((json get "Uploader").asInstanceOf[String])
-			movie.Downloaded_=((json get "Downloaded").asInstanceOf[String].toInt)
-			movie.TorrentSeeds_=((json get "TorrentSeeds").asInstanceOf[String].toInt)
-			movie.TorrentPeers_=((json get "TorrentPeers").asInstanceOf[String].toInt)
-			movie.TorrentUrl_=((json get "TorrentUrl").asInstanceOf[String])
-			movie.TorrentHash_=((json get "TorrentHash").asInstanceOf[String])
-			movie.TorrentMagnetUrl_=((json get "TorrentMagnetUrl").asInstanceOf[String])
+			LogWriter writeLog("--> get to here: genre", Level.DEBUG)
+			movie.Genre_=(genre)
+			LogWriter writeLog("--> get to here: after genre", Level.DEBUG)
 		}
+		LogWriter writeLog ("-->end stringToMovieObject", Level.DEBUG)
 		movie
 	}
 
@@ -303,38 +456,99 @@ class Utils {
 	def YIFYSearchResultToJSON(obj: YIFYSearchResult): String = {
 		val json = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
 		json put("SearchResult", "YIFY")
-		json put("MovieCount", obj.MovieCount)
-		val jsArray = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, String]]]
+		json put("status", "ok")
+		json put("status_message", "Query was successful")
+
+		val jsData = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+		jsData put("movie_count", obj.MovieCount)
+
+		val jsArray = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, Any]]]
 		val movieIterator = obj.MovieList.orNull iterator()
 		while (movieIterator.hasNext) {
 			val x = movieIterator next()
-			val movieObject = (new JSONObject).asInstanceOf[util.HashMap[String, String]]
-			movieObject put("MovieID", (x MovieID) getOrElse "")
-			movieObject put("State", (x State) getOrElse "")
-			movieObject put("MovieUrl", (x MovieUrl) getOrElse "")
-			movieObject put("MovieTitleClean", (x MovieTitleClean) getOrElse "")
-			movieObject put("MovieYear", (x MovieYear).toString)
-			movieObject put("DateUploaded", (x DateUploaded) getOrElse "")
-			movieObject put("DateUploadedEpoch", (x DateUploadedEpoch).toString)
-			movieObject put("Quality", (x Quality) getOrElse "")
-			movieObject put("CoverImage", (x CoverImage) getOrElse "")
-			movieObject put("ImdbCode", (x ImdbCode) getOrElse "")
-			movieObject put("ImdbLink", (x ImdbLink) getOrElse "")
-			movieObject put("Size", (x Size) getOrElse "")
-			movieObject put("SizeByte", (x SizeByte).toString)
-			movieObject put("MovieRating", (x MovieRating) getOrElse "")
-			movieObject put("Genre", (x Genre) getOrElse "")
-			movieObject put("Uploader", (x Uploader) getOrElse "")
-			movieObject put("Downloaded", (x Downloaded).toString)
-			movieObject put("TorrentSeeds", (x TorrentSeeds).toString)
-			movieObject put("TorrentPeers", (x TorrentPeers).toString)
-			movieObject put("TorrentUrl", (x TorrentUrl) getOrElse "")
-			movieObject put("TorrentHash", (x TorrentHash) getOrElse "")
-			movieObject put("TorrentMagnetUrl", (x TorrentMagnetUrl) getOrElse "")
+			val movieObject = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+			movieObject put("id", (x MovieID).toString)
+			movieObject put("state", (x State) getOrElse "")
+			movieObject put("url", (x MovieUrl) getOrElse "")
+			movieObject put("title_long", (x MovieTitleLong) getOrElse "")
+			movieObject put("title", (x MovieTitle) getOrElse "")
+			movieObject put("year", (x MovieYear).toString)
+			movieObject put("rating", (x MovieRating).toString)
+			movieObject put("mpa_rating", (x MpaRating) getOrElse "")
+			movieObject put("language", (x Language) getOrElse "")
+			movieObject put("runtime", (x MovieRuntime).toString)
+			movieObject put("date_uploaded", (x DateUploaded) getOrElse "")
+			movieObject put("date_uploaded_unix", (x DateUploadedEpoch).toString)
+			movieObject put("medium_cover_image", (x CoverImage) getOrElse "")
+			movieObject put("download_count", x DownloadCount)
+			movieObject put("imdb_code", (x ImdbCode) getOrElse "")
+			val movieGenres = (new JSONArray).asInstanceOf[util.List[String]]
+			if (((x Genre) getOrElse "").length > 0) {
+				val gens = ((x Genre) getOrElse "") split "|"
+				for (g <- gens) {
+					movieGenres.append(g)
+				}
+			}
+			movieObject put("genres", movieGenres)
+			val torrents = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, Any]]]
+			if ((x.TorrentUrl720p getOrElse "").length > 0) {
+				val tObject = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+				tObject put("url", x.TorrentUrl720p getOrElse "")
+				tObject put("hash", x.TorrentHash720p getOrElse "")
+				tObject put("quality", x.Quality720p getOrElse "")
+				tObject put("seeds", x.TorrentSeeds720p)
+				tObject put("peers", x.TorrentPeers720p)
+				tObject put("size", x.Size720p getOrElse "")
+				tObject put("size_bytes", x.SizeByte720p)
+				tObject put("download_count", x.Downloaded720p)
+				tObject put("resolution", x.Resolution720p getOrElse "")
+				tObject put("framerate", x.FrameRate720p)
+				tObject put("date_uploaded", x.DateUploaded720p getOrElse "")
+				tObject put("date_uploaded_unix", x.DateUploadedEpoch720p)
+				torrents add tObject
+			}
+			if ((x.TorrentUrl1080p getOrElse "").length > 0) {
+				val tObject = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+				tObject put("url", x.TorrentUrl1080p getOrElse "")
+				tObject put("hash", x.TorrentHash1080p getOrElse "")
+				tObject put("quality", x.Quality1080p getOrElse "")
+				tObject put("seeds", x.TorrentSeeds1080p)
+				tObject put("peers", x.TorrentPeers1080p)
+				tObject put("size", x.Size1080p getOrElse "")
+				tObject put("size_bytes", x.SizeByte1080p)
+				tObject put("download_count", x.Downloaded1080p)
+				tObject put("resolution", x.Resolution1080p getOrElse "")
+				tObject put("framerate", x.FrameRate1080p)
+				tObject put("date_uploaded", x.DateUploaded1080p getOrElse "")
+				tObject put("date_uploaded_unix", x.DateUploadedEpoch1080p)
+				torrents add tObject
+			}
+			if ((x.TorrentUrl3D getOrElse "").length > 0) {
+				val tObject = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
+				tObject put("url", x.TorrentUrl3D getOrElse "")
+				tObject put("hash", x.TorrentHash3D getOrElse "")
+				tObject put("quality", x.Quality3D getOrElse "")
+				tObject put("seeds", x.TorrentSeeds3D)
+				tObject put("peers", x.TorrentPeers3D)
+				tObject put("size", x.Size3D getOrElse "")
+				tObject put("size_bytes", x.SizeByte3D)
+				tObject put("download_count", x.Downloaded3D)
+				tObject put("resolution", x.Resolution3D getOrElse "")
+				tObject put("framerate", x.FrameRate3D)
+				tObject put("date_uploaded", x.DateUploaded3D getOrElse "")
+				tObject put("date_uploaded_unix", x.DateUploadedEpoch3D)
+				torrents add tObject
+			}
+			movieObject put("torrents", torrents)
+
 			jsArray.add(movieObject)
 		}
-		json put("MovieList", jsArray)
-		json.toString
+
+		jsData put ("movies", jsArray)
+		// put "data" into json
+		json put("data", jsData)
+		val result = json.toString
+		result
 	}
 
 	/**
@@ -464,7 +678,7 @@ class Utils {
 			val sb = new StringBuilder
 			for (b <- digestedBytes) {
 				val strHex = Integer toHexString (0xff & b)
-				if ((strHex length) == 1) sb append '0'
+				if (strHex.length == 1) sb append '0'
 				sb append strHex
 			}
 			retVal = sb toString()
@@ -529,6 +743,31 @@ class Utils {
 	 */
 	def sendAriaTellShutdown(client: XmlRpcClient) {
 		client.execute("aria2.shutdown", Array[Object]())
+	}
+
+	/**
+	 * Uncompress a gzipped file.
+	 *
+	 * @param inputFile A Gzipped file
+	 * @param outputFile An uncompressed file
+	 */
+	def gunzip(inputFile: String, outputFile: String) {
+		val buffer = new Array[Byte](1024)
+		try {
+			val gzi = new GZIPInputStream(new FileInputStream(inputFile))
+			val gzo = new FileOutputStream(outputFile)
+			var length = gzi read buffer
+			while (length > 0) {
+				gzo write(buffer, 0, length)
+				length = gzi read buffer
+			}
+			gzi.close()
+			gzo.close()
+		} catch {
+			case ioe: IOException =>
+				LogWriter writeLog("Error unzipping file " + inputFile + ": " + ioe.getMessage, Level.DEBUG)
+				LogWriter stackTraceToString ioe
+		}
 	}
 
 	/**

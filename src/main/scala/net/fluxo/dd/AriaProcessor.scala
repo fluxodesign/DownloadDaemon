@@ -20,14 +20,16 @@
  */
 package net.fluxo.dd
 
-import net.fluxo.dd.dbo.{Task, AriaProcess}
 import java.util
-import scala.util.control.Breaks._
-import org.joda.time.DateTime
-import org.apache.log4j.Level
 import java.util.concurrent.TimeUnit
-import org.apache.commons.io.FilenameUtils
+
+import net.fluxo.dd.dbo.{AriaProcess, Task}
 import org.apache.commons.exec._
+import org.apache.commons.io.FilenameUtils
+import org.apache.log4j.Level
+import org.joda.time.DateTime
+
+import scala.util.control.Breaks._
 
 /**
  * AriaProcessor process commands that deal with "aria2c". It also monitors the currently running download. Whenever a
@@ -61,7 +63,8 @@ class AriaProcessor {
 	 * @param httpPassword password for HTTP authentication (supply an empty string if not required)
 	 * @return status string of the request; "OK" followed by download ID or error messages
 	 */
-	def processRequest(uri: String, owner: String, isHttp: Boolean, httpUsername: String, httpPassword: String): String = {
+	def processRequest(uri: String, owner: String, isHttp: Boolean, httpUsername: String, httpPassword: String,
+		gzipped: Boolean = false): String = {
 		if (!isHttp) {
 			// the uri should always starts with "magnet:" or ends with ".torrent"
 			if (!(uri startsWith "magnet:") && !(uri endsWith ".torrent")) {
@@ -86,6 +89,7 @@ class AriaProcessor {
 		var newGid = OUtils generateGID()
 		while (DbControl isTaskGIDUsed newGid) newGid = OUtils generateGID()
 		val ariaThread = new AriaThread(rpcPort, uri, newGid, isHttp)
+		if (gzipped) ariaThread setFromKickass true
 		if (httpUsername.length > 0 && httpPassword.length > 0) {
 			ariaThread setCredentials(httpUsername, httpPassword)
 		}
@@ -104,7 +108,7 @@ class AriaProcessor {
 		breakable {
 			while (iterator.hasNext) {
 				val e = iterator.next
-				if ((e AriaPort) == port) {
+				if (e.AriaPort == port) {
 					e killAriaProcess()
 					break()
 				}
@@ -229,7 +233,7 @@ class AriaProcessor {
 	/**
 	 * AriaThread processes a new download process by calling aria2 through <code>DefaultExecutor</code>.
 	 * @param port port number where aria2 process is bound to
-	 * @param uri URL to download
+	 * @param uri Torrent file URL to download
 	 * @param gid ID for the download
 	 * @param isHttp is this a HTTP download?
 	 * @see java.lang.Runnable
@@ -237,6 +241,9 @@ class AriaProcessor {
 	class AriaThread(port: Int, uri: String, gid: String, isHttp: Boolean) extends Runnable {
 		private var _httpUsername: Option[String] = None
 		private var _httpPassword: Option[String] = None
+		private var _kickAss: Boolean = false
+
+		def setFromKickass(value: Boolean) = { _kickAss = value }
 
 		/**
 		 * Set the username and password for HTTP authentication.
@@ -264,7 +271,11 @@ class AriaProcessor {
 		 * Starts the download by constructing the command line first and then starts the <code>DefaultExecutor</code>.
 		 */
 		override def run() {
-			OUtils createUriFile (gid, uri)
+			// API v2 does not give the magnet URL easily, so we will download the .torrent file
+			// and store it in the /uridir directory...
+			//OUtils createUriFile (gid, uri)
+			val torrentPath = "uridir/" + gid + ".torrent"
+			OUtils crawlServerObject (uri, torrentPath, _kickAss)
 			// DEBUG
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
 			val sb = new StringBuilder
@@ -274,12 +285,14 @@ class AriaProcessor {
 			} else if (!isHttp) {
 				sb append " --seed-time=0" append " --max-overall-upload-limit=1" append " --follow-torrent=mem" append " --seed-ratio=1"
 			}
-			sb append " --input-file=" append "uridir/" append gid append ".txt"
+			// API v2 forces us to use --torent-file parameter
+			//sb append " --input-file=" append "uridir/" append gid append ".txt"
+			sb append " --torrent-file=" append torrentPath
 			// DEBUG
 			LogWriter writeLog("command line: " + sb.toString(), Level.DEBUG)
 			val cmdLine = CommandLine parse sb.toString()
 
-			val watchdog = new ExecuteWatchdog(ExecuteWatchdog INFINITE_TIMEOUT)
+			val watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
 			_executor = Some(executor)

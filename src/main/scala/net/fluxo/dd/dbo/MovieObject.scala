@@ -28,10 +28,10 @@ package net.fluxo.dd.dbo
  */
 class MovieObject {
 
-	private var _movieID: Option[String] = None
+	private var _movieID: Long = 0L
 
-	def MovieID: Option[String] = _movieID
-	def MovieID_=(value: String) { _movieID = Some(value) }
+	def MovieID: Long = _movieID
+	def MovieID_=(value: Long) { _movieID = value }
 
 	private var _movieState: Option[String] = None
 
@@ -43,30 +43,30 @@ class MovieObject {
 	def MovieUrl: Option[String] = _movieUrl
 	def MovieUrl_=(value: String) { _movieUrl = Some(value) }
 
-	private var _movieTitleClean: Option[String] = None
+	private var _movieTitle: Option[String] = None
 
-	def MovieTitleClean: Option[String] = _movieTitleClean
-	def MovieTitleClean_=(value: String) = { _movieTitleClean = Some(value) }
+	def MovieTitle: Option[String] = _movieTitle
+	def MovieTitle_=(value: String) { _movieTitle = Some(value) }
 
-	private var _movieYear: Int = 0
+	private var _movieTitleLong: Option[String] = None
 
-	def MovieYear:Int = _movieYear
-	def MovieYear_=(value: Int) { _movieYear = value }
+	def MovieTitleLong: Option[String] = _movieTitleLong
+	def MovieTitleLong_=(value: String) = { _movieTitleLong = Some(value) }
+
+	private var _movieYear: Long = 0
+
+	def MovieYear:Long = _movieYear
+	def MovieYear_=(value: Long) { _movieYear = value }
 
 	private var _dateUploaded: Option[String] = None
 
 	def DateUploaded: Option[String] = _dateUploaded
 	def DateUploaded_=(value: String) { _dateUploaded = Some(value) }
 
-	private var _dateUploadedEpoch: Long = 0
+	private var _dateUploadedEpoch: Long = 0L
 
 	def DateUploadedEpoch: Long = _dateUploadedEpoch
 	def DateUploadedEpoch_=(value: Long) { _dateUploadedEpoch = value }
-
-	private var _quality: Option[String] = None
-
-	def Quality: Option[String] = _quality
-	def Quality_=(value: String) { _quality = Some(value) }
 
 	private var _coverImage: Option[String] = None
 
@@ -80,66 +80,210 @@ class MovieObject {
 
 	private var _imdbLink: Option[String] = None
 
-	def ImdbLink: Option[String] = _imdbLink
-	def ImdbLink_=(value: String) { _imdbLink = Some(value) }
+	def ImdbLink: Option[String] = {
+		if (_imdbCode.isDefined) {
+			_imdbLink = Some("http://www.imdb.com/title/" + _imdbCode + "/")
+		}
+		_imdbLink
+	}
 
-	private var _size: Option[String] = None
+	private var _movieRating: Double = 0.0D
 
-	def Size: Option[String] = _size
-	def Size_=(value: String) { _size = Some(value) }
+	def MovieRating: Double = _movieRating
+	def MovieRating_=(value: Double) { _movieRating = value }
 
-	private var _sizeByte: Long = 0
+	private var _movieRuntime: Long = 0L
 
-	def SizeByte: Long = _sizeByte
-	def SizeByte_=(value: Long) { _sizeByte = value }
+	def MovieRuntime: Long = _movieRuntime
+	def MovieRutime_=(value: Long) { _movieRuntime = value }
 
-	private var _movieRating: Option[String] = None
+	private var _mpaRating: Option[String] = None
 
-	def MovieRating: Option[String] = _movieRating
-	def MovieRating_=(value: String) { _movieRating = Some(value) }
+	def MpaRating: Option[String] = _mpaRating
+	def MpaRating_=(value: String) { _mpaRating = Some(value) }
+
+	private var _language: Option[String] = None
+
+	def Language: Option[String] = _language
+	def Language_=(value: String) { _language = Some(value) }
 
 	private var _genre: Option[String] = None
 
 	def Genre: Option[String] = _genre
 	def Genre_=(value: String) { _genre = Some(value) }
 
-	private var _uploader: Option[String] = None
 
-	def Uploader: Option[String] = _uploader
-	def Uploader_=(value: String) { _uploader = Some(value) }
+	private var _quality720p: Option[String] = None
+	private var _quality1080p: Option[String] = None
+	private var _quality3D: Option[String] = None
 
-	private var _uploaderUid: Option[String] = None
+	def Quality720p: Option[String] = _quality720p
+	def Quality720p_=(value: String) { _quality720p = Some(value) }
 
-	def UploaderUID: Option[String] = _uploaderUid
-	def UploaderUID_=(value: String) { _uploaderUid = Some(value) }
+	def Quality1080p: Option[String] = _quality1080p
+	def Quality1080p_=(value: String) { _quality1080p = Some(value) }
 
-	private var _torrentSeeds: Long = 0
+	def Quality3D: Option[String] = _quality3D
+	def Quality3D_=(value: String) { _quality3D = Some(value) }
 
-	def TorrentSeeds: Long = _torrentSeeds
-	def TorrentSeeds_=(value: Long) { _torrentSeeds = value }
+	private var _torrentSeeds720p: Long = 0L
+	private var _torrentSeeds1080p: Long = 0L
+	private var _torrentSeeds3D: Long = 0L
 
-	private var _downloaded: Long = 0
+	def TorrentSeeds720p: Long = _torrentSeeds720p
+	def TorrentSeeds720p_=(value: Long) { _torrentSeeds720p = value }
 
-	def Downloaded: Long = _downloaded
-	def Downloaded_=(value: Long) { _downloaded = value }
+	def TorrentSeeds1080p: Long = _torrentSeeds1080p
+	def TorrentSeeds1080p_=(value: Long) { _torrentSeeds1080p = value }
 
-	private var _torrentPeers: Long = 0
+	def TorrentSeeds3D: Long = _torrentSeeds3D
+	def TorrentSeeds3D_=(value: Long) { _torrentSeeds3D = value }
 
-	def TorrentPeers: Long = _torrentPeers
-	def TorrentPeers_=(value: Long) { _torrentPeers = value }
+	private var _downloadCount: Long = 0L
+	private var _downloaded720p: Long = 0L
+	private var _downloaded1080p: Long = 0L
+	private var _downloaded3D: Long = 0L
 
-	private var _torrentUrl: Option[String] = None
+	def DownloadCount: Long = _downloadCount
+	def DownloadCount_=(value: Long) { _downloadCount = value }
 
-	def TorrentUrl: Option[String] = _torrentUrl
-	def TorrentUrl_=(value: String) { _torrentUrl = Some(value) }
+	def Downloaded720p: Long = _downloaded720p
+	def Downloaded720p_=(value: Long) { _downloaded720p = value }
 
-	private var _torrentHash: Option[String] = None
+	def Downloaded1080p: Long = _downloaded1080p
+	def Downloaded1080p_=(value: Long) { _downloaded1080p = value }
 
-	def TorrentHash: Option[String] = _torrentHash
-	def TorrentHash_=(value: String) { _torrentHash = Some(value) }
+	def Downloaded3D: Long = _downloaded3D
+	def Downloaded3D_=(value: Long) { _downloaded3D = value }
 
-	private var _torrentMagnetUrl: Option[String] = None
+	private var _torrentPeers720p: Long = 0L
+	private var _torrentPeers1080p: Long = 0L
+	private var _torrentPeers3D: Long = 0L
 
-	def TorrentMagnetUrl: Option[String] = _torrentMagnetUrl
-	def TorrentMagnetUrl_=(value: String) { _torrentMagnetUrl = Some(value) }
+	def TorrentPeers720p: Long = _torrentPeers720p
+	def TorrentPeers720p_=(value: Long) { _torrentPeers720p = value }
+
+	def TorrentPeers1080p: Long = _torrentPeers1080p
+	def TorrentPeers1080p_=(value: Long) { _torrentPeers1080p = value }
+
+	def TorrentPeers3D: Long = _torrentPeers3D
+	def TorrentPeers3D_=(value: Long) { _torrentPeers3D = value }
+
+	private var _torrentUrl720p: Option[String] = None
+	private var _torrentUrl1080p: Option[String] = None
+	private var _torrentUrl3D: Option[String] = None
+
+	def TorrentUrl720p: Option[String] = _torrentUrl720p
+	def TorrentUrl720p_=(value: String) { _torrentUrl720p = Some(value) }
+
+	def TorrentUrl1080p: Option[String] = _torrentUrl1080p
+	def TorrentUrl1080p_=(value: String) { _torrentUrl1080p = Some(value) }
+
+	def TorrentUrl3D: Option[String] = _torrentUrl3D
+	def TorrentUrl3D_=(value: String) { _torrentUrl3D = Some(value) }
+
+	private var _torrentHash720p: Option[String] = None
+	private var _torrentHash1080p: Option[String] = None
+	private var _torrentHash3D: Option[String] = None
+
+	def TorrentHash720p: Option[String] = _torrentHash720p
+	def TorrentHash720p_=(value: String) { _torrentHash720p = Some(value) }
+
+	def TorrentHash1080p: Option[String] = _torrentHash1080p
+	def TorrentHash1080p_=(value: String) { _torrentHash1080p = Some(value) }
+
+	def TorrentHash3D: Option[String] = _torrentHash3D
+	def TorrentHash3D_=(value: String) { _torrentHash3D = Some(value) }
+
+	private var _torrentMagnetUrl720p: Option[String] = None
+	private var _torrentMagnetUrl1080p: Option[String] = None
+	private var _torrentMagnetUrl3D: Option[String] = None
+
+	def TorrentMagnetUrl720p: Option[String] = _torrentMagnetUrl720p
+	def TorrentMagnetUrl720p_=(value: String) { _torrentMagnetUrl720p = Some(value) }
+
+	def TorrentMagnetUrl1080p: Option[String] = _torrentMagnetUrl1080p
+	def TorrentMagnetUrl1080p_=(value: String) { _torrentMagnetUrl1080p = Some(value) }
+
+	def TorrentMagnetUrl3D: Option[String] = _torrentMagnetUrl3D
+	def TorrentMagnetUrl3D_=(value: String) { _torrentMagnetUrl3D = Some(value) }
+
+	private var _size720p: Option[String] = None
+	private var _size1080p: Option[String] = None
+	private var _size3D: Option[String] = None
+
+	def Size720p: Option[String] = _size720p
+	def Size720p_=(value: String) { _size720p = Some(value) }
+
+	def Size1080p: Option[String] = _size1080p
+	def Size1080p_=(value: String) { _size1080p = Some(value) }
+
+	def Size3D: Option[String] = _size3D
+	def Size3D_=(value: String) { _size3D = Some(value) }
+
+	private var _sizeByte720p: Long = 0L
+	private var _sizeByte1080p: Long = 0L
+	private var _sizeByte3D: Long = 0L
+
+	def SizeByte720p: Long = _sizeByte720p
+	def SizeByte720p_=(value: Long) { _sizeByte720p = value }
+
+	def SizeByte1080p: Long = _sizeByte1080p
+	def SizeByte1080p_=(value: Long) { _sizeByte1080p = value }
+
+	def SizeByte3D: Long = _sizeByte3D
+	def SizeByte3D_=(value: Long) { _sizeByte3D = value }
+
+	private var _dateUploaded720p: Option[String] = None
+	private var _dateUploaded1080p: Option[String] = None
+	private var _dateUploaded3D: Option[String] = None
+
+	def DateUploaded720p: Option[String] = _dateUploaded720p
+	def DateUploaded720p_=(value: String) { _dateUploaded720p = Some(value) }
+
+	def DateUploaded1080p: Option[String] = _dateUploaded1080p
+	def DateUploaded1080p_=(value: String) { _dateUploaded1080p = Some(value) }
+
+	def DateUploaded3D: Option[String] = _dateUploaded3D
+	def DateUploaded3D_=(value: String) { _dateUploaded3D = Some(value) }
+
+	private var _dateUploadedEpoch720p: Long = 0L
+	private var _dateUploadedEpoch1080p: Long = 0L
+	private var _dateUploadedEpoch3D: Long = 0L
+
+	def DateUploadedEpoch720p: Long = _dateUploadedEpoch720p
+	def DateUploadedEpoch720p_=(value: Long) { _dateUploadedEpoch720p = value }
+
+	def DateUploadedEpoch1080p: Long = _dateUploadedEpoch1080p
+	def DateUploadedEpoch1080p_=(value: Long) { _dateUploadedEpoch1080p = value }
+
+	def DateUploadedEpoch3D: Long = _dateUploadedEpoch3D
+	def DateUploadedEpoch3D_=(value: Long) { _dateUploadedEpoch3D = value }
+
+	private var _resolution720p: Option[String] = None
+	private var _resolution1080p: Option[String] = None
+	private var _resolution3D: Option[String] = None
+
+	def Resolution720p: Option[String] = _resolution720p
+	def Resolution720p_=(value: String) { _resolution720p = Some(value) }
+
+	def Resolution1080p: Option[String] = _resolution1080p
+	def Resolution1080p_=(value: String) { _resolution1080p = Some(value) }
+
+	def Resolution3D: Option[String] = _resolution3D
+	def Resolution3D_=(value: String) { _resolution3D = Some(value) }
+
+	private var _frameRate720p: Double = 0.0D
+	private var _frameRate1080p: Double = 0.0D
+	private var _frameRate3D: Double = 0.0D
+
+	def FrameRate720p: Double = _frameRate720p
+	def FrameRate720p_=(value: Double) { _frameRate720p = value }
+
+	def FrameRate1080p: Double = _frameRate1080p
+	def FrameRate1080p_=(value: Double) { _frameRate1080p = value }
+
+	def FrameRate3D: Double = _frameRate3D
+	def FrameRate3D_=(value: Double) { _frameRate3D = value}
+
 }

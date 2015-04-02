@@ -20,17 +20,19 @@
  */
 package net.fluxo.dd
 
-import org.jivesoftware.smack._
-import org.apache.log4j.Level
-import org.joda.time.DateTime
-import org.jivesoftware.smack.packet.{Presence, Message}
-import net.fluxo.dd.dbo.Task
-import org.apache.commons.validator.routines.IntegerValidator
 import java.io.File
-import org.apache.commons.codec.net.URLCodec
-import java.util
-import net.fluxo.plugins.tpb.TrTPB
 import java.net.InetAddress
+import java.util
+
+import net.fluxo.dd.dbo.Task
+import net.fluxo.plugins.kas.TrKas
+import net.fluxo.plugins.tpb.TrTPB
+import org.apache.commons.codec.net.URLCodec
+import org.apache.commons.validator.routines.IntegerValidator
+import org.apache.log4j.Level
+import org.jivesoftware.smack._
+import org.jivesoftware.smack.packet.{Message, Presence}
+import org.joda.time.DateTime
 
 /**
  * XMPPMonitor manages XMPP connection to Facebook or GMail's chat. This enables user(s) to issue commands directly via
@@ -465,13 +467,16 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 			words(1) match {
 				case "ADD_TORRENT" =>
 					if (words.length < 4) "ERR LENGTH"
-					else OAria processRequest(words(3), words(2), isHttp = false, "", "")
+					else OAria processRequest(words(3), words(2), isHttp = false, "", "", false)
+				case "ADD_GZIPPED_TORRENT" =>
+					if (words.length < 4) "ERR LENGTH"
+					else OAria processRequest(words(3), words(2), isHttp = false, "", "", true)
 				case "ADD_URI" =>
 					if (words.length < 4) "ERR LENGTH"
-					else OAria processRequest(words(3), words(2), isHttp = true, "", "")
+					else OAria processRequest(words(3), words(2), isHttp = true, "", "", false)
 				case "ADD_URI_C" =>
 					if (words.length < 6) "ERR LENGTH"
-					else OAria processRequest(words(3), words(2), isHttp = true, words(4), words(5))
+					else OAria processRequest(words(3), words(2), isHttp = true, words(4), words(5), false)
 				case "STATUS" =>
 					if (words.length < 3) "ERR LENGTH"
 					else {
@@ -556,6 +561,27 @@ class XMPPMonitor(xmppProvider: String, xmppServer: String, xmppPort: Int, xmppA
 								}
 							case _ => "ERR CMD"
 						}
+					}
+				case "KAST" =>
+					val pm = OPlugin.getPluginManager
+					val kastPlugin = pm getPlugin classOf[TrKas]
+
+					if (kastPlugin == null) "ERR PLUGIN NOT FOUND"
+					else if (!((kastPlugin primaryCommand()) equals "KAST")) "ERR WRONG PLUGIN"
+					else {
+						kastPlugin setMailLoggerName "net.fluxo.MailLogger"
+						_isTPBSearch = true
+						kastPlugin process words
+					}
+				case "KASTDETAILS" =>
+					val pm = OPlugin.getPluginManager
+					val kastPlugin = pm getPlugin classOf[TrKas]
+
+					if (kastPlugin == null) "ERR PLUGIN NOT FOUND"
+					else if (!((kastPlugin primaryCommand()) equals "KAST")) "ERR WRONG PLUGIN"
+					else {
+						kastPlugin setMailLoggerName "net.fluxo.MailLogger"
+						kastPlugin process words
 					}
 				case "TPB" =>
 					val pm = OPlugin.getPluginManager

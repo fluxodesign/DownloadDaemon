@@ -20,10 +20,12 @@
  */
 package net.fluxo.dd
 
-import java.sql.{Timestamp, DriverManager, Connection}
+import java.sql.{Connection, DriverManager, Timestamp}
+
+import net.fluxo.dd.dbo.{CountPackage, Task, YIFYCache}
 import org.apache.log4j.Level
-import net.fluxo.dd.dbo.{YIFYCache, CountPackage, Task}
 import org.joda.time.DateTime
+
 import scala.collection.mutable
 
 /**
@@ -136,7 +138,8 @@ class DbManager {
 	 */
 	def updateTask(task: Task): Boolean = {
 		var response: Boolean = true
-		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
+		//val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
+		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND owner = ?"""
 		try {
 			val ps = _conn prepareStatement updateStatement
 			ps setString(1, task.TaskPackage.orNull)
@@ -145,8 +148,8 @@ class DbManager {
 			ps setLong(4, task.TaskTotalLength)
 			ps setString(5, task.TaskInfoHash.getOrElse("XXX"))
 			ps setString(6, task.TaskGID.orNull)
-			ps setString(7, task.TaskTailGID.orNull)
-			ps setString(8, task.TaskOwner.orNull)
+			//ps setString(7, task.TaskTailGID.orNull)
+			ps setString(7, task.TaskOwner.orNull)
 			val updated = ps executeUpdate()
 			if (updated == 0) {
 				LogWriter writeLog("Failed to update task with GID " + task.TaskGID.orNull, Level.ERROR)
@@ -581,13 +584,14 @@ class DbManager {
 	 * @return a <code>net.fluxo.dd.dbo.Task</code> object
 	 */
 	def queryTaskTailGID(tailGid: String): Task = {
-		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? AND completed = ? AND process = ?"""
+		val queryStatement = """SELECT * FROM input WHERE tail_gid = ? OR gid = ? AND completed = ? AND process = ?"""
 		val t = new Task
 		try {
 			val ps = _conn prepareStatement queryStatement
 			ps setString(1, tailGid)
-			ps setBoolean(2, false)
-			ps setString(3, "aria2c")
+			ps setString(2, tailGid)
+			ps setBoolean(3, false)
+			ps setString(4, "aria2c")
 			val rs = ps.executeQuery()
 			while (rs.next()) {
 				t.TaskGID_=(rs getString "gid")
@@ -677,12 +681,12 @@ class DbManager {
 	 * @param movieID movie ID to query
 	 * @return true if a movie is found; false otherwise
 	 */
-	def ycQueryMovieID(movieID: Int): Boolean = {
+	def ycQueryMovieID(movieID: Long): Boolean = {
 		var status = false
 		val queryStatement = """SELECT COUNT(*) AS count FROM YIFY_CACHE WHERE movie_id = ?"""
 		try {
 			val ps = _conn prepareStatement queryStatement
-			ps setInt(1, movieID)
+			ps setLong (1, movieID)
 			val result = ps executeQuery()
 			if (result next()) {
 				if ((result getInt "count") > 0) status = true
@@ -709,9 +713,9 @@ class DbManager {
 		var response: Boolean = true
 		try {
 			val ps = _conn prepareStatement insertStatement
-			ps setInt(1, obj.MovieID)
+			ps setLong(1, obj.MovieID)
 			ps setString(2, obj.MovieTitle.getOrElse(""))
-			ps setString(3, obj.MovieYear.getOrElse(""))
+			ps setLong(3, obj.MovieYear)
 			ps setString(4, obj.MovieQuality.getOrElse(""))
 			ps setString(5, obj.MovieSize.getOrElse(""))
 			ps setString(6, obj.MovieCoverImage.getOrElse(""))
@@ -752,7 +756,7 @@ class DbManager {
 				mlist.+=(new YIFYCache {
 					MovieID_:(rs getInt "movie_id")
 					MovieTitle_:(rs getString "title")
-					MovieYear_:(rs getString "year")
+					MovieYear_:(rs getLong "year")
 					MovieQuality_:(rs getString "quality")
 					MovieSize_:(rs getString "size")
 					MovieCoverImage_:(rs getString "cover_image")
@@ -803,6 +807,32 @@ class DbManager {
 		}
 		status
 	}
+
+    /**
+     * Returns the cover image URL from database
+     * @param id Movie ID to check
+     * @return Cover Image URL
+     */
+    def getCoverImageUrl(id: Int): String = {
+        val queryStatement = """SELECT * FROM YIFY_CACHE WHERE MOVIE_ID = ?"""
+        var response = ""
+        try {
+            val ps = _conn prepareStatement queryStatement
+            ps setLong(1, id)
+            val rs = ps executeQuery()
+            if (rs.next) {
+                response = rs getString "cover_image"
+            }
+            rs close()
+            ps close()
+        } catch {
+            case ex: Exception =>
+                LogWriter writeLog("Error getting movie cover image URL", Level.ERROR)
+                LogWriter writeLog(ex.getMessage, Level.ERROR)
+                LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+        }
+        response
+    }
 
 	/**
 	 * Close the connection to the database.
