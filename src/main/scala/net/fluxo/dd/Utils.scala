@@ -340,11 +340,10 @@ class Utils {
 			LogWriter writeLog("-->middle 1", Level.DEBUG)
 
 			val jTorrentObjects = (json get "torrents").asInstanceOf[JSONArray]
+			val jTorrentObjects2 = jTorrentObjects.
 			LogWriter writeLog("-->middle 2", Level.DEBUG)
-			val jTorrentIterator = jTorrentObjects.iterator
-			LogWriter writeLog("-->middle 3", Level.DEBUG)
-			while (jTorrentIterator.hasNext) {
-				val jTorrentObject = jTorrentIterator.next.asInstanceOf[JSONObject]
+			for (x <- jTorrentObjects) {
+				val jTorrentObject = x.asInstanceOf[JSONObject]
 				LogWriter writeLog("--> jTorrent iterator", Level.DEBUG)
 				if ((jTorrentObject get "quality") equals "720p") {
 					LogWriter writeLog("--> 720p 1", Level.DEBUG)
