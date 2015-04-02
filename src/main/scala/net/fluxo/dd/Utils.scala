@@ -329,7 +329,7 @@ class Utils {
 			LogWriter writeLog("--> get to here 3", Level.DEBUG)
 			movie.Language_=((json get "language").asInstanceOf[String])
 			LogWriter writeLog("--> get to here 4", Level.DEBUG)
-			movie.MovieRutime_=((json get "runtime").asInstanceOf[Int])
+			movie.MovieRutime_=((json get "runtime").asInstanceOf[Long].toInt)
 			LogWriter writeLog("--> get to here 5", Level.DEBUG)
 			movie.DateUploaded_=((json get "date_uploaded").asInstanceOf[String])
 
