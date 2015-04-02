@@ -323,7 +323,7 @@ class Utils {
 
 			LogWriter writeLog("--> get to here", Level.DEBUG)
 
-			movie.MovieRating_=((json get "rating").asInstanceOf[Double])
+			movie.MovieRating_=((json get "rating").asInstanceOf[Long].toDouble)
 			LogWriter writeLog("--> get to here 2", Level.DEBUG)
 			movie.MpaRating_=((json get "mpa_rating").asInstanceOf[String])
 			LogWriter writeLog("--> get to here 3", Level.DEBUG)
