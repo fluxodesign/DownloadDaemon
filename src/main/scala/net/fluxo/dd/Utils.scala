@@ -427,7 +427,7 @@ class Utils {
 					LogWriter writeLog("--> 3D 13", Level.DEBUG)
 					LogWriter writeLog("--> get to here: 3D", Level.DEBUG)
 				}
-			}
+			}*/
 
 			val genres = (json get "genres").asInstanceOf[JSONArray]
 			val genre: String = {
@@ -441,7 +441,7 @@ class Utils {
 			LogWriter writeLog("--> get to here: genre", Level.DEBUG)
 			movie.Genre_=(genre)
 			LogWriter writeLog("--> get to here: after genre", Level.DEBUG)
-		}*/
+		}
 		LogWriter writeLog ("-->end stringToMovieObject", Level.DEBUG)
 		movie
 	}
