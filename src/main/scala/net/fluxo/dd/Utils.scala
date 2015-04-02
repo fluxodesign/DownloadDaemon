@@ -309,6 +309,7 @@ class Utils {
 	 * @return a <code>net.fluxo.dd.dbo.MovieObject</code> object
 	 */
 	def stringToMovieObject(raw: String):MovieObject = {
+		LogWriter writeLog("--> raw input: " + raw, Level.DEBUG)
 		val movie = new MovieObject
 		try {
 			LogWriter writeLog("-->start stringToMovieObject", Level.DEBUG)
