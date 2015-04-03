@@ -312,6 +312,7 @@ class Utils {
 		val movie = new MovieObject
 		try {
 			val rawVals = JSONValue.parseWithException(raw).asInstanceOf[JSONObject]
+			//rawVals.put("SearchResult".asInstanceOf[_], "YIFY".asInstanceOf[_])
 			val json = (rawVals get "data").asInstanceOf[JSONObject]
 			movie.MovieID_=((json get "id").asInstanceOf[Long])
 			movie.MovieUrl_=((json get "url").asInstanceOf[String])
@@ -324,7 +325,8 @@ class Utils {
 			movie.MovieRutime_=((json get "runtime").asInstanceOf[Long].toInt)
 			movie.DateUploaded_=((json get "date_uploaded").asInstanceOf[String])
 			movie.DateUploadedEpoch_=((json get "date_uploaded_unix").asInstanceOf[Long])
-			movie.CoverImage_=((json get "medium_cover_image").asInstanceOf[String])
+			val jsImage = (json get "images").asInstanceOf[JSONObject]
+			movie.CoverImage_=((jsImage get "medium_cover_image").asInstanceOf[String])
 			movie.ImdbCode_=((json get "imdb_code").asInstanceOf[String])
 			val jTorrentObjects = (json get "torrents").asInstanceOf[JSONArray]
 			val jTorrentIterator = jTorrentObjects.iterator()
@@ -383,6 +385,9 @@ class Utils {
 				sb toString()
 			}
 			movie.Genre_=(genre)
+		} catch {
+			case e: Exception =>
+				LogWriter writeLog("SEARCH EXCEPTION: " + e.getMessage, Level.ERROR)
 		}
 		movie
 	}
@@ -408,7 +413,6 @@ class Utils {
 			val x = movieIterator next()
 			val movieObject = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
 			movieObject put("id", (x MovieID).toString)
-			movieObject put("state", (x State) getOrElse "")
 			movieObject put("url", (x MovieUrl) getOrElse "")
 			movieObject put("title_long", (x MovieTitleLong) getOrElse "")
 			movieObject put("title", (x MovieTitle) getOrElse "")
