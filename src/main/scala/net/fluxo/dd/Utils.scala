@@ -402,11 +402,11 @@ class Utils {
 		val json = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
 		json put("SearchResult", "YIFY")
 		json put("status", "ok")
-		json put("page_number", "1")
 		json put("status_message", "Query was successful")
 
 		val jsData = (new JSONObject).asInstanceOf[util.HashMap[String, Any]]
 		jsData put("movie_count", obj.MovieCount)
+		jsData put("page_number", 1)
 
 		val jsArray = (new JSONArray).asInstanceOf[util.List[util.HashMap[String, Any]]]
 		val movieIterator = obj.MovieList.orNull iterator()
