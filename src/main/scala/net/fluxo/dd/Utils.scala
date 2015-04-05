@@ -420,6 +420,7 @@ class Utils {
 			movieObject put("year", (x MovieYear).toString)
 			movieObject put("rating", (x MovieRating).toString)
 			movieObject put("mpa_rating", (x MpaRating) getOrElse "")
+			movieObject put("state", "ok")
 			movieObject put("language", (x Language) getOrElse "")
 			movieObject put("runtime", (x MovieRuntime).toString)
 			movieObject put("date_uploaded", (x DateUploaded) getOrElse "")
