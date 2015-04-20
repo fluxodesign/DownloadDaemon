@@ -312,7 +312,6 @@ class Utils {
 		val movie = new MovieObject
 		try {
 			val rawVals = JSONValue.parseWithException(raw).asInstanceOf[JSONObject]
-			//rawVals.put("SearchResult".asInstanceOf[_], "YIFY".asInstanceOf[_])
 			val json = (rawVals get "data").asInstanceOf[JSONObject]
 			movie.MovieID_=((json get "id").asInstanceOf[Long])
 			movie.MovieUrl_=((json get "url").asInstanceOf[String])
