@@ -20,7 +20,7 @@
  */
 package net.fluxo.dd.dbo
 
-import org.apache.commons.exec.Executor
+import org.apache.commons.exec.{CommandLine, DefaultExecutor, Executor}
 
 /**
  * Data Object used by <code>AriaProcessor</code> to represent an active download process.
@@ -44,14 +44,26 @@ class AriaProcess {
 	 * Kill the aria2 process.
 	 */
 	def killAriaProcess() {
-		_process.getOrElse(null).getWatchdog.destroyProcess()
+		_process.orNull.getWatchdog.destroyProcess()
 		_process = None
+		// just to make sure, we TERMinate the process using PID...
+		if (_pid.isDefined && _pid.orNull.length > 0) {
+			val command = "kill -9 " + AriaTaskPid.orNull
+			val executor = new DefaultExecutor
+			val commandLine = CommandLine parse command
+			executor execute commandLine
+		}
 	}
 
 	private var _gid: Option[String] = None
 
 	def AriaTaskGid: Option[String] = _gid
 	def AriaTaskGid_=(value: String) { _gid = Some(value) }
+
+	private var _pid: Option[String] = None
+
+	def AriaTaskPid: Option[String] = _pid;
+	def AriaTaskPid_=(value: String) { _pid = Some(value) }
 
 	private var _isRestarting: Boolean = false
 

@@ -20,6 +20,7 @@
  */
 package net.fluxo.dd
 
+import java.io.ByteArrayOutputStream
 import java.util
 import java.util.concurrent.TimeUnit
 
@@ -110,6 +111,7 @@ class AriaProcessor {
 				val e = iterator.next
 				if (e.AriaPort == port) {
 					e killAriaProcess()
+					_activeProcesses remove e
 					break()
 				}
 			}
@@ -191,6 +193,7 @@ class AriaProcessor {
 			AriaTaskGid_=(gid)
 			AriaTaskRestarting_=(restarting)
 			AriaHttpDownload_=(isHttp)
+			AriaTaskPid_=(findAriaTaskPid(gid))
 		}
 		// set all necessary parameters if this is an HTTP download...
 		if (isHttp) {
@@ -228,6 +231,18 @@ class AriaProcessor {
 				}
 			}
 		}
+	}
+
+	private def findAriaTaskPid(gid: String): String = {
+		val command = new StringBuilder
+		command append "ps aux | grep -e 'aria2c' | grep -e '" append gid append "' | awk {'print $2'}"
+		val outputStream = new ByteArrayOutputStream
+		val executor = new DefaultExecutor
+		val commandLine = CommandLine parse command.toString
+		val pumpsh = new PumpStreamHandler(outputStream)
+		executor setStreamHandler pumpsh
+		executor execute commandLine
+		outputStream.toString.trim
 	}
 
 	/**
@@ -280,10 +295,11 @@ class AriaProcessor {
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
 			val sb = new StringBuilder
 			sb append "aria2c" append " --enable-rpc" append " --rpc-listen-port=" append port append " --gid=" append gid
+			sb append " --allow-overwrite=true"
 			if (isHttp && (_httpUsername getOrElse "").length > 0 && (_httpPassword getOrElse "").length > 0) {
 				sb append " --http-user=" append _httpUsername.getOrElse("") append " --http-passwd=" append _httpPassword.getOrElse("")
 			} else if (!isHttp) {
-				sb append " --seed-time=0" append " --max-overall-upload-limit=1" append " --follow-torrent=mem" append " --seed-ratio=1"
+				sb append " --seed-time=0" append " --max-overall-upload-limit=1" append " --follow-torrent=mem" append " --seed-ratio=0.1"
 			}
 			// API v2 forces us to use --torent-file parameter
 			//sb append " --input-file=" append "uridir/" append gid append ".txt"
