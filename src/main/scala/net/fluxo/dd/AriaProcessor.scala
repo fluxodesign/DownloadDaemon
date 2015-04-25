@@ -308,13 +308,22 @@ class AriaProcessor {
 			LogWriter writeLog("command line: " + sb.toString(), Level.DEBUG)
 			val cmdLine = CommandLine parse sb.toString()
 
+			val resultHandler = new DefaultExecuteResultHandler
 			val watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
 			_executor = Some(executor)
 			val pumpsh = new PumpStreamHandler(new OStream)
 			executor setStreamHandler pumpsh
-			executor execute cmdLine
+			executor execute(cmdLine, resultHandler)
+
+			resultHandler.waitFor()
+			val exitCode = resultHandler getExitValue
+			if (!executor.isFailure(exitCode)) {
+				// Success! clean up now!
+			} else {
+
+			}
 		}
 	}
 

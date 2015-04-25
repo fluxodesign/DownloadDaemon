@@ -209,7 +209,7 @@ class DbManager {
 	}
 
 	/**
-	 * Update the database to mark that a particulr video download task is completed.
+	 * Update the database to mark that a particular video download task is completed.
 	 *
 	 * @param cl the completed file size (should match the total file length)
 	 * @param taskGID unique task ID
@@ -376,6 +376,11 @@ class DbManager {
 				if (response) response = false
 				_conn rollback()
 		}
+		response
+	}
+
+	def finishTaskFromThread(status: String, gid: String): Boolean = {
+		var response: Boolean = true
 		response
 	}
 

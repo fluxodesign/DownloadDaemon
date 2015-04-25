@@ -87,6 +87,57 @@ class UpdateProgressJob extends Job {
 							}
 						}
 
+						val activeTasks = OUtils sendAriaTellActive client
+						for (o <- activeTasks) {
+							val jMap = {
+								var hm: util.HashMap[String, Object] = null
+								try {
+									hm = o.asInstanceOf[util.HashMap[String, Object]]
+								} catch {
+									case e: Exception =>
+										LogWriter writeLog("Port " + _currentPort + "/ActiveTask: " + e.getMessage, Level.INFO)
+								}
+								hm
+							}
+							if (jMap != null) {
+								val tailGID = (OUtils extractValueFromHashMap(jMap, "gid")).toString
+								val task = {
+									if (tailGID.length > 0) DbControl queryTaskTailGID tailGID else null
+								}
+								task.TaskTailGID_=(tailGID)
+								val cl = (OUtils extractValueFromHashMap(jMap, "completedLength")).toString.toLong
+								task.TaskCompletedLength_=(cl)
+								val tl = (OUtils extractValueFromHashMap(jMap, "totalLength")).toString.toLong
+								task.TaskTotalLength_=(tl)
+								task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
+								task.TaskInfoHash_=({
+									if (task.TaskIsHttp) "noinfohash"
+									else (OUtils extractValueFromHashMap(jMap, "infoHash")).toString
+								})
+								// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
+								if (!a.AriaHttpDownload) {
+									val btDetailsMap = {
+										try {
+											OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
+										} catch {
+											case e: Exception => null
+										}
+									}
+									val infoMap = {
+										if (btDetailsMap != null) {
+											try {
+												OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
+											}
+										} else null
+									}
+									if (infoMap != null) {
+										task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
+									}
+								}
+								if (task.TaskGID.getOrElse("").length > 0) DbControl.updateTask(task)
+							}
+						}
+
 						val finishedTasks = OUtils sendAriaTellStopped client
 						for (o <- finishedTasks) {
 							val jMap = {
@@ -136,57 +187,6 @@ class UpdateProgressJob extends Job {
 										}
 									}
 								}
-							}
-						}
-
-						val activeTasks = OUtils sendAriaTellActive client
-						for (o <- activeTasks) {
-							val jMap = {
-								var hm: util.HashMap[String, Object] = null
-								try {
-									hm = o.asInstanceOf[util.HashMap[String, Object]]
-								} catch {
-									case e: Exception =>
-										LogWriter writeLog("Port " + _currentPort + "/ActiveTask: " + e.getMessage, Level.INFO)
-								}
-								hm
-							}
-							if (jMap != null) {
-								val tailGID = (OUtils extractValueFromHashMap(jMap, "gid")).toString
-								val task = {
-									if (tailGID.length > 0) DbControl queryTaskTailGID tailGID else null
-								}
-								task.TaskTailGID_=(tailGID)
-								val cl = (OUtils extractValueFromHashMap(jMap, "completedLength")).toString.toLong
-								task.TaskCompletedLength_=(cl)
-								val tl = (OUtils extractValueFromHashMap(jMap, "totalLength")).toString.toLong
-								task.TaskTotalLength_=(tl)
-								task.TaskStatus_=(OUtils.extractValueFromHashMap(jMap, "status").toString)
-								task.TaskInfoHash_=({
-									if (task.TaskIsHttp) "noinfohash"
-									else (OUtils extractValueFromHashMap(jMap, "infoHash")).toString
-								})
-								// now we extract the 'PACKAGE' name, which basically is the name of the directory of the downloaded files...
-								if (!a.AriaHttpDownload) {
-									val btDetailsMap = {
-										try {
-											OUtils.extractValueFromHashMap(jMap, "bittorrent").asInstanceOf[java.util.HashMap[String, Object]]
-										} catch {
-											case e: Exception => null
-										}
-									}
-									val infoMap = {
-										if (btDetailsMap != null) {
-											try {
-												OUtils.extractValueFromHashMap(btDetailsMap, "info").asInstanceOf[java.util.HashMap[String, Object]]
-											}
-										} else null
-									}
-									if (infoMap != null) {
-										task.TaskPackage_=(OUtils.extractValueFromHashMap(infoMap, "name").toString)
-									}
-								}
-								if (task.TaskGID.getOrElse("").length > 0) DbControl.updateTask(task)
 							}
 						}
 
