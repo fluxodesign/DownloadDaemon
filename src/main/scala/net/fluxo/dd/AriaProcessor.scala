@@ -318,7 +318,7 @@ class AriaProcessor {
 			executor execute(cmdLine, resultHandler)
 
 			resultHandler.waitFor()
-			val exitCode = resultHandler getExitValue
+			val exitCode = resultHandler.getExitValue
 			if (!executor.isFailure(exitCode)) {
 				// Success! clean up now!
 			} else {
