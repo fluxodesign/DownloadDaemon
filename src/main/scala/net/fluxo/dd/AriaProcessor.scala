@@ -321,8 +321,6 @@ class AriaProcessor {
 			val exitCode = resultHandler.getExitValue
 			if (!executor.isFailure(exitCode)) {
 				// Success! clean up now!
-			} else {
-
 			}
 		}
 	}

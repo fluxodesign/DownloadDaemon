@@ -150,6 +150,7 @@ class DbManager {
 			ps setString(6, task.TaskGID.orNull)
 			//ps setString(7, task.TaskTailGID.orNull)
 			ps setString(7, task.TaskOwner.orNull)
+			LogWriter writeLog("--> Updating task " + task.TaskGID.orNull + "; Package: " + task.TaskPackage.getOrElse("Package N/A"), Level.DEBUG)
 			val updated = ps executeUpdate()
 			if (updated == 0) {
 				LogWriter writeLog("Failed to update task with GID " + task.TaskGID.orNull, Level.ERROR)
@@ -379,6 +380,13 @@ class DbManager {
 		response
 	}
 
+	/**
+	 * Check that the file is fully downloaded then mark it as successfully downloaded in database.
+	 *
+	 * @param status nominated status string: "success" or "error"
+	 * @param gid
+	 * @return
+	 */
 	def finishTaskFromThread(status: String, gid: String): Boolean = {
 		var response: Boolean = true
 		response
