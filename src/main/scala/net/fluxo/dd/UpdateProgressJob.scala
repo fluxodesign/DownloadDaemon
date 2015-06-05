@@ -88,7 +88,9 @@ class UpdateProgressJob extends Job {
 						}
 
 						// ACTIVE TASKS
+						LogWriter writeLog("ACTIVE_TASKS: Start looping...", Level.DEBUG)
 						val activeTasks = OUtils sendAriaTellActive client
+						LogWriter writeLog("ACTIVE_TASKS: " + activeTasks.size, Level.DEBUG)
 						for (o <- activeTasks) {
 							val jMap = {
 								var hm: util.HashMap[String, Object] = null
