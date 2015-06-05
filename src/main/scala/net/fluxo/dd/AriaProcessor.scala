@@ -194,6 +194,7 @@ class AriaProcessor {
 			AriaTaskRestarting_=(restarting)
 			AriaHttpDownload_=(isHttp)
 			AriaTaskPid_=(findAriaTaskPid(gid))
+			LogWriter writeLog("--> Task PID: " + AriaTaskPid.orElse("[N/A]"), Level.DEBUG)
 		}
 		// set all necessary parameters if this is an HTTP download...
 		if (isHttp) {
