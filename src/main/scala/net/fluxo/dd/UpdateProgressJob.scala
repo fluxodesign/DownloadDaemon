@@ -87,6 +87,7 @@ class UpdateProgressJob extends Job {
 							}
 						}
 
+						// ACTIVE TASKS
 						val activeTasks = OUtils sendAriaTellActive client
 						for (o <- activeTasks) {
 							val jMap = {
@@ -99,6 +100,8 @@ class UpdateProgressJob extends Job {
 								}
 								hm
 							}
+							// DEBUG
+							LogWriter writeLog("ACTIVE_TASKS: " + jMap, Level.DEBUG)
 							if (jMap != null) {
 								val tailGID = (OUtils extractValueFromHashMap(jMap, "gid")).toString
 								val task = {
