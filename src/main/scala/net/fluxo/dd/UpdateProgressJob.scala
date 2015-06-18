@@ -57,6 +57,7 @@ class UpdateProgressJob extends Job {
 
 			val iterator = OAria.ActiveProcesses.iterator()
 			while (iterator.hasNext) {
+				LogWriter.writeLog("UpdateProgressJob --> new iteration (" + OUtils.tellCurrentTime + ")", Level.DEBUG)
 				breakable {
 
 					try {
