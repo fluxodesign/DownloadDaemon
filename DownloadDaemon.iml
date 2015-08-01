@@ -84,5 +84,6 @@
     <orderEntry type="library" name="Maven: jspf-core:jspf-core:1.0.2" level="project" />
     <orderEntry type="library" name="scala-sdk-2.10.3" level="project" />
     <orderEntry type="library" name="scala-sdk-2.11.41" level="application" />
+    <orderEntry type="library" name="scala-sdk-2.10.3 (2)" level="application" />
   </component>
 </module>

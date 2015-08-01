@@ -137,14 +137,14 @@ class Utils {
 	def deleteFile(file: File) {
 		try {
 			if (file.isDirectory) {
-				if ((file list() length) == 0) file delete()
+				if ((file list()).isEmpty) file delete()
 				else {
 					val fileList = file list()
 					for (fl <- fileList) {
 						val f = new File(file, fl)
 						deleteFile(f)
 					}
-					if ((file list() length) == 0) file delete()
+					if ((file list()).isEmpty) file delete()
 				}
 			} else {
 				file delete()
@@ -378,7 +378,7 @@ class Utils {
 				val sb = new StringBuilder
 				val gIterator = genres.iterator()
 				while (gIterator.hasNext) {
-					if (sb.length > 0) sb append " | "
+					if (sb.nonEmpty) sb append " | "
 					sb append gIterator.next.asInstanceOf[String]
 				}
 				sb toString()

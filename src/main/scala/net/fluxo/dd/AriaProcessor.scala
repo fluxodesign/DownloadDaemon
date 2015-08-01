@@ -298,9 +298,9 @@ class AriaProcessor {
 			sb append " --allow-overwrite=true"
 			if (isHttp && (_httpUsername getOrElse "").length > 0 && (_httpPassword getOrElse "").length > 0) {
 				sb append " --http-user=" append _httpUsername.getOrElse("") append " --http-passwd=" append _httpPassword.getOrElse("")
-			} else if (!isHttp) {
+			} /*else if (!isHttp) {
 				sb append " --seed-time=0" append " --max-overall-upload-limit=1" append " --follow-torrent=mem" append " --seed-ratio=0.1"
-			}
+			}*/
 			// API v2 forces us to use --torent-file parameter
 			//sb append " --input-file=" append "uridir/" append gid append ".txt"
 			sb append " --torrent-file=" append torrentPath
