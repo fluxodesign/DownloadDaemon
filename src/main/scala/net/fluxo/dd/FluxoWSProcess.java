@@ -436,7 +436,7 @@ public class FluxoWSProcess {
 				arrTerm[1] = "KASTDETAILS";
 				arrTerm[2] = url;
 				String decodedURL = URLDecoder.decode(url, "UTF-8");
-				if (decodedURL.startsWith("https://kickass.to/")) {
+				if (decodedURL.startsWith("https://kat.cr/")) {
 					String response = trKas.process(arrTerm);
 					return Response.status(200).entity(response).build();
 				}

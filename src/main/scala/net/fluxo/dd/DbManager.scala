@@ -381,14 +381,40 @@ class DbManager {
 	}
 
 	/**
-	 * Check that the file is fully downloaded then mark it as successfully downloaded in database.
+	 * After a task has finished downloading, we need to compare the size of main file to the total
+	 * length in the database. If they match, we mark the process as finished in the database and
+	 * let the cleanup to start.
 	 *
-	 * @param status nominated status string: "success" or "error"
-	 * @param gid
-	 * @return
+	 * @param status "completed" or "error"
+	 * @param gid GID of the task
+	 * @return true if process has completed; false otherwise
 	 */
 	def finishTaskFromThread(status: String, gid: String): Boolean = {
-		var response: Boolean = true
+		var response: Boolean = {
+			if (status equalsIgnoreCase "completed") true else false
+		}
+		if (response) {
+			val updateStatement = """UPDATE input SET completed = ? WHERE gid = ?"""
+			try {
+				val ps = _conn prepareStatement updateStatement
+				ps setBoolean(1, true)
+				ps setString(2, gid)
+				val updated = ps executeUpdate()
+				if (updated == 0) {
+					LogWriter writeLog("Failed to update task completed status for GID " + gid, Level.ERROR)
+					response = false
+				}
+				_conn commit()
+				ps close()
+			} catch {
+				case ex: Exception =>
+					LogWriter writeLog("Error updating finished status for task with GID " + gid, Level.ERROR)
+					LogWriter writeLog(ex.getMessage + " caused by " + ex.getCause.getMessage, Level.ERROR)
+					LogWriter writeLog(LogWriter stackTraceToString ex, Level.ERROR)
+					if (response) response = false
+					_conn rollback()
+			}
+		}
 		response
 	}
 

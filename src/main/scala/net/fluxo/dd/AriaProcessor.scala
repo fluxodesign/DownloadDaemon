@@ -194,6 +194,7 @@ class AriaProcessor {
 			AriaTaskRestarting_=(restarting)
 			AriaHttpDownload_=(isHttp)
 			AriaTaskPid_=(findAriaTaskPid(gid))
+			LogWriter writeLog("--> Task PID: " + AriaTaskPid, Level.DEBUG)
 		}
 		// set all necessary parameters if this is an HTTP download...
 		if (isHttp) {
@@ -294,7 +295,7 @@ class AriaProcessor {
 			// DEBUG
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
 			val sb = new StringBuilder
-			sb append "aria2c" append " --enable-rpc" append " --rpc-listen-port=" append port append " --gid=" append gid
+			sb append "aria2c" append " --disable-ipv6=true" append " --enable-rpc" append " --rpc-listen-port=" append port append " --gid=" append gid
 			sb append " --allow-overwrite=true"
 			if (isHttp && (_httpUsername getOrElse "").length > 0 && (_httpPassword getOrElse "").length > 0) {
 				sb append " --http-user=" append _httpUsername.getOrElse("") append " --http-passwd=" append _httpPassword.getOrElse("")
@@ -308,20 +309,22 @@ class AriaProcessor {
 			LogWriter writeLog("command line: " + sb.toString(), Level.DEBUG)
 			val cmdLine = CommandLine parse sb.toString()
 
-			val resultHandler = new DefaultExecuteResultHandler
+			//val resultHandler = new DefaultExecuteResultHandler
 			val watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT)
 			val executor = new DefaultExecutor
 			executor setWatchdog watchdog
 			_executor = Some(executor)
 			val pumpsh = new PumpStreamHandler(new OStream)
 			executor setStreamHandler pumpsh
-			executor execute(cmdLine, resultHandler)
+			executor execute cmdLine
+			//executor execute(cmdLine, resultHandler)
 
-			resultHandler.waitFor()
+			/*resultHandler.waitFor()
 			val exitCode = resultHandler.getExitValue
 			if (!executor.isFailure(exitCode)) {
 				// Success! clean up now!
-			}
+				DbControl.finishTaskFromThread("success", gid)
+			} */
 		}
 	}
 

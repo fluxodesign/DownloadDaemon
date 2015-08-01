@@ -23,9 +23,10 @@ package net.fluxo.dd
 import java.io._
 import java.net._
 import java.security.MessageDigest
+import java.text.SimpleDateFormat
 import java.util
 import java.util.zip.GZIPInputStream
-import java.util.{Properties, Random}
+import java.util.{Date, Properties, Random}
 
 import net.fluxo.dd.dbo.{Config, MovieObject, YIFYSearchResult}
 import org.apache.commons.io.FileUtils
@@ -127,6 +128,11 @@ class Utils {
 		ret
 	}
 
+	def tellCurrentTime: String = {
+		val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+		sdf format new Date
+	}
+
 	/**
 	 * Delete the specified file from filesystem. If file is a directory, this method recursively deletes
 	 * all the content before deleting the directory.
@@ -137,14 +143,14 @@ class Utils {
 	def deleteFile(file: File) {
 		try {
 			if (file.isDirectory) {
-				if ((file list()).isEmpty) file delete()
+				if (file list() isEmpty) file delete()
 				else {
 					val fileList = file list()
 					for (fl <- fileList) {
 						val f = new File(file, fl)
 						deleteFile(f)
 					}
-					if ((file list()).isEmpty) file delete()
+					if (file list() isEmpty) file delete()
 				}
 			} else {
 				file delete()

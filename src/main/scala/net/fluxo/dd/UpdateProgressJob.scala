@@ -57,6 +57,7 @@ class UpdateProgressJob extends Job {
 
 			val iterator = OAria.ActiveProcesses.iterator()
 			while (iterator.hasNext) {
+				LogWriter.writeLog("UpdateProgressJob --> new iteration (" + OUtils.tellCurrentTime + ")", Level.DEBUG)
 				breakable {
 
 					try {
@@ -87,7 +88,10 @@ class UpdateProgressJob extends Job {
 							}
 						}
 
+						// ACTIVE TASKS
+						LogWriter writeLog("ACTIVE_TASKS: Start looping...", Level.DEBUG)
 						val activeTasks = OUtils sendAriaTellActive client
+						LogWriter writeLog("ACTIVE_TASKS: " + activeTasks.size, Level.DEBUG)
 						for (o <- activeTasks) {
 							val jMap = {
 								var hm: util.HashMap[String, Object] = null
@@ -99,6 +103,8 @@ class UpdateProgressJob extends Job {
 								}
 								hm
 							}
+							// DEBUG
+							LogWriter writeLog("ACTIVE_TASKS: " + jMap, Level.DEBUG)
 							if (jMap != null) {
 								val tailGID = (OUtils extractValueFromHashMap(jMap, "gid")).toString
 								val task = {
