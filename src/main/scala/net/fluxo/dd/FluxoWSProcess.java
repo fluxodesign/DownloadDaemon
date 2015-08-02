@@ -447,4 +447,11 @@ public class FluxoWSProcess {
 		return Response.status(400).entity("Unable to process KAST Details request").build();
 	}
 
+	@PUT
+	@Path("/trackerupdate/{gid}/{currentByteLength}")
+	public void trackerUpdate(@PathParam("gid") String gid, @PathParam("currentByteLength") long currentByLength) {
+
+	}
+
+
 }
