@@ -296,7 +296,7 @@ class AriaProcessor {
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
 			val sb = new StringBuilder
 			sb append "aria2c" append " --disable-ipv6=true" append " --enable-rpc" append " --rpc-listen-port=" append port append " --gid=" append gid
-			sb append " --allow-overwrite=true"
+			//sb append " --allow-overwrite=true --quiet=true"
 			if (isHttp && (_httpUsername getOrElse "").length > 0 && (_httpPassword getOrElse "").length > 0) {
 				sb append " --http-user=" append _httpUsername.getOrElse("") append " --http-passwd=" append _httpPassword.getOrElse("")
 			} /*else if (!isHttp) {

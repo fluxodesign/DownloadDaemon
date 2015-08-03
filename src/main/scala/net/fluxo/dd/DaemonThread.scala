@@ -20,8 +20,9 @@
  */
 package net.fluxo.dd
 
+import java.io.{BufferedReader, InputStreamReader}
+
 import org.apache.log4j.Level
-import java.io.{InputStreamReader, BufferedReader}
 
 /**
  * DaemonThread starts and manages instances of `DownloadMonitor`, `XMPPMonitor`, `YIFYCacheMonitor`
@@ -38,8 +39,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 
 	@volatile
 	private var _isRunning: Boolean = false
-	private var _tDlMonitor: Option[DownloadMonitor] = None
-	private var _threadDlMonitor: Thread = null
+	//private var _tDlMonitor: Option[DownloadMonitor] = None
+	//private var _threadDlMonitor: Thread = null
 	private var _tXMPPMonitor: Option[XMPPMonitor] = None
 	private var _threadXMPPMonitor: Thread = null
 	private var _tYIFYCacheMonitor: Option[YIFYCacheMonitor] = None
@@ -76,10 +77,10 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		}
 		OUtils createUriDir()
 		if (_isRunning) {
-			val dlMon: DownloadMonitor = new DownloadMonitor(dbMan, this)
+			/*val dlMon: DownloadMonitor = new DownloadMonitor(dbMan, this)
 			_tDlMonitor = Some(dlMon)
 			_threadDlMonitor = new Thread(_tDlMonitor.orNull)
-			_threadDlMonitor start()
+			_threadDlMonitor start()*/
 			val xmppMon: XMPPMonitor = {
 				if (OUtils.readConfig.XMPPProvider.orNull.toLowerCase.equals("google")) {
 					new XMPPMonitor("google", "talk.google.com", 5222, OUtils.readConfig.XMPPAccount.orNull, OUtils.readConfig.XMPPPassword.orNull, this)
@@ -174,10 +175,10 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	 * Try to stop all the manager processes.
 	 */
 	def tryStop() {
-		if (_tDlMonitor.isDefined) {
+		/*if (_tDlMonitor.isDefined) {
 			_tDlMonitor.orNull stop()
 			_threadDlMonitor interrupt()
-		}
+		}*/
 		if (_tXMPPMonitor.isDefined) {
 			_tXMPPMonitor.orNull stop()
 			_threadXMPPMonitor interrupt()
