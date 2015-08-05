@@ -496,56 +496,28 @@ public class FluxoWSProcess {
 			return owner;
 		}
 
-		public void setOwner(String value) {
-			owner = value;
-		}
-
 		public String getOriginalGid() {
 			return originalGid;
-		}
-
-		public void setOriginalGid(String value) {
-			originalGid = value;
 		}
 
 		public String getActiveGid() {
 			return activeGid;
 		}
 
-		public void setActiveGid(String value) {
-			activeGid = value;
-		}
-
 		public long getTotalLength() {
 			return totalLength;
-		}
-
-		public void setTotalLength(long value) {
-			totalLength = value;
 		}
 
 		public long getCompletedLength() {
 			return completedLength;
 		}
 
-		public void setCompletedLength(long value) {
-			completedLength = value;
-		}
-
 		public String getPackageName() {
 			return packageName;
 		}
 
-		public void setPackageName(String value) {
-			packageName = value;
-		}
-
 		public String getInfoHash() {
 			return infoHash;
-		}
-
-		public void setInfoHash(String value) {
-			infoHash = value;
 		}
 
 		public boolean isOk() {

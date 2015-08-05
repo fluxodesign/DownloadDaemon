@@ -96,6 +96,7 @@ class AriaProcessor {
 		}
 		new Thread(ariaThread) start()
 		stat(rpcPort, restarting = false, newGid, owner, uri, isHttp = isHttp, httpUsername, httpPassword, ariaThread getExecutor)
+		startTracker()
 		"OK " + newGid
 	}
 
