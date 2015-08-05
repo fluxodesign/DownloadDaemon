@@ -448,11 +448,109 @@ public class FluxoWSProcess {
 	}
 
 	@POST
-	@Path("/trackerupdate/{gid}/{totalLength}/{completedLength}/{packageName}/{infoHash}")
-	public Response trackerUpdate(@PathParam("gid") String gid, @PathParam("totalLength") long totalLength, @PathParam("completedLength") long completedLength,
-		@PathParam("packageName") String packageName, @PathParam("infoHash") String infoHash) {
-
+	@Path("/trackerfinish")
+	@Consumes("application/json")
+	public Response trackerFinish(ADTObject trackerObject) {
+		if (trackerObject.isOk()) {
+			boolean status = DbControl.finishTask("complete", trackerObject.getCompletedLength(), trackerObject.getActiveGid(),
+				trackerObject.getInfoHash(), trackerObject.getTotalLength());
+			if (status) {
+				return Response.status(200).entity("OK").build();
+			}
+		}
+		return Response.status(500).entity("ERROR").build();
 	}
 
+	@POST
+	@Path("/trackerupdate/")
+	@Consumes("application/json")
+	public Response trackerUpdate(ADTObject trackerObject) {
+		if (trackerObject.isOk()) {
+			Task t = new Task();
+			t.TaskOwner_$eq(trackerObject.getOwner());
+			t.TaskGID_$eq(trackerObject.getOriginalGid());
+			t.TaskTailGID_$eq(trackerObject.getActiveGid());
+			t.TaskTotalLength_$eq(trackerObject.getTotalLength());
+			t.TaskCompletedLength_$eq(trackerObject.getCompletedLength());
+			t.TaskPackage_$eq(trackerObject.getPackageName());
+			t.TaskInfoHash_$eq(trackerObject.getInfoHash());
+			t.TaskStatus_$eq("ACTIVE");
+			boolean status = DbControl.updateTask(t);
+			if (status) {
+				return Response.status(200).entity("OK").build();
+			}
+		}
+		return Response.status(500).entity("ERROR").build();
+	}
 
+	private class ADTObject {
+		String owner;
+		String originalGid;
+		String activeGid;
+		long totalLength = -1;
+		long completedLength = -1;
+		String packageName;
+		String infoHash;
+
+		public String getOwner() {
+			return owner;
+		}
+
+		public void setOwner(String value) {
+			owner = value;
+		}
+
+		public String getOriginalGid() {
+			return originalGid;
+		}
+
+		public void setOriginalGid(String value) {
+			originalGid = value;
+		}
+
+		public String getActiveGid() {
+			return activeGid;
+		}
+
+		public void setActiveGid(String value) {
+			activeGid = value;
+		}
+
+		public long getTotalLength() {
+			return totalLength;
+		}
+
+		public void setTotalLength(long value) {
+			totalLength = value;
+		}
+
+		public long getCompletedLength() {
+			return completedLength;
+		}
+
+		public void setCompletedLength(long value) {
+			completedLength = value;
+		}
+
+		public String getPackageName() {
+			return packageName;
+		}
+
+		public void setPackageName(String value) {
+			packageName = value;
+		}
+
+		public String getInfoHash() {
+			return infoHash;
+		}
+
+		public void setInfoHash(String value) {
+			infoHash = value;
+		}
+
+		public boolean isOk() {
+			return !getOwner().isEmpty() &&!getOriginalGid().isEmpty() && !getActiveGid().isEmpty() && getTotalLength() >= 0
+				&& getCompletedLength() >= 0 &&	!getPackageName().isEmpty() && !getInfoHash().isEmpty();
+		}
+	}
 }

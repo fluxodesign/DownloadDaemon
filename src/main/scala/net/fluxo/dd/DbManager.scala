@@ -139,7 +139,7 @@ class DbManager {
 	def updateTask(task: Task): Boolean = {
 		var response: Boolean = true
 		//val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND tail_gid = ? AND owner = ?"""
-		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ? WHERE gid = ? AND owner = ?"""
+		val updateStatement = """UPDATE input SET package = ?, status = ?, completed_length = ?, total_length = ?, info_hash = ?, tail_gid = ? WHERE gid = ? AND owner = ?"""
 		try {
 			val ps = _conn prepareStatement updateStatement
 			ps setString(1, task.TaskPackage.orNull)
@@ -148,8 +148,8 @@ class DbManager {
 			ps setLong(4, task.TaskTotalLength)
 			ps setString(5, task.TaskInfoHash.getOrElse("XXX"))
 			ps setString(6, task.TaskGID.orNull)
-			//ps setString(7, task.TaskTailGID.orNull)
-			ps setString(7, task.TaskOwner.orNull)
+			ps setString(7, task.TaskTailGID.orNull)
+			ps setString(8, task.TaskOwner.orNull)
 			LogWriter writeLog("--> Updating task " + task.TaskGID.orNull + "; Package: " + task.TaskPackage.getOrElse("Package N/A"), Level.DEBUG)
 			val updated = ps executeUpdate()
 			if (updated == 0) {
