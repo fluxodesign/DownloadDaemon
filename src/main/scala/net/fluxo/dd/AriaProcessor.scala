@@ -20,13 +20,10 @@
  */
 package net.fluxo.dd
 
-import java.io.ByteArrayOutputStream
 import java.util
-import java.util.concurrent.TimeUnit
 
 import net.fluxo.dd.dbo.{AriaProcess, Task}
 import org.apache.commons.exec._
-import org.apache.commons.io.FilenameUtils
 import org.apache.log4j.Level
 import org.joda.time.DateTime
 
@@ -153,6 +150,11 @@ class AriaProcessor {
 		}
 	}
 
+	def startTracker() {
+		val sb = new StringBuilder
+		sb append "scala -classpath ./AriaDownloadTracker-0.1.jar net.fluxo.adt.DownloadTracker"
+	}
+
 	/**
 	 * Attempt to collect the statistics of a newly started aria2 process by querying its RPC port. If the call is
 	 * successful, the method updates the database where clients can query the download progress.
@@ -187,7 +189,7 @@ class AriaProcessor {
 			}
 		}
 		// DEBUG
-		LogWriter writeLog ("Adding new active task to list...", Level.DEBUG)
+		/*LogWriter writeLog ("Adding new active task to list...", Level.DEBUG)
 		ActiveProcesses add new AriaProcess {
 			AriaPort_=(port)
 			AriaProcess_:(executor)
@@ -196,9 +198,9 @@ class AriaProcessor {
 			AriaHttpDownload_=(isHttp)
 			AriaTaskPid_=(findAriaTaskPid(gid))
 			LogWriter writeLog("--> Task PID: " + AriaTaskPid, Level.DEBUG)
-		}
+		}*/
 		// set all necessary parameters if this is an HTTP download...
-		if (isHttp) {
+		/*if (isHttp) {
 			DbControl updateTaskTailGID(gid, gid)
 			try {
 				TimeUnit.SECONDS.sleep(5)
@@ -232,10 +234,10 @@ class AriaProcessor {
 					DbControl updateTask task
 				}
 			}
-		}
+		}*/
 	}
 
-	private def findAriaTaskPid(gid: String): String = {
+	/*private def findAriaTaskPid(gid: String): String = {
 		val command = new StringBuilder
 		command append "ps aux | grep -e 'aria2c' | grep -e '" append gid append "' | awk {'print $2'}"
 		val outputStream = new ByteArrayOutputStream
@@ -245,7 +247,7 @@ class AriaProcessor {
 		executor setStreamHandler pumpsh
 		executor execute commandLine
 		outputStream.toString.trim
-	}
+	}*/
 
 	/**
 	 * AriaThread processes a new download process by calling aria2 through <code>DefaultExecutor</code>.
