@@ -20,9 +20,7 @@
  */
 package net.fluxo.dd
 
-import java.util
-
-import net.fluxo.dd.dbo.{AriaProcess, Task}
+import net.fluxo.dd.dbo.Task
 import org.apache.commons.exec._
 import org.apache.log4j.Level
 import org.joda.time.DateTime
@@ -39,16 +37,16 @@ import scala.util.control.Breaks._
  */
 class AriaProcessor {
 
-	private val _activeProcesses: util.ArrayList[AriaProcess] = new util.ArrayList
+	//private val _activeProcesses: util.ArrayList[AriaProcess] = new util.ArrayList
 
-	private val _startingProcesses: util.ArrayList[Int] = new util.ArrayList
+	//private val _startingProcesses: util.ArrayList[Int] = new util.ArrayList
 
 	/**
 	 * Return a list of active <code>net.fluxo.dd.dbo.AriaProcess</code>.
 	 *
 	 * @return <code>java.util.ArrayList</code> object
 	 */
-	def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
+	//def ActiveProcesses: util.ArrayList[AriaProcess] = _activeProcesses
 
 	/**
 	 * Process a download request from the client. Before the download starts, the process finds a free port to bind our
@@ -93,16 +91,16 @@ class AriaProcessor {
 		}
 		new Thread(ariaThread) start()
 		stat(rpcPort, restarting = false, newGid, owner, uri, isHttp = isHttp, httpUsername, httpPassword, ariaThread getExecutor)
-		startTracker()
+		startTracker(newGid, rpcPort, owner, "https://svr3.fluxodesign.net:8888/")
 		"OK " + newGid
 	}
 
-	/**
+	/*
 	 * Kill the aria2 process that is bound to a specified port.
 	 *
 	 * @param port the port number where the aria2 process is allegedly bound to
 	 */
-	def killProcess(port: Int) {
+	/*def killProcess(port: Int) {
 		val iterator = _activeProcesses iterator()
 		breakable {
 			while (iterator.hasNext) {
@@ -114,12 +112,12 @@ class AriaProcessor {
 				}
 			}
 		}
-	}
+	}*/
 
 	/**
 	 * Attempt to restart failed downloads.
 	 */
-	def restartDownloads() {
+	/*def restartDownloads() {
 		val activeTasks = DbControl queryUnfinishedTasks()
 		if (activeTasks.length > 0) LogWriter writeLog("Trying to restart " + activeTasks.length + " unfinished downloads...", Level.INFO)
 		var rpcPort = -1
@@ -148,11 +146,13 @@ class AriaProcessor {
 			stat(rpcPort, restarting = true, t.TaskGID.getOrElse(""), t.TaskOwner.getOrElse(""), t.TaskInput.getOrElse(""),
 				isHttp = t.TaskIsHttp, t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""), ariaThread getExecutor)
 		}
-	}
+	}*/
 
-	def startTracker() {
+	def startTracker(gid: String, rpcPort: Int, ownerID: String, endpoint: String) {
 		val sb = new StringBuilder
 		sb append "scala -classpath ./AriaDownloadTracker-0.1.jar net.fluxo.adt.DownloadTracker"
+		sb append " -g " append gid append " -p " append rpcPort append " -o " append ownerID
+		sb append " -u " append endpoint append " -d"
 	}
 
 	/**

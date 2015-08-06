@@ -20,15 +20,7 @@
  */
 package net.fluxo.dd
 
-import java.io._
-import java.util
-
-import org.apache.commons.io.FileUtils
-import org.apache.log4j.Level
-import org.apache.xmlrpc.XmlRpcException
 import org.quartz.{Job, JobExecutionContext, JobExecutionException}
-
-import scala.util.control.Breaks._
 
 /**
  * UpdateProgressJob represents a <code>Job</code> where it monitors the active and finished downloads and updates the
@@ -52,7 +44,7 @@ class UpdateProgressJob extends Job {
 	 */
 	@throws(classOf[JobExecutionException])
 	override def execute(context: JobExecutionContext) {
-		try {
+		/*try {
 			if (OUtils.allPortsFree) OAria restartDownloads()
 
 			val iterator = OAria.ActiveProcesses.iterator()
@@ -217,7 +209,7 @@ class UpdateProgressJob extends Job {
 			case ie: InterruptedException =>
 				LogWriter writeLog(ie.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter.stackTraceToString(ie), Level.ERROR)
-		}
+		}*/
 	}
 
 }

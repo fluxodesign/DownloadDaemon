@@ -20,9 +20,10 @@
  */
 package net.fluxo.dd
 
+import java.io.File
+
 import net.xeoh.plugins.base.PluginManager
 import net.xeoh.plugins.base.impl.PluginManagerFactory
-import java.io.File
 
 /**
  * This is the entry point to access our plugins.
@@ -41,7 +42,7 @@ class PluginProcessor {
 	 * @return <code>net.xeoh.plugins.base.PluginManager</code>
 	 */
 	def getPluginManager: PluginManager = {
-		if (!(_plugMan isDefined)) {
+		if (_plugMan.isEmpty) {
 			val pm = PluginManagerFactory createPluginManager()
 			_plugMan = Some(pm)
 			val plugDir = new File("plugins/")

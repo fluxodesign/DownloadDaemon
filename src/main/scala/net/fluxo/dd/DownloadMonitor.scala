@@ -21,9 +21,8 @@
 package net.fluxo.dd
 
 import org.apache.log4j.Level
-import java.io.IOException
-import org.quartz.impl.StdSchedulerFactory
 import org.quartz._
+import org.quartz.impl.StdSchedulerFactory
 
 /**
  * DownloadMonitor attempts to restart unfinished downloads and monitors the download progress every x
@@ -45,7 +44,7 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 	 */
 	override def run() {
 		//check for unfinished downloads and restart them...
-		OAria restartDownloads()
+		/*OAria restartDownloads()
 
 		try {
 			_scheduler start()
@@ -76,7 +75,7 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 			case ioe: IOException =>
 				LogWriter writeLog("Quartz Scheduler IO/ERROR: " + ioe.getMessage + " caused by " + ioe.getCause.getMessage, Level.ERROR)
 				LogWriter writeLog(LogWriter.stackTraceToString(ioe), Level.ERROR)
-		}
+		}*/
 	}
 
 	/**
