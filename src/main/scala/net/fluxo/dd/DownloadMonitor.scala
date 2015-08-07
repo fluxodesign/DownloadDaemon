@@ -44,9 +44,9 @@ class DownloadMonitor(dbMan: DbManager, parent: DaemonThread) extends Runnable {
 	 */
 	override def run() {
 		//check for unfinished downloads and restart them...
-		/*OAria restartDownloads()
+		OAria restartDownloads()
 
-		try {
+		/*try {
 			_scheduler start()
 
 			val jobDetail: JobDetail = JobBuilder.newJob(classOf[UpdateProgressJob])

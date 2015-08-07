@@ -117,7 +117,7 @@ class AriaProcessor {
 	/**
 	 * Attempt to restart failed downloads.
 	 */
-	/*def restartDownloads() {
+	def restartDownloads() {
 		val activeTasks = DbControl queryUnfinishedTasks()
 		if (activeTasks.length > 0) LogWriter writeLog("Trying to restart " + activeTasks.length + " unfinished downloads...", Level.INFO)
 		var rpcPort = -1
@@ -141,12 +141,13 @@ class AriaProcessor {
 					ariaThread setCredentials(t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""))
 				}
 			}
-			_startingProcesses add rpcPort
+			//_startingProcesses add rpcPort
 			new Thread(ariaThread) start()
 			stat(rpcPort, restarting = true, t.TaskGID.getOrElse(""), t.TaskOwner.getOrElse(""), t.TaskInput.getOrElse(""),
 				isHttp = t.TaskIsHttp, t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""), ariaThread getExecutor)
+			startTracker(t.TaskGID.orNull, rpcPort, t.TaskOwner.orNull, "https://svr3.fluxodesign.net:8888/")
 		}
-	}*/
+	}
 
 	def startTracker(gid: String, rpcPort: Int, ownerID: String, endpoint: String) {
 		val sb = new StringBuilder

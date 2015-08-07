@@ -25,12 +25,15 @@ import net.fluxo.plugins.kas.TrKas;
 import net.fluxo.plugins.tpb.TrTPB;
 import net.xeoh.plugins.base.PluginManager;
 import org.apache.commons.codec.net.URLCodec;
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Level;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import java.io.File;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
@@ -466,21 +469,52 @@ public class FluxoWSProcess {
 	@Consumes("application/json")
 	public Response trackerUpdate(ADTObject trackerObject) {
 		if (trackerObject.isOk()) {
-			Task t = new Task();
-			t.TaskOwner_$eq(trackerObject.getOwner());
-			t.TaskGID_$eq(trackerObject.getOriginalGid());
-			t.TaskTailGID_$eq(trackerObject.getActiveGid());
-			t.TaskTotalLength_$eq(trackerObject.getTotalLength());
-			t.TaskCompletedLength_$eq(trackerObject.getCompletedLength());
-			t.TaskPackage_$eq(trackerObject.getPackageName());
-			t.TaskInfoHash_$eq(trackerObject.getInfoHash());
-			t.TaskStatus_$eq("ACTIVE");
-			boolean status = DbControl.updateTask(t);
-			if (status) {
-				return Response.status(200).entity("OK").build();
+			Task[] arrTasks = DbControl.queryTask(trackerObject.getOriginalGid());
+			if (arrTasks.length > 0 && arrTasks[0].TaskOwner().get().equals(trackerObject.getOwner()) &&
+				arrTasks[0].TaskGID().get().equals(trackerObject.getOriginalGid())) {
+				Task t = arrTasks[0];
+				t.TaskTailGID_$eq(trackerObject.getActiveGid());
+				t.TaskCompletedLength_$eq(trackerObject.getCompletedLength());
+				t.TaskTotalLength_$eq(trackerObject.getTotalLength());
+				t.TaskInfoHash_$eq(trackerObject.getInfoHash());
+				t.TaskPackage_$eq(trackerObject.getPackageName());
+				t.TaskStatus_$eq("ACTIVE");
+				boolean status = DbControl.updateTask(t);
+				if (status) {
+					try {
+						movePackageToDlDir(t);
+					} catch (IOException ioe) {
+						LogWriter.writeLog("Failed to move finished package \'" + t.TaskPackage().get() +
+							"\' to destination directory", Level.ERROR);
+					}
+					return Response.status(200).entity("OK").build();
+				}
 			}
 		}
 		return Response.status(500).entity("ERROR").build();
+	}
+
+	private void movePackageToDlDir(Task t) throws IOException {
+		// move the package to a directory specified in config...
+		if (OUtils.readConfig().DownloadDir().get().length() > 0) {
+			if (t.TaskIsHttp()) {
+				// HTTP downloads usually are just for 1 file...
+				File packageFile = new File(t.TaskPackage().get());
+				File destDir = new File(OUtils.readConfig().DownloadDir().get());
+				if (packageFile.isFile() && packageFile.exists() && destDir.isDirectory() && destDir.exists()) {
+					FileUtils.moveFileToDirectory(packageFile, destDir, false);
+				} else LogWriter.writeLog("Failed to move file " + t.TaskPackage().get() +
+					" to " + OUtils.readConfig().DownloadDir().get(), Level.INFO);
+			} else {
+				File packageDir = new File(t.TaskPackage().get());
+				File destDir = new File(OUtils.readConfig().DownloadDir().get() + "/" + t.TaskPackage().get());
+				if (packageDir.isDirectory() && packageDir.exists() && !destDir.exists()) {
+					FileUtils.moveDirectory(packageDir, destDir);
+				} else if (packageDir.isFile() && packageDir.exists() && !destDir.exists()) {
+					FileUtils.moveFile(packageDir, destDir);
+				} else LogWriter.writeLog("directory " + destDir.getAbsolutePath() + " exist!", Level.INFO);
+			}
+		}
 	}
 
 	private class ADTObject {
