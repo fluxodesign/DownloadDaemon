@@ -153,6 +153,16 @@ class AriaProcessor {
 		sb append "scala -classpath ./AriaDownloadTracker-0.1.jar net.fluxo.adt.DownloadTracker"
 		sb append " -g " append gid append " -p " append rpcPort append " -o " append ownerID
 		sb append " -u " append endpoint append " -d"
+		LogWriter writeLog("command line: " + sb.toString, Level.DEBUG)
+
+		val cmdLine = CommandLine parse sb.toString
+		//val resultHandler = new DefaultExecuteResultHandler
+		val watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT)
+		val executor = new DefaultExecutor
+		executor setWatchdog watchdog
+		val pumpsh = new PumpStreamHandler(new OStream)
+		executor setStreamHandler pumpsh
+		executor execute cmdLine
 	}
 
 	/**
