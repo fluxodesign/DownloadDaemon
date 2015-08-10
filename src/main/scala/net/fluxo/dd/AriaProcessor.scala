@@ -145,7 +145,7 @@ class AriaProcessor {
 			new Thread(ariaThread) start()
 			stat(rpcPort, restarting = true, t.TaskGID.getOrElse(""), t.TaskOwner.getOrElse(""), t.TaskInput.getOrElse(""),
 				isHttp = t.TaskIsHttp, t.TaskHttpUsername.getOrElse(""), t.TaskHttpPassword.getOrElse(""), ariaThread getExecutor)
-			startTracker(t.TaskGID.orNull, rpcPort, t.TaskOwner.orNull, "https://svr3.fluxodesign.net:8888/")
+			startTracker(t.TaskGID.orNull, rpcPort, t.TaskOwner.orNull, "http://127.0.0.1:8889/")
 		}
 	}
 
