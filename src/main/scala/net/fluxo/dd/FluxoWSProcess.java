@@ -468,28 +468,32 @@ public class FluxoWSProcess {
 	@Path("/trackerupdate/")
 	@Consumes("application/json")
 	public Response trackerUpdate(ADTObject trackerObject) {
-		if (trackerObject.isOk()) {
-			Task[] arrTasks = DbControl.queryTask(trackerObject.getOriginalGid());
-			if (arrTasks.length > 0 && arrTasks[0].TaskOwner().get().equals(trackerObject.getOwner()) &&
-				arrTasks[0].TaskGID().get().equals(trackerObject.getOriginalGid())) {
-				Task t = arrTasks[0];
-				t.TaskTailGID_$eq(trackerObject.getActiveGid());
-				t.TaskCompletedLength_$eq(trackerObject.getCompletedLength());
-				t.TaskTotalLength_$eq(trackerObject.getTotalLength());
-				t.TaskInfoHash_$eq(trackerObject.getInfoHash());
-				t.TaskPackage_$eq(trackerObject.getPackageName());
-				t.TaskStatus_$eq("ACTIVE");
-				boolean status = DbControl.updateTask(t);
-				if (status) {
-					try {
-						movePackageToDlDir(t);
-					} catch (IOException ioe) {
-						LogWriter.writeLog("Failed to move finished package \'" + t.TaskPackage().get() +
-							"\' to destination directory", Level.ERROR);
+		try {
+			if (trackerObject.isOk()) {
+				Task[] arrTasks = DbControl.queryTask(trackerObject.getOriginalGid());
+				if (arrTasks.length > 0 && arrTasks[0].TaskOwner().get().equals(trackerObject.getOwner()) &&
+					arrTasks[0].TaskGID().get().equals(trackerObject.getOriginalGid())) {
+					Task t = arrTasks[0];
+					t.TaskTailGID_$eq(trackerObject.getActiveGid());
+					t.TaskCompletedLength_$eq(trackerObject.getCompletedLength());
+					t.TaskTotalLength_$eq(trackerObject.getTotalLength());
+					t.TaskInfoHash_$eq(trackerObject.getInfoHash());
+					t.TaskPackage_$eq(trackerObject.getPackageName());
+					t.TaskStatus_$eq("ACTIVE");
+					boolean status = DbControl.updateTask(t);
+					if (status) {
+						try {
+							movePackageToDlDir(t);
+						} catch (IOException ioe) {
+							LogWriter.writeLog("Failed to move finished package \'" + t.TaskPackage().get() +
+								"\' to destination directory", Level.ERROR);
+						}
+						return Response.status(200).entity("OK").build();
 					}
-					return Response.status(200).entity("OK").build();
 				}
 			}
+		} catch (Exception e) {
+			LogWriter.writeLog("ERROR updating Aria data: " + e.getMessage() + " caused by " + e.getCause().getMessage(), Level.ERROR);
 		}
 		return Response.status(500).entity("ERROR").build();
 	}
