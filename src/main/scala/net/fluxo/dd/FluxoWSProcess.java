@@ -20,6 +20,7 @@
  */
 package net.fluxo.dd;
 
+import net.fluxo.dd.dbo.ADTObject;
 import net.fluxo.dd.dbo.Task;
 import net.fluxo.plugins.kas.TrKas;
 import net.fluxo.plugins.tpb.TrTPB;
@@ -536,7 +537,7 @@ public class FluxoWSProcess {
 		}
 	}
 
-	private class ADTObject {
+	/*private class ADTObject {
 		String owner;
 		String originalGid;
 		String activeGid;
@@ -577,5 +578,5 @@ public class FluxoWSProcess {
 			return !getOwner().isEmpty() &&!getOriginalGid().isEmpty() && !getActiveGid().isEmpty() && getTotalLength() >= 0
 				&& getCompletedLength() >= 0 &&	!getPackageName().isEmpty() && !getInfoHash().isEmpty();
 		}
-	}
+	}*/
 }
