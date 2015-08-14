@@ -91,7 +91,7 @@ class AriaProcessor {
 		}
 		new Thread(ariaThread) start()
 		stat(rpcPort, restarting = false, newGid, owner, uri, isHttp = isHttp, httpUsername, httpPassword, ariaThread getExecutor)
-		startTracker(newGid, rpcPort, owner, "https://svr3.fluxodesign.net:8888/")
+		startTracker(newGid, rpcPort, owner, "http://127.0.0.1:8889/")
 		"OK " + newGid
 	}
 
