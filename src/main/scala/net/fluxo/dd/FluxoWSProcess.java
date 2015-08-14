@@ -454,7 +454,6 @@ public class FluxoWSProcess {
 	@POST
 	@Path("/trackerfinish")
 	@Consumes("application/json")
-	@Produces("text/plain")
 	public Response trackerFinish(ADTObject trackerObject) {
 		if (trackerObject.isOk()) {
 			Task[] arrTasks = DbControl.queryTask(trackerObject.getOriginalGid());
@@ -486,7 +485,6 @@ public class FluxoWSProcess {
 	@POST
 	@Path("/trackerupdate/")
 	@Consumes("application/json")
-	@Produces("text/plain")
 	public Response trackerUpdate(ADTObject trackerObject) {
 		try {
 			if (trackerObject.isOk()) {
