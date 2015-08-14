@@ -455,10 +455,27 @@ public class FluxoWSProcess {
 	@Consumes("application/json")
 	public Response trackerFinish(ADTObject trackerObject) {
 		if (trackerObject.isOk()) {
-			boolean status = DbControl.finishTask("complete", trackerObject.getCompletedLength(), trackerObject.getActiveGid(),
-				trackerObject.getInfoHash(), trackerObject.getTotalLength());
-			if (status) {
-				return Response.status(200).entity("OK").build();
+			Task[] arrTasks = DbControl.queryTask(trackerObject.getOriginalGid());
+			if (arrTasks.length > 0 && arrTasks[0].TaskOwner().get().equals(trackerObject.getOwner()) &&
+				arrTasks[0].TaskGID().get().equals(trackerObject.getOriginalGid())) {
+				Task t = arrTasks[0];
+				t.TaskTailGID_$eq(trackerObject.getActiveGid());
+				t.TaskCompletedLength_$eq(trackerObject.getCompletedLength());
+				t.TaskTotalLength_$eq(trackerObject.getTotalLength());
+				t.TaskInfoHash_$eq(trackerObject.getInfoHash());
+				t.TaskPackage_$eq(trackerObject.getPackageName());
+				t.TaskStatus_$eq("ACTIVE");
+				boolean status = DbControl.finishTask("complete", trackerObject.getCompletedLength(), trackerObject.getActiveGid(),
+					trackerObject.getInfoHash(), trackerObject.getTotalLength());
+				if (status) {
+					try {
+						movePackageToDlDir(t);
+					} catch (IOException ioe) {
+						LogWriter.writeLog("Failed to move finished package \'" + t.TaskPackage().get() +
+							"\' to destination directory", Level.ERROR);
+					}
+					return Response.status(200).entity("OK").build();
+				}
 			}
 		}
 		return Response.status(500).entity("ERROR").build();
@@ -479,15 +496,11 @@ public class FluxoWSProcess {
 					t.TaskTotalLength_$eq(trackerObject.getTotalLength());
 					t.TaskInfoHash_$eq(trackerObject.getInfoHash());
 					t.TaskPackage_$eq(trackerObject.getPackageName());
+					// DEBUG
+					LogWriter.writeLog("--ARIA UPDATE: " + trackerObject.getPackageName(), Level.INFO);
 					t.TaskStatus_$eq("ACTIVE");
 					boolean status = DbControl.updateTask(t);
 					if (status) {
-						try {
-							movePackageToDlDir(t);
-						} catch (IOException ioe) {
-							LogWriter.writeLog("Failed to move finished package \'" + t.TaskPackage().get() +
-								"\' to destination directory", Level.ERROR);
-						}
 						return Response.status(200).entity("OK").build();
 					}
 				}
