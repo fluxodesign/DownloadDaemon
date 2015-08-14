@@ -173,6 +173,11 @@
             <version>3.0.5.Final</version>
         </dependency>
         <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-jackson-provider</artifactId>
+            <version>3.0.5.Final</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-exec</artifactId>
             <version>1.2</version>
