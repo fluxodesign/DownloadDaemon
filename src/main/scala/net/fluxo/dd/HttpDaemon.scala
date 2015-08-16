@@ -62,7 +62,7 @@ class HttpDaemon(port: Int, sslPort: Int) extends Runnable {
 
 		val defaultHandler = new DefaultHandler
 
-		val webAppContext = new ServletContextHandler(ServletContextHandler SESSIONS)
+		val webAppContext = new ServletContextHandler(ServletContextHandler.SESSIONS)
 		webAppContext setContextPath "/comm"
 		webAppContext setInitParameter("resteasy.scan", "true")
 		webAppContext setInitParameter("resteasy.servlet.mapping.prefix", "/rs")
@@ -77,9 +77,9 @@ class HttpDaemon(port: Int, sslPort: Int) extends Runnable {
 		_server setHandler handlerCollection
 		_server setStopAtShutdown true
 
-		val sslContextFactory = new SslContextFactory((OUtils readConfig).SSLKeystore.getOrElse(""))
-		sslContextFactory setKeyStorePassword (OUtils readConfig).SSLKeystorePassword.getOrElse("")
-		sslContextFactory setKeyManagerPassword (OUtils readConfig).SSLKeymanagerPassword.getOrElse("")
+		val sslContextFactory = new SslContextFactory(OUtils.readConfig.SSLKeystore.getOrElse(""))
+		sslContextFactory setKeyStorePassword OUtils.readConfig.SSLKeystorePassword.getOrElse("")
+		sslContextFactory setKeyManagerPassword OUtils.readConfig.SSLKeymanagerPassword.getOrElse("")
 		sslContextFactory addExcludeProtocols "SSLv3"
 		sslContextFactory addExcludeProtocols "SSLv2Hello"
 		sslContextFactory setIncludeCipherSuites("TLS_DHE_RSA_WITH_AES_128_CBC_SHA",
