@@ -32,7 +32,6 @@ import org.apache.log4j.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
@@ -485,8 +484,9 @@ public class FluxoWSProcess {
 
 	@POST
 	@Path("/trackerupdate/")
-	@Consumes(MediaType.APPLICATION_JSON)
-	public Response trackerUpdate(ADTObject trackerObject) {
+	@Consumes("application/json")
+	@Produces("application/json")
+	public ADTObject trackerUpdate(ADTObject trackerObject) {
 		try {
 			if (trackerObject.isOk()) {
 				Task[] arrTasks = DbControl.queryTask(trackerObject.getOriginalGid());
@@ -503,14 +503,15 @@ public class FluxoWSProcess {
 					t.TaskStatus_$eq("ACTIVE");
 					boolean status = DbControl.updateTask(t);
 					if (status) {
-						return Response.status(200).entity("OK").build();
+						//return Response.status(200).entity("OK").build();
+						return trackerObject;
 					}
 				}
 			}
 		} catch (Exception e) {
 			LogWriter.writeLog("ERROR updating Aria data: " + e.getMessage() + " caused by " + e.getCause().getMessage(), Level.ERROR);
 		}
-		return Response.status(500).entity("ERROR").build();
+		return null;//return Response.status(500).entity("ERROR").build();
 	}
 
 	private void movePackageToDlDir(Task t) throws IOException {
