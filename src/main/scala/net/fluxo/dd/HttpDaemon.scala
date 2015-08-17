@@ -66,6 +66,7 @@ class HttpDaemon(port: Int, sslPort: Int) extends Runnable {
 		webAppContext setContextPath "/comm"
 		webAppContext setInitParameter("resteasy.scan", "true")
 		webAppContext setInitParameter("resteasy.servlet.mapping.prefix", "/rs")
+		webAppContext setInitParameter("com.sun.jersey.config.property.packages", "net.fluxo.dd")
 		webAppContext setInitParameter("com.sun.jersey.api.json.POJOMappingFeature", "true")
 		val webAppHolder = new ServletHolder(new HttpServletDispatcher)
 		webAppHolder setInitOrder 1

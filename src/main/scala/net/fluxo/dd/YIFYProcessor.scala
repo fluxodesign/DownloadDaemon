@@ -109,8 +109,8 @@ class YIFYProcessor {
 		val searchString = term replaceAllLiterally("%20", " ")
 		val searchResult = DbControl ycQueryMoviesByTitle searchString
 		val yifySearchResult = new YIFYSearchResult
-		if ((searchResult length) > 0) {
-			yifySearchResult.MovieCount_:(searchResult length)
+		if (searchResult.length > 0) {
+			yifySearchResult.MovieCount_:(searchResult.length)
 			val request = new StringBuilder
 			for (x <- searchResult) {
 				request setLength 0
