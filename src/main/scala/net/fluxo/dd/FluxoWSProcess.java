@@ -484,7 +484,7 @@ public class FluxoWSProcess {
 
 	@POST
 	@Path("/trackerupdate/")
-	@Consumes("application/json")
+	@Consumes("text/xml")
 	public Response trackerUpdate(ADTObject trackerObject) {
 		try {
 			if (trackerObject.isOk()) {
