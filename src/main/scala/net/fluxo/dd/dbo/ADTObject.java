@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Ronald Kurniawan (viper)
  * @version 0.1, 14/08/15
  */
-@XmlRootElement
+@XmlRootElement(name="ariaobject")
 public class ADTObject {
 	String owner;
 	String originalGid;
