@@ -26,7 +26,10 @@ import org.eclipse.jetty.server.handler.{DefaultHandler, HandlerCollection}
 import org.eclipse.jetty.servlet.{ServletContextHandler, ServletHolder}
 import org.eclipse.jetty.util.ssl.SslContextFactory
 import org.eclipse.jetty.webapp.WebAppContext
+import org.jboss.resteasy.plugins.providers.RegisterBuiltin
+import org.jboss.resteasy.plugins.providers.jackson.ResteasyJacksonProvider
 import org.jboss.resteasy.plugins.server.servlet.HttpServletDispatcher
+import org.jboss.resteasy.spi.ResteasyProviderFactory
 
 /**
  * HttpDaemon is one of the daemon processes managed by `DaemonThread` class.
@@ -59,6 +62,10 @@ class HttpDaemon(port: Int, sslPort: Int) extends Runnable {
 		val wap = new WebAppContext()
 		wap setContextPath "/"
 		wap setWar "."
+
+		val restEasyProvider = ResteasyProviderFactory getInstance()
+		RegisterBuiltin register restEasyProvider
+		restEasyProvider registerProvider classOf[ResteasyJacksonProvider]
 
 		val defaultHandler = new DefaultHandler
 
