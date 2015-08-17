@@ -32,6 +32,7 @@ import org.apache.log4j.Level;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
@@ -484,7 +485,7 @@ public class FluxoWSProcess {
 
 	@POST
 	@Path("/trackerupdate/")
-	@Consumes("text/xml")
+	@Consumes(MediaType.APPLICATION_JSON)
 	public Response trackerUpdate(ADTObject trackerObject) {
 		try {
 			if (trackerObject.isOk()) {
