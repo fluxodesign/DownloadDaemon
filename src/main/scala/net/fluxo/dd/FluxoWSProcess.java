@@ -20,7 +20,6 @@
  */
 package net.fluxo.dd;
 
-import net.fluxo.dd.dbo.ADTObject;
 import net.fluxo.dd.dbo.Task;
 import net.fluxo.plugins.kas.TrKas;
 import net.fluxo.plugins.tpb.TrTPB;
@@ -453,30 +452,42 @@ public class FluxoWSProcess {
 
 	@POST
 	@Path("/trackerfinish")
-	@Consumes("application/json")
-	public Response trackerFinish(ADTObject trackerObject) {
-		if (trackerObject.isOk()) {
-			Task[] arrTasks = DbControl.queryTask(trackerObject.getOriginalGid());
-			if (arrTasks.length > 0 && arrTasks[0].TaskOwner().get().equals(trackerObject.getOwner()) &&
-				arrTasks[0].TaskGID().get().equals(trackerObject.getOriginalGid())) {
-				Task t = arrTasks[0];
-				t.TaskTailGID_$eq(trackerObject.getActiveGid());
-				t.TaskCompletedLength_$eq(trackerObject.getCompletedLength());
-				t.TaskTotalLength_$eq(trackerObject.getTotalLength());
-				t.TaskInfoHash_$eq(trackerObject.getInfoHash());
-				t.TaskPackage_$eq(trackerObject.getPackageName());
-				t.TaskStatus_$eq("ACTIVE");
-				boolean status = DbControl.finishTask("complete", trackerObject.getCompletedLength(), trackerObject.getActiveGid(),
-					trackerObject.getInfoHash(), trackerObject.getTotalLength());
-				if (status) {
-					try {
-						movePackageToDlDir(t);
-					} catch (IOException ioe) {
-						LogWriter.writeLog("Failed to move finished package \'" + t.TaskPackage().get() +
-							"\' to destination directory", Level.ERROR);
+	@Consumes("text/plain")
+	public Response trackerFinish(String input) {
+		LogWriter.writeLog("--trackerfinish: " + input, Level.DEBUG);
+		HashMap<String,String> keyVal = new HashMap<>();
+		String[] arrInputs = input.split("&");
+		for (String line : arrInputs) {
+			// each line should consists of key, a '=' and a value
+			String[] elements = line.split("=");
+			if (elements.length > 0) {
+				keyVal.put(elements[0], elements[1]);
+			}
+		}
+		Task[] arrTasks = DbControl.queryTask(keyVal.get("originalGid"));
+		if (arrTasks.length > 0 && arrTasks[0].TaskOwner().get().equals(keyVal.get("owner")) &&
+			arrTasks[0].TaskGID().get().equals(keyVal.get("originalGid"))) {
+				try {
+					Task t = arrTasks[0];
+					t.TaskTailGID_$eq(keyVal.get("activeGid"));
+					t.TaskCompletedLength_$eq(Long.parseLong(keyVal.get("completedLength")));
+					t.TaskTotalLength_$eq(Long.parseLong(keyVal.get("totalLength")));
+					t.TaskInfoHash_$eq(keyVal.get("infoHash"));
+					t.TaskPackage_$eq(keyVal.get(URLDecoder.decode("packageName", "UTF-8")));
+					t.TaskStatus_$eq("ACTIVE");
+					boolean status = DbControl.finishTask("complete", t.TaskCompletedLength(), t.TaskTailGID().get(),
+						t.TaskInfoHash().get(), t.TaskTotalLength());
+					if (status) {
+						try {
+							movePackageToDlDir(t);
+						} catch (IOException ioe) {
+							LogWriter.writeLog("Failed to move finished package \'" + t.TaskPackage().get() +
+								"\' to destination directory", Level.ERROR);
+						}
+						return Response.status(200).entity("OK").build();
 					}
-					return Response.status(200).entity("OK").build();
-				}
+				} catch (Exception e) {
+					LogWriter.writeLog("ERROR finishing Aria task: " + e.getMessage() + " caused by " + e.getCause().getMessage(), Level.ERROR);
 			}
 		}
 		return Response.status(500).entity("ERROR").build();
@@ -485,34 +496,39 @@ public class FluxoWSProcess {
 	@POST
 	@Path("/trackerupdate/")
 	@Consumes("text/plain")
-	public ADTObject trackerUpdate(String text) {
-	//public ADTObject trackerUpdate(ADTObject trackerObject) {
-		/*try {
-			if (trackerObject.isOk()) {
-				Task[] arrTasks = DbControl.queryTask(trackerObject.getOriginalGid());
-				if (arrTasks.length > 0 && arrTasks[0].TaskOwner().get().equals(trackerObject.getOwner()) &&
-					arrTasks[0].TaskGID().get().equals(trackerObject.getOriginalGid())) {
-					Task t = arrTasks[0];
-					t.TaskTailGID_$eq(trackerObject.getActiveGid());
-					t.TaskCompletedLength_$eq(trackerObject.getCompletedLength());
-					t.TaskTotalLength_$eq(trackerObject.getTotalLength());
-					t.TaskInfoHash_$eq(trackerObject.getInfoHash());
-					t.TaskPackage_$eq(trackerObject.getPackageName());
-					// DEBUG
-					LogWriter.writeLog("--ARIA UPDATE: " + trackerObject.getPackageName(), Level.INFO);
-					t.TaskStatus_$eq("ACTIVE");
-					boolean status = DbControl.updateTask(t);
-					if (status) {
-						//return Response.status(200).entity("OK").build();
-						return trackerObject;
-					}
-				}
+	public Response trackerUpdate(String input) {
+		LogWriter.writeLog("-->trackerupdate: " + input, Level.DEBUG);
+		HashMap<String,String> keyVal = new HashMap<>();
+		String[] arrInputs = input.split("&");
+		for (String line : arrInputs) {
+			// each line should consists of key, a '=' and a value
+			String[] elements = line.split("=");
+			if (elements.length > 0) {
+				keyVal.put(elements[0], elements[1]);
 			}
-		} catch (Exception e) {
-			LogWriter.writeLog("ERROR updating Aria data: " + e.getMessage() + " caused by " + e.getCause().getMessage(), Level.ERROR);
-		}*/
-		LogWriter.writeLog("-->trackerupdate: " + text, Level.DEBUG);
-		return null;//return Response.status(500).entity("ERROR").build();
+		}
+		Task[] arrTasks = DbControl.queryTask(keyVal.get("originalGid"));
+		if (arrTasks.length > 0 && arrTasks[0].TaskOwner().get().equals(keyVal.get("owner")) &&
+			arrTasks[0].TaskGID().get().equals(keyVal.get("originalGid"))) {
+			try {
+				Task t = arrTasks[0];
+				t.TaskTailGID_$eq(keyVal.get("activeGid"));
+				t.TaskCompletedLength_$eq(Long.parseLong(keyVal.get("completedLength")));
+				t.TaskTotalLength_$eq(Long.parseLong(keyVal.get("totalLength")));
+				t.TaskInfoHash_$eq(keyVal.get("infoHash"));
+				t.TaskPackage_$eq(keyVal.get(URLDecoder.decode("packageName", "UTF-8")));
+				// DEBUG
+				LogWriter.writeLog("--ARIA UPDATE: " + keyVal.get("packageName"), Level.INFO);
+				t.TaskStatus_$eq("ACTIVE");
+				boolean status = DbControl.updateTask(t);
+				if (status) {
+					return Response.status(200).entity("OK").build();
+				}
+			} catch (Exception e) {
+				LogWriter.writeLog("ERROR updating Aria data: " + e.getMessage() + " caused by " + e.getCause().getMessage(), Level.ERROR);
+			}
+		}
+		return Response.status(500).entity("ERROR").build();
 	}
 
 	private void movePackageToDlDir(Task t) throws IOException {
