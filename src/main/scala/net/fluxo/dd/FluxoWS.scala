@@ -20,7 +20,10 @@
  */
 package net.fluxo.dd
 
+import java.util
 import javax.ws.rs.core.Application
+
+import net.fluxo.dd.dbo.ADTObject
 
 /**
  * <code>javax.ws.rs.core.Application</code> object to be used by embedded Jetty server.
@@ -31,15 +34,21 @@ import javax.ws.rs.core.Application
  */
 class FluxoWS extends Application {
 
-	private val _services: java.util.Set[Object] = new java.util.HashSet[Object]
+	private val _services: util.Set[Object] = new util.HashSet[Object]
 
 	/**
 	 * Add a new <code>net.fluxo.dd.FluxoWSProcess</code> instance to the <code>Set</code>.
 	 *
 	 * @return a <code>java.util.Set</code>
 	 */
-	override def getSingletons: java.util.Set[Object] = {
+	override def getSingletons: util.Set[Object] = {
 		_services add new FluxoWSProcess
 		_services
+	}
+
+	override def getClasses: util.Set[Class[_]] = {
+		val classes = new util.HashSet[Class[_]]
+		classes add classOf[ADTObject]
+		classes
 	}
 }

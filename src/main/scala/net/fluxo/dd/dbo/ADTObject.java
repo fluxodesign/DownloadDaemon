@@ -2,13 +2,14 @@ package net.fluxo.dd.dbo;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 /**
  * @author Ronald Kurniawan (viper)
  * @version 0.1, 14/08/15
  */
 @XmlRootElement(name="ariaobject")
-public class ADTObject {
+public class ADTObject implements Serializable {
 	String owner;
 	String originalGid;
 	String activeGid;
