@@ -484,10 +484,10 @@ public class FluxoWSProcess {
 
 	@POST
 	@Path("/trackerupdate/")
-	@Consumes("application/json")
-	@Produces("application/json")
-	public ADTObject trackerUpdate(ADTObject trackerObject) {
-		try {
+	@Consumes("text/plain")
+	public ADTObject trackerUpdate(String text) {
+	//public ADTObject trackerUpdate(ADTObject trackerObject) {
+		/*try {
 			if (trackerObject.isOk()) {
 				Task[] arrTasks = DbControl.queryTask(trackerObject.getOriginalGid());
 				if (arrTasks.length > 0 && arrTasks[0].TaskOwner().get().equals(trackerObject.getOwner()) &&
@@ -510,7 +510,8 @@ public class FluxoWSProcess {
 			}
 		} catch (Exception e) {
 			LogWriter.writeLog("ERROR updating Aria data: " + e.getMessage() + " caused by " + e.getCause().getMessage(), Level.ERROR);
-		}
+		}*/
+		LogWriter.writeLog("-->trackerupdate: " + text, Level.DEBUG);
 		return null;//return Response.status(500).entity("ERROR").build();
 	}
 

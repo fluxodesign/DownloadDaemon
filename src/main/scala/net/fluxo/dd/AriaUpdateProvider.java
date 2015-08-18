@@ -3,7 +3,6 @@ package net.fluxo.dd;
 import net.fluxo.dd.dbo.ADTObject;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -21,7 +20,6 @@ import java.lang.reflect.Type;
  */
 @Provider
 @Consumes("application/json")
-@Produces("application/json")
 public class AriaUpdateProvider implements MessageBodyReader<ADTObject> {
 	@Override
 	public boolean isReadable(Class<?> aClass, Type type, Annotation[] annotations, MediaType mediaType) {
