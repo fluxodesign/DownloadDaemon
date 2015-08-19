@@ -473,7 +473,7 @@ public class FluxoWSProcess {
 					t.TaskCompletedLength_$eq(Long.parseLong(keyVal.get("completedLength")));
 					t.TaskTotalLength_$eq(Long.parseLong(keyVal.get("totalLength")));
 					t.TaskInfoHash_$eq(keyVal.get("infoHash"));
-					t.TaskPackage_$eq(keyVal.get(URLDecoder.decode("packageName", "UTF-8")));
+					t.TaskPackage_$eq(URLDecoder.decode(keyVal.get("packageName"), "UTF-8"));
 					t.TaskStatus_$eq("ACTIVE");
 					boolean status = DbControl.finishTask("complete", t.TaskCompletedLength(), t.TaskTailGID().get(),
 						t.TaskInfoHash().get(), t.TaskTotalLength());
@@ -516,7 +516,7 @@ public class FluxoWSProcess {
 				t.TaskCompletedLength_$eq(Long.parseLong(keyVal.get("completedLength")));
 				t.TaskTotalLength_$eq(Long.parseLong(keyVal.get("totalLength")));
 				t.TaskInfoHash_$eq(keyVal.get("infoHash"));
-				t.TaskPackage_$eq(keyVal.get(URLDecoder.decode("packageName", "UTF-8")));
+				t.TaskPackage_$eq(URLDecoder.decode(keyVal.get("packageName"), "UTF-8"));
 				// DEBUG
 				LogWriter.writeLog("--ARIA UPDATE: " + keyVal.get("packageName"), Level.INFO);
 				t.TaskStatus_$eq("ACTIVE");
