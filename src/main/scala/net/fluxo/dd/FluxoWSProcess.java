@@ -180,18 +180,23 @@ public class FluxoWSProcess {
 	    @DefaultValue("") @PathParam("owner") String owner) {
 		String username = htRequest.getHeader("DDUSER");
 		String password = htRequest.getHeader("DDPWD");
+		LogWriter.writeLog("Receiving request: " + uri + " from owner " + owner, Level.INFO);
 		if (username == null || password == null || !DbControl.authCredentials(username, password)) {
+			LogWriter.writeLog("ADD_TORRENT ERROR: owner not authorized!", Level.ERROR);
 			return Response.status(400).entity("NOT-AUTHORIZED").build();
 		}
 		try {
 			if (uri.length() > 0 && owner.length() > 0) {
 				String decodedURL = URLDecoder.decode(uri, "UTF-8");
 				String response = OAria.processRequest(decodedURL, owner, false, "", "", false);
+				LogWriter.writeLog("ADD_TORRENT Successful! - Response: " + response, Level.INFO);
 				return Response.status(200).entity(response).build();
 			}
 		} catch (UnsupportedEncodingException uee) {
+			LogWriter.writeLog("ADD_TORRENT ERROR: " + uee.getMessage(), Level.ERROR);
 			return Response.status(500).entity(uee.getMessage()).build();
 		}
+		LogWriter.writeLog("ADD_TORRENT ERROR: Either URI error or no owner specified!", Level.ERROR);
 		return Response.status(400).entity("EITHER-URI-ERROR-OR-NO-OWNER").build();
 	}
 
