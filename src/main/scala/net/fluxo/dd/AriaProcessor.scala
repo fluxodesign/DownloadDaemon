@@ -163,7 +163,15 @@ class AriaProcessor {
 		executor setWatchdog watchdog
 		val pumpsh = new PumpStreamHandler(new OStream)
 		executor setStreamHandler pumpsh
-		executor execute cmdLine
+		executor execute (cmdLine, new ExecuteResultHandler {
+			override def onProcessFailed(e: ExecuteException) {
+				LogWriter writeLog("Aria Tracking failed: " + e.getMessage, Level.ERROR)
+			}
+
+			override def onProcessComplete(i: Int) {
+				LogWriter writeLog("Aria Tracking finished successfully (return value " + i + ")", Level.INFO)
+			}
+		})
 	}
 
 	/**
