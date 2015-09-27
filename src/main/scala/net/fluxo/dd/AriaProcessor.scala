@@ -20,6 +20,8 @@
  */
 package net.fluxo.dd
 
+import java.io.PrintWriter
+
 import net.fluxo.dd.dbo.Task
 import org.apache.commons.exec._
 import org.apache.log4j.Level
@@ -312,8 +314,24 @@ class AriaProcessor {
 			// API v2 does not give the magnet URL easily, so we will download the .torrent file
 			// and store it in the /uridir directory...
 			//OUtils createUriFile (gid, uri)
-			val torrentPath = "uridir/" + gid + ".torrent"
-			OUtils crawlServerObject (uri, torrentPath, _kickAss)
+			val torrentPath: String = {
+				if (uri endsWith ".torrent") {
+					"uridir/" + gid + ".torrent"
+				} else null
+			}
+			val magnetPath: String = {
+				if (uri startsWith "magnet:") {
+					"uridir/" + gid
+				} else null
+			}
+			if (uri endsWith ".torrent") {
+				OUtils crawlServerObject(uri, torrentPath, _kickAss)
+			} else if (uri startsWith "magnet:") {
+				new PrintWriter(magnetPath) {
+					write(uri)
+					close()
+				}
+			}
 			// DEBUG
 			LogWriter writeLog("AriaProcessor STARTING!", Level.DEBUG)
 			val sb = new StringBuilder
@@ -326,7 +344,11 @@ class AriaProcessor {
 			}*/
 			// API v2 forces us to use --torent-file parameter
 			//sb append " --input-file=" append "uridir/" append gid append ".txt"
-			sb append " --torrent-file=" append torrentPath
+			if (uri endsWith ".torrent") {
+				sb append " --torrent-file=" append torrentPath
+			} else if (uri startsWith "magnet:") {
+				sb append " --input-file=" append magnetPath
+			}
 			// DEBUG
 			LogWriter writeLog("command line: " + sb.toString(), Level.DEBUG)
 			val cmdLine = CommandLine parse sb.toString()
@@ -338,7 +360,15 @@ class AriaProcessor {
 			_executor = Some(executor)
 			val pumpsh = new PumpStreamHandler(new OStream)
 			executor setStreamHandler pumpsh
-			executor execute cmdLine
+			executor execute(cmdLine, new ExecuteResultHandler {
+				override def onProcessFailed(e: ExecuteException) {
+					LogWriter writeLog("Aria Thread --> Downloading Failed: " + e.getMessage, Level.ERROR)
+				}
+
+				override def onProcessComplete(i: Int) {
+					LogWriter writeLog("Aria Thread --> Finished downloading, return value " + i, Level.INFO)
+				}
+			})
 			//executor execute(cmdLine, resultHandler)
 
 			/*resultHandler.waitFor()
