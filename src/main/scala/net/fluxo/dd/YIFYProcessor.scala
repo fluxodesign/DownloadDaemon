@@ -64,7 +64,8 @@ class YIFYProcessor {
 		val response = OUtils crawlServer (request toString())
 		checkEntryWithYIFYCache(response)
 		LogWriter writeLog("checkEntryWithYIFYCache went OK", Level.DEBUG)
-		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR NO LIST"
+		//if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR NO LIST"
+		if (!analyseReturnedStatus(response)) return "ERR NO LIST"
 		processImages(response, externalIP, port)
 	}
 
@@ -80,7 +81,8 @@ class YIFYProcessor {
 		val request: StringBuilder = new StringBuilder("https://yts.to/api/v2/movie_details.json?movie_id=") append id
 		request append "&with_images=true&with_cast=true"
 		val response = OUtils crawlServer (request toString())
-		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
+		//if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return "ERR MOVIE NOT FOUND"
+		if (!analyseReturnedStatus(response)) return "ERR MOVIE NOT FOUND"
         val coverURL = DbControl getCoverImageUrl id
 		processScreenshotImages(coverURL, response, externalIP, port)
 	}
@@ -94,7 +96,8 @@ class YIFYProcessor {
 		val request: StringBuilder = new StringBuilder("https://yts.to/api/v2/list_movies.json?limit=50")
 		if (page > 1) request append "&page=" append page
 		val response = OUtils crawlServer (request toString())
-		if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return  "ERR NO LIST"
+		//if ((response indexOf "status") > -1 && (response indexOf "fail") > -1) return  "ERR NO LIST"
+		if (!analyseReturnedStatus(response)) return "ERR NO LIST"
 		response
 	}
 
@@ -121,6 +124,23 @@ class YIFYProcessor {
 			}
 		}
 		OUtils YIFYSearchResultToJSON yifySearchResult
+	}
+
+	/**
+	 * Determine the status of YIFY response; either "ok" or "error".
+	 * @param retString returned JSON response from YIFY
+	 * @return true if status is "ok", false if "error"
+	 */
+	private def analyseReturnedStatus(retString: String): Boolean = {
+		val jsObj = (JSONValue parseWithException retString).asInstanceOf[JSONObject]
+		val jsStatus = (jsObj get "status").asInstanceOf[String]
+		if ("ok" equalsIgnoreCase jsStatus) true
+		else {
+			val jsStatusMessage = (jsObj get "status_message").asInstanceOf[String]
+			LogWriter writeLog("YIFY request status: " + jsStatus, Level.ERROR)
+			LogWriter writeLog("YIFY request status message: " + jsStatusMessage, Level.ERROR)
+			false
+		}
 	}
 
 	/**
