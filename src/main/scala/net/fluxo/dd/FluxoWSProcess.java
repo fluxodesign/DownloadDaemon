@@ -510,6 +510,7 @@ public class FluxoWSProcess {
 			String[] elements = line.split("=");
 			if (elements.length > 0) {
 				keyVal.put(elements[0], elements[1]);
+				LogWriter.writeLog("--ARIA UPDATE: " + elements[0] + "=" + elements[1], Level.INFO);
 			}
 		}
 		Task[] arrTasks = DbControl.queryTask(keyVal.get("originalGid"));
