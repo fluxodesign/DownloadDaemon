@@ -62,7 +62,7 @@ class AriaProcess {
 
 	private var _pid: Option[String] = None
 
-	def AriaTaskPid: Option[String] = _pid;
+	def AriaTaskPid: Option[String] = _pid
 	def AriaTaskPid_=(value: String) { _pid = Some(value) }
 
 	private var _isRestarting: Boolean = false
