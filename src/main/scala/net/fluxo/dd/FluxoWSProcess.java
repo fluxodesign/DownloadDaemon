@@ -494,6 +494,8 @@ public class FluxoWSProcess {
 				} catch (Exception e) {
 					LogWriter.writeLog("ERROR finishing Aria task: " + e.getMessage() + " caused by " + e.getCause().getMessage(), Level.ERROR);
 			}
+		} else {
+			LogWriter.writeLog("ERROR could not find Task in Database!", Level.ERROR);
 		}
 		return Response.status(500).entity("ERROR").build();
 	}
@@ -533,6 +535,8 @@ public class FluxoWSProcess {
 			} catch (Exception e) {
 				LogWriter.writeLog("ERROR updating Aria data: " + e.getMessage() + " caused by " + e.getCause().getMessage(), Level.ERROR);
 			}
+		} else {
+			LogWriter.writeLog("ERROR could not find Task in database!", Level.ERROR);
 		}
 		return Response.status(500).entity("ERROR").build();
 	}
