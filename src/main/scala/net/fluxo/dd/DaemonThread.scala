@@ -41,8 +41,8 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 	private var _isRunning: Boolean = false
 	//private var _tDlMonitor: Option[DownloadMonitor] = None
 	//private var _threadDlMonitor: Thread = null
-	private var _tXMPPMonitor: Option[XMPPMonitor] = None
-	private var _threadXMPPMonitor: Thread = null
+	//private var _tXMPPMonitor: Option[XMPPMonitor] = None
+	//private var _threadXMPPMonitor: Thread = null
 	private var _tYIFYCacheMonitor: Option[YIFYCacheMonitor] = None
 	private var _threadYIFYCacheMonitor: Thread = null
 	private var _tHttpd: Option[HttpDaemon] = None
@@ -80,17 +80,17 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 			/*val dlMon: DownloadMonitor = new DownloadMonitor(dbMan, this)
 			_tDlMonitor = Some(dlMon)
 			_threadDlMonitor = new Thread(_tDlMonitor.orNull)
-			_threadDlMonitor start()*/
+			_threadDlMonitor start()
 			val xmppMon: XMPPMonitor = {
 				if (OUtils.readConfig.XMPPProvider.orNull.toLowerCase.equals("google")) {
 					new XMPPMonitor("google", "talk.google.com", 5222, OUtils.readConfig.XMPPAccount.orNull, OUtils.readConfig.XMPPPassword.orNull, this)
 				} else if (OUtils.readConfig.XMPPProvider.orNull.toLowerCase.equals("facebook")) {
 					new XMPPMonitor("facebook", "chat.facebook.com", 5222, OUtils.readConfig.XMPPAccount.orNull, OUtils.readConfig.XMPPPassword.orNull, this)
 				} else null
-			}
-			_tXMPPMonitor = Some(xmppMon)
-			_threadXMPPMonitor = new Thread(_tXMPPMonitor.orNull)
-			_threadXMPPMonitor start()
+			}*/
+			//_tXMPPMonitor = Some(xmppMon)
+			//_threadXMPPMonitor = new Thread(_tXMPPMonitor.orNull)
+			//_threadXMPPMonitor start()
 			val httpd: HttpDaemon = new HttpDaemon((OUtils readConfig) HTTPPort, (OUtils readConfig) HTTPSPort)
 			_tHttpd = Some(httpd)
 			_threadHttpD = new Thread(_tHttpd.orNull)
@@ -178,11 +178,11 @@ class DaemonThread(dbMan: DbManager) extends Thread {
 		/*if (_tDlMonitor.isDefined) {
 			_tDlMonitor.orNull stop()
 			_threadDlMonitor interrupt()
-		}*/
+		}
 		if (_tXMPPMonitor.isDefined) {
 			_tXMPPMonitor.orNull stop()
 			_threadXMPPMonitor interrupt()
-		}
+		}*/
 		if (_tHttpd.isDefined) {
 			_tHttpd.orNull stop()
 			_threadHttpD interrupt()
