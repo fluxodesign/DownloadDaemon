@@ -22,6 +22,10 @@ package net.fluxo.dd
 
 import java.io.File
 import java.net.URL
+import org.apache.log4j.Level
+import org.apache.commons.io.FilenameUtils
+import org.json.simple.{JSONArray,JSONObject,JSONValue}
+import org.json.simple.parser.JSONParser
 
 import net.fluxo.dd.dbo.{YIFYCache, YIFYSearchResult}
 
